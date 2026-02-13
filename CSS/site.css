@@ -1,0 +1,128 @@
+﻿html, body {
+    height: 100%;
+}
+
+body {
+    margin: 0; 
+    padding: 0;
+}
+
+form {
+    margin: 0; 
+}
+
+.navbar {
+    width: 100%;
+    box-sizing: border-box; 
+    background: #fff9c4; 
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.logo-img {
+    height: 80px;
+    vertical-align: middle;
+    margin-right: auto;
+}
+
+.logo-text {
+    font-weight: bold;
+    margin-left: 8px;
+    margin-right: auto;
+}
+.page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.page-content {
+    flex: 1;
+    display: flex;
+    justify-content: center; 
+    align-items: center; 
+    padding: 40px 20px;
+}
+
+.login-container {
+    display: flex;
+    gap: 48px;
+    width: min(1100px, 100%);
+}
+
+.login-left {
+    flex: 1;
+    background-color: #fff9c4;
+    padding: 48px;
+    border-radius: 18px;
+    text-align: center;
+}
+
+.login-right {
+    flex: 1;
+    padding: 48px;
+    text-align: center;
+}
+
+.login-input {
+    width: 90%;
+    max-width: 520px;
+    padding: 14px 18px;
+    margin: 12px 0;
+    border-radius: 999px;
+    border: none;
+    background-color: #f6c1c1;
+}
+
+.tagline {
+    display: block;
+    margin-top: 12px;
+}
+
+.profile-icon-btn {
+    background: transparent !important; /* Removes that blue/grey background */
+    border: none !important; /* Removes borders */
+    padding: 0;
+    cursor: pointer;
+    width: 40px; /* Fixed small width */
+    height: 40px; /* Fixed small height */
+    margin-left: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    outline: none;
+}
+
+.profile-icon-btn img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%; /* Makes it a perfect circle */
+    object-fit: cover;
+    border: 1px solid #ddd; /* Optional thin grey border */
+    transition: transform 0.2s ease;
+}
+
+.profile-icon-btn:hover img {
+    transform: scale(1.1); /* Subtle hover effect */
+    border-color: #007bff; /* Change border color on hover */
+}
+
+.nav-links a {
+    margin: 0 15px; /* 15px gap on left and right of each link */
+    text-decoration: none; /* Removes default underline */
+    color: #333; /* Sets a clean text color */
+    font-weight: 500;
+}
+
+    .nav-links a:hover {
+        color: #007bff; /* Changes color when hovering */
+    }
+
+/* Optional: If you prefer using flex gap instead of margins */
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 20px; /* Modern way to create equal spacing */
+}
