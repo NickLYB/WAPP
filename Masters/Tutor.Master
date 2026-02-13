@@ -1,0 +1,41 @@
+﻿<%@ Master Language="C#" AutoEventWireup="true" CodeBehind="Tutor.master.cs" Inherits="WAPP.Masters.Tutor" %>
+<%@ Register Src="~/Pages/Tutor/ProfileDropdown.ascx" TagPrefix="uc" TagName="ProfileDropdown" %>
+
+<!DOCTYPE html>
+
+<html>
+<head runat="server">
+    <title>EduConnect-Tutor</title>
+    <link href="~/CSS/site.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <asp:ContentPlaceHolder ID="head" runat="server">
+    </asp:ContentPlaceHolder>
+</head>
+<body>
+    <form id="form1" runat="server">
+        <asp:ScriptManager ID="ScriptManager1" runat="server" />
+
+            <asp:Panel ID="Panel1" runat="server" CssClass="ec-navbar">
+            <div class="nav-brand">
+                <asp:Image ID="imgLogo" runat="server" ImageUrl="~/Images/logo.png" CssClass="logo-img" />
+            </div>
+
+            <div class="nav-links">
+                <asp:HyperLink ID="HyperLink1" runat="server" NavigateUrl="~/Pages/Tutor/Home.aspx" CssClass="nav-item">Home</asp:HyperLink>
+                <asp:HyperLink ID="HyperLink2" runat="server" NavigateUrl="~/Pages/Tutor/Study.aspx" CssClass="nav-item">Study</asp:HyperLink>
+                <asp:HyperLink ID="HyperLink3" runat="server" NavigateUrl="~/Pages/Tutor/About.aspx" CssClass="nav-item">About Us</asp:HyperLink>
+                <asp:HyperLink ID="HyperLink4" runat="server" NavigateUrl="~/Pages/Tutor/Setting.aspx" CssClass="nav-item">Setting</asp:HyperLink>
+        
+                <uc:ProfileDropdown runat="server" ID="ucProfileDropdown" />
+            </div>
+        </asp:Panel>
+
+        <div>
+            <main class="page-content">
+                <asp:ContentPlaceHolder ID="ContentPlaceHolder1" runat="server" />
+            </main>
+        </div>
+    </form>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

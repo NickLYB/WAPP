@@ -7,11 +7,11 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace WAPP.Master
+namespace WAPP.Masters
 {
 
 
-    public partial class Guest
+    public partial class Tutor
     {
 
         /// <summary>
@@ -78,22 +78,31 @@ namespace WAPP.Master
         protected global::System.Web.UI.WebControls.HyperLink HyperLink2;
 
         /// <summary>
-        /// imgProfileCircle control.
+        /// HyperLink3 control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Image imgProfileCircle;
+        protected global::System.Web.UI.WebControls.HyperLink HyperLink3;
 
         /// <summary>
-        /// ucLoginModal control.
+        /// HyperLink4 control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::WAPP.Controls.LoginModal ucLoginModal;
+        protected global::System.Web.UI.WebControls.HyperLink HyperLink4;
+
+        /// <summary>
+        /// ucProfileDropdown control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::WAPP.Pages.Tutor.ProfileDropdown ucProfileDropdown;
 
         /// <summary>
         /// ContentPlaceHolder1 control.

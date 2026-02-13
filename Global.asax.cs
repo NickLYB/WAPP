@@ -18,4 +18,11 @@ namespace WAPP
             BundleConfig.RegisterBundles(BundleTable.Bundles);
         }
     }
+    public enum UserRole
+    {
+        Admin = 1,
+        Staff = 2,
+        Tutor = 3,
+        Student = 4
+    }
 }

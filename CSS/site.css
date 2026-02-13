@@ -1,37 +1,101 @@
-﻿html, body {
+﻿/* =========================
+   Global reset
+========================= */
+html, body {
     height: 100%;
-}
-
-body {
-    margin: 0; 
+    margin: 0;
     padding: 0;
 }
 
 form {
-    margin: 0; 
+    margin: 0;
 }
 
-.navbar {
+/* =========================
+   Navbar (avoid Bootstrap .navbar conflict)
+========================= */
+.ec-navbar {
     width: 100%;
-    box-sizing: border-box; 
-    background: #fff9c4; 
-    padding: 16px 32px;
+    height: 80px;
+    box-sizing: border-box;
+    background: #fff9c4;
+    padding: 0 32px;
     display: flex;
     align-items: center;
-    gap: 24px;
+    justify-content: space-between;
+    position: relative;
+    z-index: 1000;
+    overflow: visible;
+}
+
+.nav-brand {
+    display: flex;
+    align-items: center;
 }
 
 .logo-img {
-    height: 80px;
-    vertical-align: middle;
-    margin-right: auto;
+    height: 60px;
+    width: auto;
 }
 
 .logo-text {
-    font-weight: bold;
+    font-weight: 700;
     margin-left: 8px;
-    margin-right: auto;
+    color: #333;
 }
+
+/* Right side items */
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+    .nav-links a {
+        text-decoration: none;
+        color: #333;
+        font-weight: 500;
+        padding: 5px 10px;
+        transition: color 0.2s;
+    }
+
+        .nav-links a:hover {
+            color: #007bff;
+        }
+
+/* =========================
+   Profile icon button (modal + dropdown)
+========================= */
+.profile-icon-btn {
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    width: 45px;
+    height: 45px;
+    margin-left: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    outline: none;
+}
+
+    /* Remove Bootstrap dropdown arrow if used */
+    .profile-icon-btn.dropdown-toggle::after {
+        display: none;
+    }
+
+    .profile-icon-btn img {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 1px solid #ddd;
+    }
+
+/* =========================
+   Page layout
+========================= */
 .page {
     min-height: 100vh;
     display: flex;
@@ -41,29 +105,82 @@ form {
 .page-content {
     flex: 1;
     display: flex;
-    justify-content: center; 
-    align-items: center; 
+    justify-content: center;
     padding: 40px 20px;
 }
 
+/* =========================
+   Dashboard layout
+========================= */
+.dashboard-wrapper {
+    display: flex;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    gap: 24px;
+    box-sizing: border-box;
+}
+
+.main-content {
+    flex: 7;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.sidebar {
+    flex: 3;
+    min-width: 280px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.dashboard-grid {
+    display: flex;
+    gap: 20px;
+}
+
+    .dashboard-grid .card {
+        flex: 1;
+    }
+
+/* =========================
+   Components
+========================= */
+.card {
+    background-color: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.welcome-banner {
+    background-color: #fff9c4;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 25px;
+    border-radius: 15px;
+}
+
+.avatar-small {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    background-color: #ddd;
+    border: 3px solid #fff;
+}
+
+/* =========================
+   Login components
+========================= */
 .login-container {
     display: flex;
     gap: 48px;
     width: min(1100px, 100%);
-}
-
-.login-left {
-    flex: 1;
-    background-color: #fff9c4;
-    padding: 48px;
-    border-radius: 18px;
-    text-align: center;
-}
-
-.login-right {
-    flex: 1;
-    padding: 48px;
-    text-align: center;
 }
 
 .login-input {
@@ -71,58 +188,7 @@ form {
     max-width: 520px;
     padding: 14px 18px;
     margin: 12px 0;
-    border-radius: 999px;
     border: none;
+    border-radius: 999px;
     background-color: #f6c1c1;
-}
-
-.tagline {
-    display: block;
-    margin-top: 12px;
-}
-
-.profile-icon-btn {
-    background: transparent !important; /* Removes that blue/grey background */
-    border: none !important; /* Removes borders */
-    padding: 0;
-    cursor: pointer;
-    width: 40px; /* Fixed small width */
-    height: 40px; /* Fixed small height */
-    margin-left: 20px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    outline: none;
-}
-
-.profile-icon-btn img {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%; /* Makes it a perfect circle */
-    object-fit: cover;
-    border: 1px solid #ddd; /* Optional thin grey border */
-    transition: transform 0.2s ease;
-}
-
-.profile-icon-btn:hover img {
-    transform: scale(1.1); /* Subtle hover effect */
-    border-color: #007bff; /* Change border color on hover */
-}
-
-.nav-links a {
-    margin: 0 15px; /* 15px gap on left and right of each link */
-    text-decoration: none; /* Removes default underline */
-    color: #333; /* Sets a clean text color */
-    font-weight: 500;
-}
-
-    .nav-links a:hover {
-        color: #007bff; /* Changes color when hovering */
-    }
-
-/* Optional: If you prefer using flex gap instead of margins */
-.nav-links {
-    display: flex;
-    align-items: center;
-    gap: 20px; /* Modern way to create equal spacing */
 }
