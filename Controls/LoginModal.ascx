@@ -25,9 +25,15 @@
                     </div>
 
                     <div class="text-center mt-3 border-top pt-3">
-                        <asp:HyperLink ID="hlForgot" runat="server" Font-Size="Small">Forgot Password?</asp:HyperLink>
+                        <asp:HyperLink ID="hlForgot" runat="server" Font-Size="Small" NavigateUrl="~/ForgotPassword.aspx">Forgot Password?</asp:HyperLink>
+    
                         <span class="mx-2">|</span>
-                        <asp:HyperLink ID="hlSignUp" runat="server" Font-Size="Small">Sign Up</asp:HyperLink>
+    
+                        <a href="javascript:void(0);" 
+                           class="small text-decoration-none" 
+                           data-bs-toggle="modal" 
+                           data-bs-target="#signUpModal" 
+                           data-bs-dismiss="modal">Sign Up</a>
                     </div>
                 </ContentTemplate>
             </asp:UpdatePanel>

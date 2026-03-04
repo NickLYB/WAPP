@@ -102,7 +102,7 @@ namespace WAPP.Masters
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::WAPP.Pages.Tutor.ProfileDropdown ucProfileDropdown;
+        protected global::WAPP.Pages.Shared.ProfileDropdown ucProfileDropdown;
 
         /// <summary>
         /// ContentPlaceHolder1 control.

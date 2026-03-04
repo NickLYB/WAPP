@@ -33,16 +33,16 @@ namespace WAPP.Controls
                         switch (roleId)
                         {
                             case 1: // Admin
-                                Response.Redirect("~/Pages/Admin/Dashboard.aspx");
+                                Response.Redirect("~/Pages/Admin/Home.aspx");
                                 break;
                             case 2: // Staff
-                                Response.Redirect("~/Pages/Staff/Management.aspx");
+                                Response.Redirect("~/Pages/Staff/StaffDashboard.aspx");
                                 break;
                             case 3: // Tutor
                                 Response.Redirect("~/Pages/Tutor/Home.aspx");
                                 break;
                             case 4: // Student
-                                Response.Redirect("~/Pages/Student/Profile.aspx");
+                                Response.Redirect("~/Pages/Student/Home.aspx");
                                 break;
                             default:
                                 lblError.Text = "Account has no assigned role.";

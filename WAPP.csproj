@@ -1,6 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\build\net46\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props" Condition="Exists('packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\build\net46\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" />
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -44,12 +43,37 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.AspNet.SignalR.Core, Version=2.4.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>packages\Microsoft.AspNet.SignalR.Core.2.4.3\lib\net45\Microsoft.AspNet.SignalR.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AspNet.SignalR.SystemWeb, Version=2.4.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>packages\Microsoft.AspNet.SignalR.SystemWeb.2.4.3\lib\net45\Microsoft.AspNet.SignalR.SystemWeb.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CodeDom.Providers.DotNetCompilerPlatform, Version=4.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.4.1.0\lib\net472\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Microsoft.Owin, Version=4.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>packages\Microsoft.Owin.4.2.3\lib\net45\Microsoft.Owin.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Host.SystemWeb, Version=4.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>packages\Microsoft.Owin.Host.SystemWeb.4.2.3\lib\net45\Microsoft.Owin.Host.SystemWeb.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Security, Version=4.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>packages\Microsoft.Owin.Security.4.2.3\lib\net45\Microsoft.Owin.Security.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>packages\Newtonsoft.Json.13.0.4\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="Owin, Version=1.0.0.0, Culture=neutral, PublicKeyToken=f0ebd12fd5e55cc5, processorArchitecture=MSIL">
+      <HintPath>packages\Owin.1.0\lib\net40\Owin.dll</HintPath>
+    </Reference>
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Security" />
     <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Drawing" />
@@ -74,9 +98,6 @@
     <Reference Include="System.Web.Optimization, Version=1.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
       <HintPath>packages\Microsoft.AspNet.Web.Optimization.1.1.3\lib\net40\System.Web.Optimization.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
-    </Reference>
     <Reference Include="WebGrease">
       <Private>True</Private>
       <HintPath>packages\WebGrease.1.6.0\lib\WebGrease.dll</HintPath>
@@ -91,11 +112,6 @@
     </Reference>
     <Reference Include="Microsoft.AspNet.FriendlyUrls">
       <HintPath>packages\Microsoft.AspNet.FriendlyUrls.Core.1.0.2\lib\net45\Microsoft.AspNet.FriendlyUrls.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="Microsoft.CodeDom.Providers.DotNetCompilerPlatform">
-      <HintPath>packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\lib\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -123,54 +139,93 @@
     <Content Include="Content\bootstrap.rtl.min.css" />
     <Content Include="Content\Site.css" />
     <Content Include="Controls\LoginModal.ascx" />
+    <Content Include="Controls\ProfileDropdown.ascx" />
+    <Content Include="Controls\SignUpModal.ascx" />
     <Content Include="CSS\site.css" />
     <Content Include="Default.aspx" />
     <Content Include="favicon.ico" />
     <Content Include="Global.asax" />
     <Content Include="Images\logo.png" />
+    <Content Include="Pages\Admin\Home.aspx" />
+    <Content Include="Pages\Admin\ManageAlertLogs.aspx" />
+    <Content Include="Pages\Admin\ManageAnnouncements.aspx" />
+    <Content Include="Pages\Admin\ManageSystemLogs.aspx" />
+    <Content Include="Pages\Admin\ManageUsers.aspx" />
     <Content Include="Pages\Guest\About.aspx" />
+    <Content Include="Pages\Guest\Help.aspx" />
     <Content Include="Pages\Guest\Home.aspx" />
     <Content Include="Pages\Guest\Login.aspx" />
+    <Content Include="Pages\Guest\Privacy.aspx" />
+    <Content Include="Pages\Guest\Terms.aspx" />
+    <Content Include="Pages\Shared\EditProfile.aspx" />
+    <Content Include="Pages\Shared\ProfileDropdown.ascx" />
+    <Content Include="Pages\Shared\Setting.aspx" />
+    <Content Include="Pages\Staff\About.aspx" />
+    <Content Include="Pages\Staff\AddCourse.aspx" />
+    <Content Include="Pages\Staff\AddResource.aspx" />
+    <Content Include="Pages\Staff\AnnouncementManagement.aspx" />
+    <Content Include="Pages\Staff\ComposeAnnouncement.aspx" />
+    <Content Include="Pages\Staff\CourseApplication.aspx" />
+    <Content Include="Pages\Staff\CourseManagement.aspx" />
+    <Content Include="Pages\Staff\FeedbackManagement.aspx" />
+    <Content Include="Pages\Staff\LearningResourceManagement.aspx" />
+    <Content Include="Pages\Staff\PendingTutorsWidget.ascx" />
+    <Content Include="Pages\Staff\StaffDashboard.aspx" />
+    <Content Include="Pages\Staff\TutorApplication.aspx" />
+    <Content Include="Pages\Staff\UserManagement.aspx" />
+    <Content Include="Pages\Student\About.aspx" />
+    <Content Include="Pages\Student\CourseDetail.aspx" />
+    <Content Include="Pages\Student\Home.aspx" />
+    <Content Include="Pages\Student\LessonView.aspx" />
+    <Content Include="Pages\Student\MyCourses.aspx" />
+    <Content Include="Pages\Student\Notifications.ascx" />
+    <Content Include="Pages\Student\ProfileDropdown.ascx" />
+    <Content Include="Pages\Student\QuizReview.aspx" />
+    <Content Include="Pages\Student\Quizzes.aspx" />
+    <Content Include="Pages\Student\RecentActivity.ascx" />
+    <Content Include="Pages\Student\RecentCourse.ascx" />
+    <Content Include="Pages\Student\Setting.aspx" />
+    <Content Include="Pages\Student\StudentCalendar.ascx" />
+    <Content Include="Pages\Student\Study.aspx" />
     <Content Include="Pages\Tutor\About.aspx" />
+    <Content Include="Pages\Tutor\Announcement.aspx" />
+    <Content Include="Pages\Tutor\AnnouncementRecord.aspx" />
+    <Content Include="Pages\Tutor\Calendar.ascx" />
+    <Content Include="Pages\Tutor\Chat.aspx" />
+    <Content Include="Pages\Tutor\CreateCourseModal.ascx" />
+    <Content Include="Pages\Tutor\CreateNewCourse.aspx" />
+    <Content Include="Pages\Tutor\CreateQuiz.aspx" />
+    <Content Include="Pages\Tutor\EditCourse.aspx" />
+    <Content Include="Pages\Tutor\EditCourseOverviewModal.ascx" />
+    <Content Include="Pages\Tutor\EditLessonModal.ascx" />
     <Content Include="Pages\Tutor\Home.aspx" />
     <Content Include="Pages\Tutor\ProfileDropdown.ascx" />
+    <Content Include="Pages\Tutor\RecentAnnouncement.ascx" />
     <Content Include="Pages\Tutor\Setting.aspx" />
-    <Content Include="Pages\Tutor\Study.aspx" />
+    <Content Include="Pages\Tutor\StudentProgress.aspx" />
+    <Content Include="Pages\Tutor\Teaching.aspx" />
+    <Content Include="Pages\Tutor\UploadCourseMaterial.aspx" />
+    <Content Include="Masters\Guest.Master" />
+    <Content Include="Masters\Tutor.Master" />
+    <Content Include="Pages\Tutor\ViewCourse.aspx" />
+    <Content Include="Pages\Tutor\ViewQuizAttempts.aspx" />
     <Content Include="Scripts\bootstrap.bundle.js" />
     <Content Include="Scripts\bootstrap.bundle.min.js" />
     <Content Include="Scripts\bootstrap.esm.js" />
     <Content Include="Scripts\bootstrap.esm.min.js" />
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
-    <Content Include="Scripts\bootstrap.min.js.map" />
-    <Content Include="Scripts\bootstrap.js.map" />
-    <Content Include="Scripts\bootstrap.esm.min.js.map" />
-    <Content Include="Scripts\bootstrap.esm.js.map" />
-    <Content Include="Scripts\bootstrap.bundle.min.js.map" />
-    <Content Include="Scripts\bootstrap.bundle.js.map" />
-    <Content Include="Content\bootstrap.rtl.min.css.map" />
-    <Content Include="Content\bootstrap.rtl.css.map" />
-    <Content Include="Content\bootstrap.min.css.map" />
-    <Content Include="Content\bootstrap.css.map" />
-    <Content Include="Content\bootstrap-utilities.rtl.min.css.map" />
-    <Content Include="Content\bootstrap-utilities.rtl.css.map" />
-    <Content Include="Content\bootstrap-utilities.min.css.map" />
-    <Content Include="Content\bootstrap-utilities.css.map" />
-    <Content Include="Content\bootstrap-reboot.rtl.min.css.map" />
-    <Content Include="Content\bootstrap-reboot.rtl.css.map" />
-    <Content Include="Content\bootstrap-reboot.min.css.map" />
-    <Content Include="Content\bootstrap-reboot.css.map" />
-    <Content Include="Content\bootstrap-grid.rtl.min.css.map" />
-    <Content Include="Content\bootstrap-grid.rtl.css.map" />
-    <Content Include="Content\bootstrap-grid.min.css.map" />
-    <Content Include="Content\bootstrap-grid.css.map" />
-    <Content Include="Masters\Guest.Master" />
-    <Content Include="Masters\Tutor.Master" />
-    <None Include="Scripts\jquery-3.7.0.intellisense.js" />
-    <Content Include="Scripts\jquery-3.7.0.js" />
-    <Content Include="Scripts\jquery-3.7.0.min.js" />
-    <Content Include="Scripts\jquery-3.7.0.slim.js" />
-    <Content Include="Scripts\jquery-3.7.0.slim.min.js" />
+    <Content Include="Masters\Admin.Master" />
+    <None Include="Scripts\jquery-3.7.1.intellisense.js" />
+    <Content Include="Scripts\jquery-3.7.1.js" />
+    <Content Include="Scripts\jquery-3.7.1.min.js" />
+    <Content Include="Scripts\jquery-3.7.1.slim.js" />
+    <Content Include="Scripts\jquery-3.7.1.slim.min.js" />
+    <Content Include="Scripts\jquery.signalR-2.4.3.js" />
+    <Content Include="Scripts\jquery.signalR-2.4.3.min.js" />
+    <Content Include="Tutor.sitemap" />
+    <Content Include="Masters\Student.Master" />
+    <Content Include="Masters\Staff.Master" />
     <Content Include="Scripts\modernizr-2.8.3.js" />
     <Content Include="Scripts\WebForms\DetailsView.js" />
     <Content Include="Scripts\WebForms\Focus.js" />
@@ -209,6 +264,7 @@
       <DependentUpon>About.aspx</DependentUpon>
     </Compile>
     <Compile Include="App_Start\RouteConfig.cs" />
+    <Compile Include="ChatHub.cs" />
     <Compile Include="Contact.aspx.cs">
       <DependentUpon>Contact.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
@@ -223,6 +279,20 @@
     <Compile Include="Controls\LoginModal.ascx.designer.cs">
       <DependentUpon>LoginModal.ascx</DependentUpon>
     </Compile>
+    <Compile Include="Controls\ProfileDropdown.ascx.cs">
+      <DependentUpon>ProfileDropdown.ascx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Controls\ProfileDropdown.ascx.designer.cs">
+      <DependentUpon>ProfileDropdown.ascx</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\SignUpModal.ascx.cs">
+      <DependentUpon>SignUpModal.ascx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Controls\SignUpModal.ascx.designer.cs">
+      <DependentUpon>SignUpModal.ascx</DependentUpon>
+    </Compile>
     <Compile Include="Default.aspx.cs">
       <DependentUpon>Default.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
@@ -233,12 +303,33 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Masters\Admin.Master.cs">
+      <DependentUpon>Admin.Master</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Masters\Admin.Master.designer.cs">
+      <DependentUpon>Admin.Master</DependentUpon>
+    </Compile>
     <Compile Include="Masters\Guest.Master.cs">
       <DependentUpon>Guest.Master</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="Masters\Guest.Master.designer.cs">
       <DependentUpon>Guest.Master</DependentUpon>
+    </Compile>
+    <Compile Include="Masters\Staff.Master.cs">
+      <DependentUpon>Staff.Master</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Masters\Staff.Master.designer.cs">
+      <DependentUpon>Staff.Master</DependentUpon>
+    </Compile>
+    <Compile Include="Masters\Student.Master.cs">
+      <DependentUpon>Student.Master</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Masters\Student.Master.designer.cs">
+      <DependentUpon>Student.Master</DependentUpon>
     </Compile>
     <Compile Include="Masters\Tutor.Master.cs">
       <DependentUpon>Tutor.Master</DependentUpon>
@@ -247,12 +338,54 @@
     <Compile Include="Masters\Tutor.Master.designer.cs">
       <DependentUpon>Tutor.Master</DependentUpon>
     </Compile>
+    <Compile Include="Pages\Admin\Home.aspx.cs">
+      <DependentUpon>Home.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Admin\Home.aspx.designer.cs">
+      <DependentUpon>Home.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Admin\ManageAlertLogs.aspx.cs">
+      <DependentUpon>ManageAlertLogs.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Admin\ManageAlertLogs.aspx.designer.cs">
+      <DependentUpon>ManageAlertLogs.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Admin\ManageAnnouncements.aspx.cs">
+      <DependentUpon>ManageAnnouncements.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Admin\ManageAnnouncements.aspx.designer.cs">
+      <DependentUpon>ManageAnnouncements.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Admin\ManageSystemLogs.aspx.cs">
+      <DependentUpon>ManageSystemLogs.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Admin\ManageSystemLogs.aspx.designer.cs">
+      <DependentUpon>ManageSystemLogs.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Admin\ManageUsers.aspx.cs">
+      <DependentUpon>ManageUsers.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Admin\ManageUsers.aspx.designer.cs">
+      <DependentUpon>ManageUsers.aspx</DependentUpon>
+    </Compile>
     <Compile Include="Pages\Guest\About.aspx.cs">
       <DependentUpon>About.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="Pages\Guest\About.aspx.designer.cs">
       <DependentUpon>About.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Guest\Help.aspx.cs">
+      <DependentUpon>Help.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Guest\Help.aspx.designer.cs">
+      <DependentUpon>Help.aspx</DependentUpon>
     </Compile>
     <Compile Include="Pages\Guest\Home.aspx.cs">
       <DependentUpon>Home.aspx</DependentUpon>
@@ -268,12 +401,305 @@
     <Compile Include="Pages\Guest\Login.aspx.designer.cs">
       <DependentUpon>Login.aspx</DependentUpon>
     </Compile>
+    <Compile Include="Pages\Guest\Privacy.aspx.cs">
+      <DependentUpon>Privacy.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Guest\Privacy.aspx.designer.cs">
+      <DependentUpon>Privacy.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Guest\Terms.aspx.cs">
+      <DependentUpon>Terms.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Guest\Terms.aspx.designer.cs">
+      <DependentUpon>Terms.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Shared\EditProfile.aspx.cs">
+      <DependentUpon>EditProfile.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Shared\EditProfile.aspx.designer.cs">
+      <DependentUpon>EditProfile.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Shared\ProfileDropdown.ascx.cs">
+      <DependentUpon>ProfileDropdown.ascx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Shared\ProfileDropdown.ascx.designer.cs">
+      <DependentUpon>ProfileDropdown.ascx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Shared\Setting.aspx.cs">
+      <DependentUpon>Setting.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Shared\Setting.aspx.designer.cs">
+      <DependentUpon>Setting.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Staff\About.aspx.cs">
+      <DependentUpon>About.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Staff\About.aspx.designer.cs">
+      <DependentUpon>About.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Staff\AddCourse.aspx.cs">
+      <DependentUpon>AddCourse.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Staff\AddCourse.aspx.designer.cs">
+      <DependentUpon>AddCourse.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Staff\AddResource.aspx.cs">
+      <DependentUpon>AddResource.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Staff\AddResource.aspx.designer.cs">
+      <DependentUpon>AddResource.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Staff\AnnouncementManagement.aspx.cs">
+      <DependentUpon>AnnouncementManagement.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Staff\AnnouncementManagement.aspx.designer.cs">
+      <DependentUpon>AnnouncementManagement.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Staff\ComposeAnnouncement.aspx.cs">
+      <DependentUpon>ComposeAnnouncement.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Staff\ComposeAnnouncement.aspx.designer.cs">
+      <DependentUpon>ComposeAnnouncement.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Staff\CourseApplication.aspx.cs">
+      <DependentUpon>CourseApplication.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Staff\CourseApplication.aspx.designer.cs">
+      <DependentUpon>CourseApplication.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Staff\CourseManagement.aspx.cs">
+      <DependentUpon>CourseManagement.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Staff\CourseManagement.aspx.designer.cs">
+      <DependentUpon>CourseManagement.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Staff\FeedbackManagement.aspx.cs">
+      <DependentUpon>FeedbackManagement.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Staff\FeedbackManagement.aspx.designer.cs">
+      <DependentUpon>FeedbackManagement.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Staff\LearningResourceManagement.aspx.cs">
+      <DependentUpon>LearningResourceManagement.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Staff\LearningResourceManagement.aspx.designer.cs">
+      <DependentUpon>LearningResourceManagement.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Staff\PendingTutorsWidget.ascx.cs">
+      <DependentUpon>PendingTutorsWidget.ascx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Staff\PendingTutorsWidget.ascx.designer.cs">
+      <DependentUpon>PendingTutorsWidget.ascx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Staff\StaffDashboard.aspx.cs">
+      <DependentUpon>StaffDashboard.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Staff\StaffDashboard.aspx.designer.cs">
+      <DependentUpon>StaffDashboard.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Staff\TutorApplication.aspx.cs">
+      <DependentUpon>TutorApplication.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Staff\TutorApplication.aspx.designer.cs">
+      <DependentUpon>TutorApplication.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Staff\UserManagement.aspx.cs">
+      <DependentUpon>UserManagement.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Staff\UserManagement.aspx.designer.cs">
+      <DependentUpon>UserManagement.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Student\About.aspx.cs">
+      <DependentUpon>About.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Student\About.aspx.designer.cs">
+      <DependentUpon>About.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Student\CourseDetail.aspx.cs">
+      <DependentUpon>CourseDetail.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Student\CourseDetail.aspx.designer.cs">
+      <DependentUpon>CourseDetail.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Student\Home.aspx.cs">
+      <DependentUpon>Home.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Student\Home.aspx.designer.cs">
+      <DependentUpon>Home.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Student\LessonView.aspx.cs">
+      <DependentUpon>LessonView.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Student\LessonView.aspx.designer.cs">
+      <DependentUpon>LessonView.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Student\MyCourses.aspx.cs">
+      <DependentUpon>MyCourses.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Student\MyCourses.aspx.designer.cs">
+      <DependentUpon>MyCourses.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Student\Notifications.ascx.cs">
+      <DependentUpon>Notifications.ascx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Student\Notifications.ascx.designer.cs">
+      <DependentUpon>Notifications.ascx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Student\ProfileDropdown.ascx.cs">
+      <DependentUpon>ProfileDropdown.ascx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Student\ProfileDropdown.ascx.designer.cs">
+      <DependentUpon>ProfileDropdown.ascx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Student\QuizReview.aspx.cs">
+      <DependentUpon>QuizReview.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Student\QuizReview.aspx.designer.cs">
+      <DependentUpon>QuizReview.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Student\Quizzes.aspx.cs">
+      <DependentUpon>Quizzes.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Student\Quizzes.aspx.designer.cs">
+      <DependentUpon>Quizzes.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Student\RecentActivity.ascx.cs">
+      <DependentUpon>RecentActivity.ascx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Student\RecentActivity.ascx.designer.cs">
+      <DependentUpon>RecentActivity.ascx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Student\RecentCourse.ascx.cs">
+      <DependentUpon>RecentCourse.ascx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Student\RecentCourse.ascx.designer.cs">
+      <DependentUpon>RecentCourse.ascx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Student\Setting.aspx.cs">
+      <DependentUpon>Setting.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Student\Setting.aspx.designer.cs">
+      <DependentUpon>Setting.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Student\StudentCalendar.ascx.cs">
+      <DependentUpon>StudentCalendar.ascx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Student\StudentCalendar.ascx.designer.cs">
+      <DependentUpon>StudentCalendar.ascx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Student\Study.aspx.cs">
+      <DependentUpon>Study.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Student\Study.aspx.designer.cs">
+      <DependentUpon>Study.aspx</DependentUpon>
+    </Compile>
     <Compile Include="Pages\Tutor\About.aspx.cs">
       <DependentUpon>About.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="Pages\Tutor\About.aspx.designer.cs">
       <DependentUpon>About.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Tutor\Announcement.aspx.cs">
+      <DependentUpon>Announcement.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Tutor\Announcement.aspx.designer.cs">
+      <DependentUpon>Announcement.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Tutor\AnnouncementRecord.aspx.cs">
+      <DependentUpon>AnnouncementRecord.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Tutor\AnnouncementRecord.aspx.designer.cs">
+      <DependentUpon>AnnouncementRecord.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Tutor\Calendar.ascx.cs">
+      <DependentUpon>Calendar.ascx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Tutor\Calendar.ascx.designer.cs">
+      <DependentUpon>Calendar.ascx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Tutor\Chat.aspx.cs">
+      <DependentUpon>Chat.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Tutor\Chat.aspx.designer.cs">
+      <DependentUpon>Chat.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Tutor\CreateCourseModal.ascx.cs">
+      <DependentUpon>CreateCourseModal.ascx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Tutor\CreateCourseModal.ascx.designer.cs">
+      <DependentUpon>CreateCourseModal.ascx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Tutor\CreateNewCourse.aspx.cs">
+      <DependentUpon>CreateNewCourse.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Tutor\CreateNewCourse.aspx.designer.cs">
+      <DependentUpon>CreateNewCourse.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Tutor\CreateQuiz.aspx.cs">
+      <DependentUpon>CreateQuiz.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Tutor\CreateQuiz.aspx.designer.cs">
+      <DependentUpon>CreateQuiz.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Tutor\EditCourse.aspx.cs">
+      <DependentUpon>EditCourse.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Tutor\EditCourse.aspx.designer.cs">
+      <DependentUpon>EditCourse.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Tutor\EditCourseOverviewModal.ascx.cs">
+      <DependentUpon>EditCourseOverviewModal.ascx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Tutor\EditCourseOverviewModal.ascx.designer.cs">
+      <DependentUpon>EditCourseOverviewModal.ascx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Tutor\EditLessonModal.ascx.cs">
+      <DependentUpon>EditLessonModal.ascx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Tutor\EditLessonModal.ascx.designer.cs">
+      <DependentUpon>EditLessonModal.ascx</DependentUpon>
     </Compile>
     <Compile Include="Pages\Tutor\Home.aspx.cs">
       <DependentUpon>Home.aspx</DependentUpon>
@@ -289,6 +715,13 @@
     <Compile Include="Pages\Tutor\ProfileDropdown.ascx.designer.cs">
       <DependentUpon>ProfileDropdown.ascx</DependentUpon>
     </Compile>
+    <Compile Include="Pages\Tutor\RecentAnnouncement.ascx.cs">
+      <DependentUpon>RecentAnnouncement.ascx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Tutor\RecentAnnouncement.ascx.designer.cs">
+      <DependentUpon>RecentAnnouncement.ascx</DependentUpon>
+    </Compile>
     <Compile Include="Pages\Tutor\Setting.aspx.cs">
       <DependentUpon>Setting.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
@@ -296,12 +729,39 @@
     <Compile Include="Pages\Tutor\Setting.aspx.designer.cs">
       <DependentUpon>Setting.aspx</DependentUpon>
     </Compile>
-    <Compile Include="Pages\Tutor\Study.aspx.cs">
-      <DependentUpon>Study.aspx</DependentUpon>
+    <Compile Include="Pages\Tutor\StudentProgress.aspx.cs">
+      <DependentUpon>StudentProgress.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Tutor\StudentProgress.aspx.designer.cs">
+      <DependentUpon>StudentProgress.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Tutor\Teaching.aspx.cs">
+      <DependentUpon>Teaching.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
-    <Compile Include="Pages\Tutor\Study.aspx.designer.cs">
-      <DependentUpon>Study.aspx</DependentUpon>
+    <Compile Include="Pages\Tutor\Teaching.aspx.designer.cs">
+      <DependentUpon>Teaching.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Tutor\UploadCourseMaterial.aspx.cs">
+      <DependentUpon>UploadCourseMaterial.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Tutor\UploadCourseMaterial.aspx.designer.cs">
+      <DependentUpon>UploadCourseMaterial.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Tutor\ViewCourse.aspx.cs">
+      <DependentUpon>ViewCourse.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Tutor\ViewCourse.aspx.designer.cs">
+      <DependentUpon>ViewCourse.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Tutor\ViewQuizAttempts.aspx.cs">
+      <DependentUpon>ViewQuizAttempts.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Tutor\ViewQuizAttempts.aspx.designer.cs">
+      <DependentUpon>ViewQuizAttempts.aspx</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Site.Master.cs">
@@ -318,6 +778,7 @@
     <Compile Include="Site.Mobile.Master.designer.cs">
       <DependentUpon>Site.Mobile.Master</DependentUpon>
     </Compile>
+    <Compile Include="Startup.cs" />
     <Compile Include="ViewSwitcher.ascx.cs">
       <DependentUpon>ViewSwitcher.ascx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
@@ -326,11 +787,36 @@
       <DependentUpon>ViewSwitcher.ascx</DependentUpon>
     </Compile>
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
+    <Folder Include="Images\Courses\" />
+    <Folder Include="Uploads\CourseMaterials\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Content\bootstrap.rtl.min.css.map" />
+    <Content Include="Content\bootstrap.rtl.css.map" />
+    <Content Include="Content\bootstrap.min.css.map" />
+    <Content Include="Content\bootstrap.css.map" />
+    <Content Include="Content\bootstrap-utilities.rtl.min.css.map" />
+    <Content Include="Content\bootstrap-utilities.rtl.css.map" />
+    <Content Include="Content\bootstrap-utilities.min.css.map" />
+    <Content Include="Content\bootstrap-utilities.css.map" />
+    <Content Include="Content\bootstrap-reboot.rtl.min.css.map" />
+    <Content Include="Content\bootstrap-reboot.rtl.css.map" />
+    <Content Include="Content\bootstrap-reboot.min.css.map" />
+    <Content Include="Content\bootstrap-reboot.css.map" />
+    <Content Include="Content\bootstrap-grid.rtl.min.css.map" />
+    <Content Include="Content\bootstrap-grid.rtl.css.map" />
+    <Content Include="Content\bootstrap-grid.min.css.map" />
+    <Content Include="Content\bootstrap-grid.css.map" />
     <None Include="packages.config" />
-    <Content Include="Scripts\jquery-3.7.0.slim.min.map" />
-    <Content Include="Scripts\jquery-3.7.0.min.map" />
+    <Content Include="Scripts\bootstrap.min.js.map" />
+    <Content Include="Scripts\bootstrap.js.map" />
+    <Content Include="Scripts\bootstrap.esm.min.js.map" />
+    <Content Include="Scripts\bootstrap.esm.js.map" />
+    <Content Include="Scripts\bootstrap.bundle.min.js.map" />
+    <Content Include="Scripts\bootstrap.bundle.js.map" />
+    <Content Include="Scripts\jquery-3.7.1.slim.min.map" />
+    <Content Include="Scripts\jquery-3.7.1.min.map" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
@@ -370,10 +856,11 @@
       </FlavorProperties>
     </VisualStudio>
   </ProjectExtensions>
+  <Import Project="packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.4.1.0\build\net472\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.targets" Condition="Exists('packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.4.1.0\build\net472\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\build\net46\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\build\net46\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props'))" />
+    <Error Condition="!Exists('packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.4.1.0\build\net472\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.4.1.0\build\net472\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.targets'))" />
   </Target>
 </Project>

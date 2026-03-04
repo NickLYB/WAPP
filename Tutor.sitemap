@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<siteMap xmlns="http://schemas.microsoft.com/AspNet/SiteMap-File-1.0" >
+	<siteMapNode url="~/Pages/Tutor/Home" title="Home"  description="">
+		<siteMapNode url="~/Pages/Tutor/Teaching" title="Courses"  description="">
+			<siteMapNode url="~/Pages/Tutor/ViewCourse" title="Course Details"  description="" />
+			
+			<siteMapNode url="~/Pages/Tutor/EditCourse" title="Edit"  description="" >
+				<siteMapNode url="~/Pages/Tutor/Announcement" title="Announcement"  description="" />
+				<siteMapNode url="~/Pages/Tutor/UploadCourseMaterial" title="Upload Course Material"  description="" />
+				<siteMapNode url="~/Pages/Tutor/CreateQuiz" title="Quiz"  description="" />
+				<siteMapNode url="~/Pages/Tutor/StudentProgress" title="Student Progress"  description="" />
+				<siteMapNode url="~/Pages/Tutor/ViewQuizAttempts" title="Quiz Attempts" description="" />
+			</siteMapNode>
+		</siteMapNode>
+		<siteMapNode url="~/Pages/Tutor/AnnouncementRecord" title="Announcement Record" description=""/>
+		<siteMapNode url="~/Pages/Tutor/Chat" title="Chat Messages" description=""/>
+	</siteMapNode>
+	
+</siteMap>
