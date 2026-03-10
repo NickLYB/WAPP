@@ -41,7 +41,7 @@
                     noRecRow.id = 'clientNoRecordRow';
                     var cell = document.createElement('td');
                     cell.colSpan = "100"; 
-                    cell.className = "ec-no-records"; /* Updated to Master CSS */
+                    cell.className = "ec-no-records"; 
                     cell.innerText = "No feedbacks found matching your filters.";
                     noRecRow.appendChild(cell);
                     tbody.appendChild(noRecRow);
@@ -64,8 +64,14 @@
             bootstrap.Modal.getOrCreateInstance(document.getElementById('removeModal')).hide();
             $('.modal-backdrop').remove(); $('body').removeClass('modal-open').css('overflow', '').css('padding-right', '');
         }
+
+        function openViewModal() { bootstrap.Modal.getOrCreateInstance(document.getElementById('viewModal')).show(); }
+        function closeViewModal() {
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('viewModal')).hide();
+            $('.modal-backdrop').remove(); $('body').removeClass('modal-open').css('overflow', '').css('padding-right', '');
+        }
     </script>
-    </asp:Content>
+</asp:Content>
 
 <asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
     <asp:UpdateProgress ID="UpdateProgress1" runat="server" AssociatedUpdatePanelID="upFeedbackMgmt">
@@ -104,32 +110,28 @@
                             </div>
                         </div>
                         
-                        <div class="row g-2">
+                        <div class="row g-3">
                             <div class="col-md-3">
                                 <label class="form-label small text-muted mb-1 fw-bold">Tutor</label>
                                 <asp:DropDownList ID="ddlFilterTutor" runat="server" CssClass="form-select ec-filter-ddl w-100" AutoPostBack="true" OnSelectedIndexChanged="FilterGrid_Changed"></asp:DropDownList>
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label small text-muted mb-1 fw-bold">Resource / Course</label>
+                                <label class="form-label small text-muted mb-1 fw-bold">Course</label>
+                                <asp:DropDownList ID="ddlFilterCourse" runat="server" CssClass="form-select ec-filter-ddl w-100" AutoPostBack="true" OnSelectedIndexChanged="ddlFilterCourse_SelectedIndexChanged"></asp:DropDownList>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small text-muted mb-1 fw-bold">Resource (Lesson)</label>
                                 <asp:DropDownList ID="ddlFilterResource" runat="server" CssClass="form-select ec-filter-ddl w-100" AutoPostBack="true" OnSelectedIndexChanged="FilterGrid_Changed"></asp:DropDownList>
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label small text-muted mb-1 fw-bold">Rating</label>
                                 <asp:DropDownList ID="ddlFilterRating" runat="server" CssClass="form-select ec-filter-ddl w-100" AutoPostBack="true" OnSelectedIndexChanged="FilterGrid_Changed">
-                                    <asp:ListItem Value="All">All</asp:ListItem>
+                                    <asp:ListItem Value="All">All Ratings</asp:ListItem>
                                     <asp:ListItem Value="5">5 Stars</asp:ListItem>
                                     <asp:ListItem Value="4">4 Stars</asp:ListItem>
                                     <asp:ListItem Value="3">3 Stars</asp:ListItem>
                                     <asp:ListItem Value="2">2 Stars</asp:ListItem>
                                     <asp:ListItem Value="1">1 Star</asp:ListItem>
-                                </asp:DropDownList>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label small text-muted mb-1 fw-bold">Status</label>
-                                <asp:DropDownList ID="ddlFilterStatus" runat="server" CssClass="form-select ec-filter-ddl w-100" AutoPostBack="true" OnSelectedIndexChanged="FilterGrid_Changed">
-                                    <asp:ListItem Value="All">All</asp:ListItem>
-                                    <asp:ListItem Value="PENDING">Newest</asp:ListItem>
-                                    <asp:ListItem Value="VIEWED">Viewed</asp:ListItem>
                                 </asp:DropDownList>
                             </div>
                         </div>
@@ -143,34 +145,46 @@
                         <asp:GridView ID="gvFeedbacks" runat="server" CssClass="table table-hover ec-table-custom align-middle mb-0 border-top" 
                             AutoGenerateColumns="False" GridLines="None" DataKeyNames="Id" ShowHeaderWhenEmpty="true"
                             AllowPaging="True" PageSize="10" PagerSettings-Visible="false"
-                            OnDataBound="gvFeedbacks_DataBound">
+                            OnRowCommand="gvFeedbacks_RowCommand">
                             
                             <Columns>
                                 <asp:TemplateField><ItemTemplate><asp:CheckBox ID="chkSelect" runat="server" /></ItemTemplate></asp:TemplateField>
-                                <asp:BoundField DataField="Id" HeaderText="ID" DataFormatString="F{0:D3}" />
-                                <asp:BoundField DataField="created_at" HeaderText="Date Received" DataFormatString="{0:dd/MM/yyyy}" />
-                                <asp:TemplateField HeaderText="Tutor/Resources">
+                                
+                                <asp:TemplateField HeaderText="ID">
                                     <ItemTemplate>
-                                        <span class="fw-bold"><%# Eval("TutorName") %></span><br />
-                                        <small class="text-muted"><%# Eval("ResourceTitle") %></small>
+                                        <span class="fw-bold"><%# Eval("Id", "F{0:D3}") %></span>
+                                        <asp:Label ID="lblNewBadge" runat="server" CssClass="badge bg-danger ms-2" Visible='<%# Eval("status").ToString() == "PENDING" %>'>NEW</asp:Label>
                                     </ItemTemplate>
                                 </asp:TemplateField>
+                                
+                                <asp:BoundField DataField="created_at" HeaderText="Date Received" DataFormatString="{0:dd/MM/yyyy}" />
+                                
+                                <asp:TemplateField HeaderText="Tutor / Resources">
+                                    <ItemTemplate>
+                                        <span class="fw-bold"><%# Eval("TutorName") %></span><br />
+                                        <small class="text-muted"><%# Eval("CourseAndResource") %></small>
+                                    </ItemTemplate>
+                                </asp:TemplateField>
+                                
                                 <asp:TemplateField HeaderText="Rating">
                                     <ItemTemplate>
                                         <span class="fw-bold fs-5"><%# Eval("rating") %></span> <i class="bi bi-star-fill text-warning"></i>
                                     </ItemTemplate>
                                 </asp:TemplateField>
-                                <asp:TemplateField HeaderText="Comment & Suggestions">
+                                
+                                <asp:TemplateField HeaderText="Comment">
                                     <ItemTemplate>
                                         <span class="ec-desc-truncate" title='<%# Eval("comment") %>'>
-                                            <%# string.IsNullOrEmpty(Eval("comment").ToString()) ? "<i class='text-muted'>No comment provided</i>" : Eval("comment") %>
+                                            <%# string.IsNullOrWhiteSpace(Eval("comment").ToString()) ? "<i class='text-muted'>No comment provided</i>" : Eval("comment") %>
                                         </span>
                                     </ItemTemplate>
                                 </asp:TemplateField>
-                                <asp:TemplateField HeaderText="Status">
+                                
+                                <asp:TemplateField HeaderText="Action">
                                     <ItemTemplate>
-                                        <span class='<%# GetStatusDotClass(Eval("status")) %>'></span>
-                                        <span class="fw-bold"><%# GetStatusText(Eval("status")) %></span>
+                                        <asp:LinkButton ID="btnView" runat="server" CssClass="btn btn-sm btn-primary rounded-pill px-3 shadow-sm" CommandName="ViewFeedback" CommandArgument='<%# Eval("Id") %>'>
+                                            <i class="bi bi-eye-fill me-1"></i> View
+                                        </asp:LinkButton>
                                     </ItemTemplate>
                                 </asp:TemplateField>
                             </Columns>
@@ -204,6 +218,63 @@
                                 <div class="d-flex justify-content-center gap-3 mt-4">
                                     <asp:Button ID="btnConfirmRemove" runat="server" Text="Remove" CssClass="btn btn-danger px-4 fw-bold rounded-pill" OnClick="btnConfirmRemove_Click" />
                                     <button type="button" class="btn btn-secondary px-4 fw-bold rounded-pill" onclick="closeRemoveModal()">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="viewModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content ec-modal-content" style="border: 1px solid var(--ec-primary);">
+                            <div class="ec-modal-header bg-light border-0 pb-0">
+                                <h5 class="modal-title fw-bold text-primary text-uppercase">Feedback Details</h5>
+                                <button type="button" class="btn-close" onclick="closeViewModal()"></button>
+                            </div>
+                            <div class="ec-modal-body p-4 pt-3">
+                                
+                                <div class="row mb-3">
+                                    <div class="col-6">
+                                        <label class="fw-bold text-muted small">Feedback ID</label>
+                                        <div class="fw-bold fs-5 text-dark"><asp:Literal ID="litViewId" runat="server"></asp:Literal></div>
+                                    </div>
+                                    <div class="col-6 text-end">
+                                        <label class="fw-bold text-muted small">Date Submitted</label>
+                                        <div class="text-dark"><asp:Literal ID="litViewDate" runat="server"></asp:Literal></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3 border-top pt-3">
+                                    <label class="fw-bold text-muted small">Submitted By (Student)</label>
+                                    <div class="fw-bold text-dark"><asp:Literal ID="litViewStudent" runat="server"></asp:Literal></div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="fw-bold text-muted small">Tutor Evaluated</label>
+                                    <div class="fw-bold text-dark"><asp:Literal ID="litViewTutor" runat="server"></asp:Literal></div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="fw-bold text-muted small">Course / Resource</label>
+                                    <div class="text-dark"><asp:Literal ID="litViewResource" runat="server"></asp:Literal></div>
+                                </div>
+
+                                <div class="mb-3 border-top pt-3">
+                                    <label class="fw-bold text-muted small d-block">Rating</label>
+                                    <div class="fs-4 text-warning fw-bold d-flex align-items-center gap-2">
+                                        <asp:Literal ID="litViewRating" runat="server"></asp:Literal> <i class="bi bi-star-fill pb-1"></i>
+                                    </div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="fw-bold text-muted small">Comment & Suggestions</label>
+                                    <div class="p-3 bg-light rounded text-dark border mt-1" style="min-height: 80px;">
+                                        <asp:Literal ID="litViewComment" runat="server"></asp:Literal>
+                                    </div>
+                                </div>
+
+                                <div class="text-end">
+                                    <button type="button" class="btn btn-secondary px-4 fw-bold rounded-pill" onclick="closeViewModal()">Close</button>
                                 </div>
                             </div>
                         </div>

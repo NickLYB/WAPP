@@ -6,6 +6,10 @@
 
 <asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
     <div class="container py-5">
+        <div class="ec-section-gap mb-3">
+            <asp:SiteMapPath ID="SiteMapPath1" runat="server" SiteMapProvider="StudentMap" 
+                PathSeparator=" > " CssClass="small text-muted text-decoration-none" RenderCurrentNodeAsLink="false" />
+        </div>
         <div style="max-width: 850px; margin: 0 auto;">
             
             <div class="d-flex justify-content-between align-items-center mb-5">

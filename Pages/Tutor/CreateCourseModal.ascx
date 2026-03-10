@@ -1,4 +1,43 @@
 ﻿<%@ Control Language="C#" AutoEventWireup="true" CodeBehind="CreateCourseModal.ascx.cs" Inherits="WAPP.Pages.Tutor.CreateCourseModal" %>
+
+<script src="https://cdn.tiny.cloud/1/se4de6ff8koipe875tskvfyghjwer395r0j6o0g79t2k5ioq/tinymce/8/tinymce.min.js" referrerpolicy="origin" crossorigin="anonymous"></script>
+<script>
+    function initCreateModalEditor() {
+        if (typeof tinymce !== 'undefined') {
+            // Remove old instance to prevent duplicate editors when UpdatePanel reloads
+            tinymce.remove('#<%= description.ClientID %>'); 
+            
+            tinymce.init({
+                selector: '#<%= description.ClientID %>',
+                plugins: 'lists link charmap preview code textcolor',
+                toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline | forecolor backcolor | alignleft aligncenter alignright | bullist numlist | link code',
+                menubar: false,
+                height: 250,
+                branding: false,
+                setup: function (editor) {
+                    editor.on('change', function () {
+                        editor.save(); // Force sync so ASP.NET can read the text on submit
+                    });
+                }
+            });
+        }
+    }
+
+    // Hook into ASP.NET AJAX lifecycle to survive UpdatePanel partial postbacks
+    if (typeof Sys !== 'undefined') {
+        Sys.Application.add_load(initCreateModalEditor);
+    } else {
+        window.addEventListener('DOMContentLoaded', initCreateModalEditor);
+    }
+
+    // Prevent Bootstrap modal focus trap from breaking TinyMCE dropdown menus
+    document.addEventListener('focusin', function (e) {
+        if (e.target.closest(".tox-tinymce, .tox-tinymce-aux, .moxman-window, .tam-assetmanager-root") !== null) {
+            e.stopImmediatePropagation();
+        }
+    });
+</script>
+
 <div class="modal fade" id="createCourseModal" tabindex="-1" aria-labelledby="createCourseModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered"> <div class="modal-content">
             

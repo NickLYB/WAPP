@@ -41,7 +41,11 @@ namespace WAPP.Pages.Staff
                     }
                 }
 
-                using (SqlCommand cmdTutor = new SqlCommand("SELECT Id, ('T' + RIGHT('000'+CAST(Id AS VARCHAR), 3) + '-' + fname) as FullTutorName FROM [user] WHERE role_id = 3", conn))
+                // FIXED: SQL query now formats as "T004-John Doe"
+                using (SqlCommand cmdTutor = new SqlCommand(@"SELECT Id, 
+                                                                     ('T' + RIGHT('000'+CAST(Id AS VARCHAR), 3) + '-' + fname + ' ' + lname) as FullTutorName 
+                                                              FROM [user] 
+                                                              WHERE role_id = 3", conn))
                 {
                     using (SqlDataReader rdrTutor = cmdTutor.ExecuteReader())
                     {
@@ -67,7 +71,14 @@ namespace WAPP.Pages.Staff
 
         protected void btnSaveResource_Click(object sender, EventArgs e)
         {
-            if (!Page.IsValid) return;
+            // 1. Manual Server-Side Validation Check
+            if (string.IsNullOrWhiteSpace(txtAddLink.Text))
+            {
+                lblMessage.Visible = true;
+                lblMessage.Text = "Please provide a valid Resource Link.";
+                lblMessage.CssClass = "alert alert-danger d-block";
+                return;
+            }
 
             try
             {

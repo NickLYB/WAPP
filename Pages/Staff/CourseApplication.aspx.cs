@@ -21,8 +21,42 @@ namespace WAPP.Pages.Staff
 
             if (!IsPostBack)
             {
-                ddlFilterStatus.SelectedValue = "All";
+                LoadFilterOptions();
                 BindGrid();
+            }
+        }
+
+        private void LoadFilterOptions()
+        {
+            using (SqlConnection conn = new SqlConnection(connString))
+            {
+                string catSql = "SELECT Id, name FROM [courseType]";
+                using (SqlDataAdapter sdaCat = new SqlDataAdapter(catSql, conn))
+                {
+                    DataTable dtCat = new DataTable();
+                    sdaCat.Fill(dtCat);
+                    ddlFilterCategory.DataSource = dtCat;
+                    ddlFilterCategory.DataTextField = "name";
+                    ddlFilterCategory.DataValueField = "Id";
+                    ddlFilterCategory.DataBind();
+                }
+                ddlFilterCategory.Items.Insert(0, new ListItem("All Categories", "All"));
+
+                string tutorSql = @"SELECT DISTINCT u.Id, 
+                                           'T' + RIGHT('000' + CAST(u.Id AS VARCHAR(10)), 3) + '-' + u.fname + ' ' + u.lname AS tutor_name
+                                    FROM [user] u
+                                    INNER JOIN [course] c ON u.Id = c.tutor_id
+                                    WHERE c.status != 'PRIVATE'";
+                using (SqlDataAdapter sdaTutor = new SqlDataAdapter(tutorSql, conn))
+                {
+                    DataTable dtTutor = new DataTable();
+                    sdaTutor.Fill(dtTutor);
+                    ddlFilterTutor.DataSource = dtTutor;
+                    ddlFilterTutor.DataTextField = "tutor_name";
+                    ddlFilterTutor.DataValueField = "Id";
+                    ddlFilterTutor.DataBind();
+                }
+                ddlFilterTutor.Items.Insert(0, new ListItem("All Tutors", "All"));
             }
         }
 
@@ -31,19 +65,27 @@ namespace WAPP.Pages.Staff
             using (SqlConnection conn = new SqlConnection(connString))
             {
                 string sql = @"SELECT c.Id, c.title, c.description, c.skill_level, c.tutor_id, 
+                                      ('T' + RIGHT('000' + CAST(u.Id AS VARCHAR(10)), 3) + '-' + u.fname + ' ' + u.lname) AS tutor_name,
                                       c.created_at, c.status, ct.name AS category_name
                                FROM [course] c
                                INNER JOIN [courseType] ct ON c.course_type_id = ct.Id
-                               WHERE 1=1";
+                               INNER JOIN [user] u ON c.tutor_id = u.Id
+                               WHERE c.status != 'PRIVATE'";
 
-                string filter = ddlFilterStatus.SelectedValue;
-                if (filter != "All") sql += " AND c.status = @FilterStatus";
+                if (ddlFilterStatus.SelectedValue != "All") sql += " AND c.status = @status";
+                if (ddlFilterCategory.SelectedValue != "All") sql += " AND c.course_type_id = @catId";
+                if (ddlFilterSkill.SelectedValue != "All") sql += " AND c.skill_level = @skill";
+                if (ddlFilterTutor.SelectedValue != "All") sql += " AND c.tutor_id = @tutorId";
 
-                sql += " ORDER BY c.created_at DESC";
+                string sortOrder = ddlSortDate.SelectedValue;
+                sql += $" ORDER BY c.created_at {sortOrder}";
 
                 using (SqlCommand cmd = new SqlCommand(sql, conn))
                 {
-                    if (filter != "All") cmd.Parameters.AddWithValue("@FilterStatus", filter);
+                    if (ddlFilterStatus.SelectedValue != "All") cmd.Parameters.AddWithValue("@status", ddlFilterStatus.SelectedValue);
+                    if (ddlFilterCategory.SelectedValue != "All") cmd.Parameters.AddWithValue("@catId", ddlFilterCategory.SelectedValue);
+                    if (ddlFilterSkill.SelectedValue != "All") cmd.Parameters.AddWithValue("@skill", ddlFilterSkill.SelectedValue);
+                    if (ddlFilterTutor.SelectedValue != "All") cmd.Parameters.AddWithValue("@tutorId", ddlFilterTutor.SelectedValue);
 
                     using (SqlDataAdapter sda = new SqlDataAdapter(cmd))
                     {
@@ -51,7 +93,6 @@ namespace WAPP.Pages.Staff
                         sda.Fill(dt);
 
                         ViewState["TotalCourseAppRecords"] = dt.Rows.Count;
-
                         gvCourses.DataSource = dt;
                         gvCourses.DataBind();
                     }
@@ -60,7 +101,6 @@ namespace WAPP.Pages.Staff
             UpdatePager();
         }
 
-        // --- NEW PERMANENT PAGER LOGIC ---
         private void UpdatePager()
         {
             int totalRecords = ViewState["TotalCourseAppRecords"] != null ? Convert.ToInt32(ViewState["TotalCourseAppRecords"]) : 0;
@@ -81,11 +121,7 @@ namespace WAPP.Pages.Staff
 
         protected void btnPrev_Click(object sender, EventArgs e)
         {
-            if (gvCourses.PageIndex > 0)
-            {
-                gvCourses.PageIndex--;
-                BindGrid();
-            }
+            if (gvCourses.PageIndex > 0) { gvCourses.PageIndex--; BindGrid(); }
         }
 
         protected void btnNext_Click(object sender, EventArgs e)
@@ -93,13 +129,8 @@ namespace WAPP.Pages.Staff
             int totalRecords = ViewState["TotalCourseAppRecords"] != null ? Convert.ToInt32(ViewState["TotalCourseAppRecords"]) : 0;
             int totalPages = (int)Math.Ceiling((double)totalRecords / gvCourses.PageSize);
 
-            if (gvCourses.PageIndex < totalPages - 1)
-            {
-                gvCourses.PageIndex++;
-                BindGrid();
-            }
+            if (gvCourses.PageIndex < totalPages - 1) { gvCourses.PageIndex++; BindGrid(); }
         }
-        // ---------------------------------
 
         protected void FilterGrid_Changed(object sender, EventArgs e)
         {
@@ -108,9 +139,16 @@ namespace WAPP.Pages.Staff
             BindGrid();
         }
 
-        protected void gvCourses_DataBound(object sender, EventArgs e)
+        protected void gvCourses_DataBound(object sender, EventArgs e) { }
+
+        // THESE ARE THE METHODS THAT FIX THE CS0103 ERROR!
+        protected string GetStatusDotClass(object statusObj)
         {
-            // Empty placeholder to fulfill the asp:GridView OnDataBound property requirement
+            if (statusObj == null) return "status-dot dot-draft";
+            string status = statusObj.ToString().ToUpper();
+            if (status == "APPROVED" || status == "PUBLISHED") return "status-dot dot-active";
+            if (status == "REJECT") return "status-dot dot-archived";
+            return "status-dot dot-draft";
         }
 
         protected string GetStatusText(object statusObj)
@@ -122,25 +160,23 @@ namespace WAPP.Pages.Staff
             return "Pending";
         }
 
-        protected string GetStatusDotClass(object statusObj)
-        {
-            if (statusObj == null) return "status-dot dot-draft";
-            string status = statusObj.ToString().ToUpper();
-            if (status == "APPROVED" || status == "PUBLISHED") return "status-dot dot-active";
-            if (status == "REJECT") return "status-dot dot-archived";
-            return "status-dot dot-draft";
-        }
-
         protected void gvCourses_RowDataBound(object sender, GridViewRowEventArgs e)
         {
             if (e.Row.RowType == DataControlRowType.DataRow)
             {
                 string status = DataBinder.Eval(e.Row.DataItem, "status").ToString().ToUpper();
+
                 RadioButton rbVerify = (RadioButton)e.Row.FindControl("rbVerify");
                 RadioButton rbReject = (RadioButton)e.Row.FindControl("rbReject");
 
-                if (status == "APPROVED" || status == "PUBLISHED") rbVerify.Checked = true;
-                else if (status == "REJECT") rbReject.Checked = true;
+                if (status == "APPROVED" || status == "PUBLISHED")
+                {
+                    rbVerify.Checked = true;
+                }
+                else if (status == "REJECT")
+                {
+                    rbReject.Checked = true;
+                }
             }
         }
 
@@ -149,7 +185,7 @@ namespace WAPP.Pages.Staff
             RadioButton rb = (RadioButton)sender;
             GridViewRow row = (GridViewRow)rb.NamingContainer;
             int courseId = Convert.ToInt32(gvCourses.DataKeys[row.RowIndex].Value);
-            string courseTitle = row.Cells[2].Text; // Title is exactly at index 2
+            string courseTitle = row.Cells[2].Text;
 
             string newStatus = rb.ID == "rbVerify" ? "APPROVED" : "REJECT";
 
@@ -206,7 +242,7 @@ namespace WAPP.Pages.Staff
             if (selectedIds.Count > 0)
             {
                 litSelectedIds.Text = "[" + string.Join("], [", selectedIds) + "]";
-                ScriptManager.RegisterStartupScript(this, this.GetType(), "OpenModal", "openRemoveModal();", true);
+                ScriptManager.RegisterStartupScript(upCourseApp, upCourseApp.GetType(), "OpenModal", "openRemoveModal();", true);
             }
             else
             {
@@ -253,9 +289,9 @@ namespace WAPP.Pages.Staff
 
                     BindGrid();
                     lblMessage.Visible = true;
-                    lblMessage.Text = "Selected course application(s) removed successfully.";
+                    lblMessage.Text = "Selected course application(s) deleted permanently.";
                     lblMessage.CssClass = "alert alert-success d-block";
-                    ScriptManager.RegisterStartupScript(this, this.GetType(), "CloseModal", "closeRemoveModal();", true);
+                    ScriptManager.RegisterStartupScript(upCourseApp, upCourseApp.GetType(), "CloseModal", "closeRemoveModal();", true);
                 }
                 catch (Exception ex)
                 {

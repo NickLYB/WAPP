@@ -2,21 +2,44 @@
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
+using System.Web.UI;
 using System.Web.UI.WebControls;
 
-namespace WAPP.Pages.Tutor
+namespace WAPP.Pages.Shared
 {
     public partial class Chat : System.Web.UI.Page
     {
-        public int LoggedInUserId
+        // --- NEW: DYNAMIC MASTER PAGE LOGIC ---
+        protected void Page_PreInit(object sender, EventArgs e)
         {
-            get { return Session["UserId"] != null ? Convert.ToInt32(Session["UserId"]) : 0; }
+            if (Session["role_id"] != null)
+            {
+                int roleId = Convert.ToInt32(Session["role_id"]);
+                switch (roleId)
+                {
+                    case 1: // Admin
+                        this.MasterPageFile = "~/Masters/Admin.Master";
+                        break;
+                    case 3: // Tutor
+                        this.MasterPageFile = "~/Masters/Tutor.Master";
+                        break;
+                    case 4: // Student
+                        this.MasterPageFile = "~/Masters/Student.Master";
+                        break;
+                    default:
+                        this.MasterPageFile = "~/Masters/Guest.Master";
+                        break;
+                }
+            }
         }
+
+        public int LoggedInUserId => Session["UserId"] != null ? Convert.ToInt32(Session["UserId"]) : 0;
+        public int UserRoleId => Session["role_id"] != null ? Convert.ToInt32(Session["role_id"]) : 0;
 
         public int ActiveContactId
         {
-            get { return ViewState["ActiveContactId"] != null ? Convert.ToInt32(ViewState["ActiveContactId"]) : 0; }
-            set { ViewState["ActiveContactId"] = value; }
+            get => ViewState["ActiveContactId"] != null ? Convert.ToInt32(ViewState["ActiveContactId"]) : 0;
+            set => ViewState["ActiveContactId"] = value;
         }
 
         protected void Page_Load(object sender, EventArgs e)
@@ -24,16 +47,22 @@ namespace WAPP.Pages.Tutor
             if (LoggedInUserId == 0)
             {
                 Response.Redirect("~/Pages/Guest/Home.aspx");
+                return;
             }
 
             if (!IsPostBack)
             {
-                LoadContacts(""); // Blank search term loads history by default
+                // Dynamic SiteMapProvider Setup
+                if (UserRoleId == 3) SiteMapPath1.SiteMapProvider = "TutorMap";
+                else if (UserRoleId == 4) SiteMapPath1.SiteMapProvider = "StudentMap";
+                else SiteMapPath1.SiteMapProvider = "AdminMap"; // Add Admin map if exists
+
+                LoadContacts("");
                 hfMyId.Value = LoggedInUserId.ToString();
             }
         }
 
-        // Triggered when the Tutor types a name and presses Enter
+        // Triggered when the user types a name
         protected void txtSearch_TextChanged(object sender, EventArgs e)
         {
             LoadContacts(txtSearch.Text.Trim());
@@ -47,32 +76,44 @@ namespace WAPP.Pages.Tutor
                 string query = "";
                 SqlCommand cmd = new SqlCommand();
                 cmd.Connection = con;
+                cmd.Parameters.AddWithValue("@Me", LoggedInUserId);
 
                 if (string.IsNullOrEmpty(searchTerm))
                 {
-                    // DEFAULT: Only load users you already have a conversation with
+                    // DEFAULT: Load users you have existing conversations with
                     query = @"
-                        SELECT Id AS UserId, (fname + ' ' + lname) AS UserName 
-                        FROM [user] 
-                        WHERE Id IN (
+                        SELECT 
+                            u.Id AS UserId, 
+                            (u.fname + ' ' + u.lname) AS UserName,
+                            (SELECT COUNT(Id) FROM chatMessage WHERE sender_id = u.Id AND receiver_id = @Me AND is_read = 0) AS UnreadCount
+                        FROM [user] u 
+                        WHERE u.Id IN (
                             SELECT sender_id FROM chatMessage WHERE receiver_id = @Me
                             UNION 
                             SELECT receiver_id FROM chatMessage WHERE sender_id = @Me
-                        )";
-
-                    cmd.Parameters.AddWithValue("@Me", LoggedInUserId);
+                        )
+                        ORDER BY UnreadCount DESC, UserName ASC";
                 }
                 else
                 {
-                    // SEARCH: Load any user matching the search term
+                    // SEARCH Logic with Role Boundaries
+                    string roleFilter = "";
+                    if (UserRoleId == 4) // Student searching
+                        roleFilter = " AND u.role_id = 3"; // Can only find Tutors
+                    else if (UserRoleId == 3) // Tutor searching
+                        roleFilter = " AND u.role_id = 4"; // Can only find Students
+
                     query = @"
-                        SELECT Id AS UserId, (fname + ' ' + lname) AS UserName 
-                        FROM [user] 
-                        WHERE (fname LIKE @Search OR lname LIKE @Search) 
-                        AND Id != @Me";
+                        SELECT 
+                            u.Id AS UserId, 
+                            (u.fname + ' ' + u.lname) AS UserName,
+                            0 AS UnreadCount
+                        FROM [user] u 
+                        WHERE (u.fname LIKE @Search OR u.lname LIKE @Search) 
+                        AND u.Id != @Me " + roleFilter + @"
+                        ORDER BY UserName ASC";
 
                     cmd.Parameters.AddWithValue("@Search", "%" + searchTerm + "%");
-                    cmd.Parameters.AddWithValue("@Me", LoggedInUserId);
                 }
 
                 cmd.CommandText = query;
@@ -111,7 +152,7 @@ namespace WAPP.Pages.Tutor
             }
         }
 
-        private void LoadChatHistory()
+        private void MarkMessagesAsRead()
         {
             if (ActiveContactId == 0) return;
 
@@ -119,7 +160,35 @@ namespace WAPP.Pages.Tutor
             using (SqlConnection con = new SqlConnection(cs))
             {
                 string query = @"
-                    SELECT m.sender_id, m.message_text, m.created_at, u.fname AS SenderName
+                    UPDATE chatMessage 
+                    SET is_read = 1 
+                    WHERE sender_id = @Them AND receiver_id = @Me AND is_read = 0";
+
+                using (SqlCommand cmd = new SqlCommand(query, con))
+                {
+                    cmd.Parameters.AddWithValue("@Them", ActiveContactId);
+                    cmd.Parameters.AddWithValue("@Me", LoggedInUserId);
+
+                    con.Open();
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        private void LoadChatHistory()
+        {
+            if (ActiveContactId == 0) return;
+
+            MarkMessagesAsRead();
+
+            LoadContacts(txtSearch.Text.Trim());
+            upContacts.Update();
+
+            string cs = ConfigurationManager.ConnectionStrings["MyDbConn"].ConnectionString;
+            using (SqlConnection con = new SqlConnection(cs))
+            {
+                string query = @"
+                    SELECT m.sender_id, m.message_text, m.created_at, m.is_read, u.fname AS SenderName
                     FROM chatMessage m
                     INNER JOIN [user] u ON m.sender_id = u.Id
                     WHERE (m.sender_id = @Me AND m.receiver_id = @Them)
@@ -163,7 +232,7 @@ namespace WAPP.Pages.Tutor
             using (SqlConnection con = new SqlConnection(cs))
             {
                 string query = @"INSERT INTO chatMessage (sender_id, receiver_id, message_text) 
-                                 VALUES (@SenderId, @ReceiverId, @MessageText)";
+                         VALUES (@SenderId, @ReceiverId, @MessageText)";
 
                 using (SqlCommand cmd = new SqlCommand(query, con))
                 {
@@ -181,29 +250,27 @@ namespace WAPP.Pages.Tutor
 
             txtMessage.Text = "";
 
-            // If this was the very first message sent to this user, we should refresh the sidebar
-            // so they permanently appear in the history list, then update the panel.
             LoadContacts(txtSearch.Text.Trim());
             upContacts.Update();
-
             LoadChatHistory();
+
+            ScriptManager.RegisterStartupScript(btnSend, btnSend.GetType(), "ClearMyChatBox", "setTimeout(function() { document.getElementById('txtMessage').value = ''; }, 0);", true);
         }
 
         protected void btnRefreshChat_Click(object sender, EventArgs e)
         {
             LoadChatHistory();
+        }
 
-            // Refresh sidebar in case a new student messaged us
+        protected void btnRefreshSidebar_Click(object sender, EventArgs e)
+        {
             LoadContacts(txtSearch.Text.Trim());
             upContacts.Update();
         }
 
         protected void btnSearchTrigger_Click(object sender, EventArgs e)
         {
-            // Search the database
             LoadContacts(txtSearch.Text.Trim());
-
-            // Only refresh the sidebar list, keeping the user's cursor safely in the search box
             upContacts.Update();
         }
     }

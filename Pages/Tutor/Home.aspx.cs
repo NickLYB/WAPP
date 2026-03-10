@@ -7,6 +7,7 @@ using System.Linq;
 using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
+using WAPP.Pages.Student;
 
 namespace WAPP.Pages.Tutor
 {
@@ -24,9 +25,13 @@ namespace WAPP.Pages.Tutor
                 lblTutorName.Text = Session["UserName"].ToString();
                 int tutorId = Convert.ToInt32(Session["UserId"]);
 
+                hfMyId.Value = tutorId.ToString();
+
                 CheckTutorStatus(tutorId);
+                LoadNotifications(tutorId);
                 LoadTeachingOverview();
                 LoadRecentAnnouncements();
+                LoadRecentUnreadMessages(tutorId);
 
                 // NEW: Check if they were redirected here from the Teaching dashboard
                 if (!IsPostBack && Request.QueryString["err"] == "unverified")
@@ -92,7 +97,71 @@ namespace WAPP.Pages.Tutor
                     break;
             }
         }
+        private void LoadNotifications(int userId)
+        {
+            using (SqlConnection conn = new SqlConnection(cs))
+            {
+                // Updated query to use a CASE statement for the title
+                string query = @"
+                SELECT 
+                    CASE 
+                        WHEN n.appointment_id IS NOT NULL THEN 'Appointment'
+                        WHEN n.announcement_id IS NOT NULL THEN 'Announcement'
+                        ELSE 'System Alert'
+                    END AS title, 
+                    COALESCE(a.message, n.content) AS message, 
+                    n.created_at, 
+                    n.Id AS notification_id
+                FROM notification n
+                LEFT JOIN announcement a ON n.announcement_id = a.Id
+                WHERE n.user_id = @UserId AND n.status = 'UNREAD'
+                ORDER BY n.created_at DESC";
 
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue("@UserId", userId);
+                    SqlDataAdapter da = new SqlDataAdapter(cmd);
+                    DataTable dt = new DataTable();
+
+                    conn.Open();
+                    da.Fill(dt);
+                    conn.Close();
+
+                    // 1. Update Notification Bubble Count
+                    int unreadCount = dt.Rows.Count;
+                    if (unreadCount > 0)
+                    {
+                        lblNotificationCount.Text = unreadCount > 99 ? "99+" : unreadCount.ToString();
+                        lblNotificationCount.Visible = true;
+                    }
+                    else
+                    {
+                        lblNotificationCount.Visible = false; // Hide bubble if 0
+                    }
+
+                    // 2. Bind the Repeater
+                    if (dt.Rows.Count > 0)
+                    {
+                        // Bind only top 5 if you don't want the card to get too long
+                        DataTable top5 = dt.Clone();
+                        for (int i = 0; i < Math.Min(5, dt.Rows.Count); i++)
+                        {
+                            top5.ImportRow(dt.Rows[i]);
+                        }
+
+                        rptNotifications.DataSource = top5;
+                        rptNotifications.DataBind();
+                        lblNoNotifications.Visible = false;
+                    }
+                    else
+                    {
+                        rptNotifications.DataSource = null;
+                        rptNotifications.DataBind();
+                        lblNoNotifications.Visible = true;
+                    }
+                }
+            }
+        }
         private void DisableCourseButton()
         {
             lnkCreateCourse.Enabled = false;
@@ -149,6 +218,19 @@ namespace WAPP.Pages.Tutor
                     lblTotalResources.Text = result != DBNull.Value ? result.ToString() : "0";
                 }
             } // Connection for query 2 is closed and returned to the pool here
+
+            // 3. Get Pending Appointments Count
+            using (SqlConnection con = new SqlConnection(cs))
+            {
+                string apptQuery = "SELECT COUNT(Id) FROM appointment WHERE tutor_id = @TutorId AND status = 'PENDING'";
+                using (SqlCommand cmd = new SqlCommand(apptQuery, con))
+                {
+                    cmd.Parameters.AddWithValue("@TutorId", tutorId);
+                    con.Open();
+                    object result = cmd.ExecuteScalar();
+                    lblPendingAppts.Text = result != DBNull.Value ? result.ToString() : "0";
+                }
+            } // Connection for query 3 is closed and returned to the pool here
         }
 
         private void LoadRecentAnnouncements()
@@ -210,6 +292,68 @@ namespace WAPP.Pages.Tutor
                 return msg.Substring(0, maxLength) + "...";
             }
             return msg;
+        }
+
+        private void LoadRecentUnreadMessages(int userId)
+        {
+            using (SqlConnection conn = new SqlConnection(cs))
+            {
+                // This query gets the top 4 students who have sent unread messages.
+                // It counts how many unread messages they sent and grabs the text of their latest one.
+                string query = @"
+            SELECT TOP 4
+                u.Id AS SenderId,
+                (u.fname + ' ' + u.lname) AS SenderName,
+                COUNT(m.Id) AS UnreadCount,
+                MAX(m.created_at) AS LastMessageTime,
+                (
+                    SELECT TOP 1 message_text 
+                    FROM chatMessage 
+                    WHERE sender_id = u.Id AND receiver_id = @UserId AND is_read = 0 
+                    ORDER BY created_at DESC
+                ) AS LastMessage
+            FROM chatMessage m
+            INNER JOIN [user] u ON m.sender_id = u.Id
+            WHERE m.receiver_id = @UserId AND m.is_read = 0
+            GROUP BY u.Id, u.fname, u.lname
+            ORDER BY LastMessageTime DESC";
+
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue("@UserId", userId);
+                    SqlDataAdapter da = new SqlDataAdapter(cmd);
+                    DataTable dt = new DataTable();
+
+                    conn.Open();
+                    da.Fill(dt);
+                    conn.Close();
+
+                    if (dt.Rows.Count > 0)
+                    {
+                        rptUnreadMessages.DataSource = dt;
+                        rptUnreadMessages.DataBind();
+                        rptUnreadMessages.Visible = true;
+                        lblNoUnreadMessages.Visible = false;
+                    }
+                    else
+                    {
+                        rptUnreadMessages.Visible = false;
+                        lblNoUnreadMessages.Visible = true;
+                    }
+                }
+            }
+        }
+        protected void btnSignalRUpdate_Click(object sender, EventArgs e)
+        {
+            int tutorId = Convert.ToInt32(Session["UserId"]);
+
+            // Refresh the data
+            LoadNotifications(tutorId);
+            LoadRecentUnreadMessages(tutorId);
+
+            // Tell the UpdatePanels to push the new HTML to the browser
+            upNotifications.Update();
+            upRecentMessages.Update();
         }
     }
 }

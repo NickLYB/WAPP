@@ -24,23 +24,23 @@
     </style>
 
     <script>
-        // Check local storage for theme on page load
         document.addEventListener("DOMContentLoaded", function () {
             const toggle = document.getElementById("themeToggle");
+
+            // Check current theme on load to set the switch visual position
             if (localStorage.getItem("theme") === "dark") {
-                document.body.classList.add("dark-mode");
                 toggle.checked = true;
             }
 
-            // Listen for toggle switch
+            // Listen for the switch click
             toggle.addEventListener("change", function () {
                 if (this.checked) {
-                    document.body.classList.add("dark-mode");
                     localStorage.setItem("theme", "dark");
                 } else {
-                    document.body.classList.remove("dark-mode");
                     localStorage.setItem("theme", "light");
                 }
+                // INSTANTLY REFRESH THE PAGE TO APPLY MOOD
+                window.location.reload();
             });
         });
     </script>

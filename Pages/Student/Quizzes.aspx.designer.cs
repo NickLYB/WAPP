@@ -42,6 +42,15 @@ namespace WAPP.Pages.Student
         protected global::System.Web.UI.WebControls.Repeater rptQuestions;
 
         /// <summary>
+        /// btnCancelQuiz control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Button btnCancelQuiz;
+
+        /// <summary>
         /// btnSubmitQuiz control.
         /// </summary>
         /// <remarks>

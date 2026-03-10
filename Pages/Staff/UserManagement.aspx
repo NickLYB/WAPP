@@ -170,32 +170,64 @@
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
                             <div class="modal-body ec-modal-body">
-                                <asp:ValidationSummary ID="valSummaryEdit" runat="server" ValidationGroup="EditUser" CssClass="alert alert-danger" />
                                 <asp:HiddenField ID="hfEditUserId" runat="server" />
                                 
-                                <div class="mb-3"><label class="fw-bold small text-muted">User ID</label><asp:TextBox ID="txtEditID" runat="server" CssClass="form-control bg-light" ReadOnly="true"></asp:TextBox></div>
+                                <div class="mb-3">
+                                    <label class="fw-bold small text-muted">User ID</label>
+                                    <asp:TextBox ID="txtEditID" runat="server" CssClass="form-control bg-light" ReadOnly="true"></asp:TextBox>
+                                </div>
                                 
                                 <div class="row">
-                                    <div class="col-md-6 mb-3"><label class="fw-bold small text-muted">First Name</label><asp:TextBox ID="txtEditFirstName" runat="server" CssClass="form-control"></asp:TextBox><asp:RequiredFieldValidator ID="rfvEditFN" runat="server" ControlToValidate="txtEditFirstName" ErrorMessage="First Name required" ValidationGroup="EditUser" Display="None" /></div>
-                                    <div class="col-md-6 mb-3"><label class="fw-bold small text-muted">Last Name</label><asp:TextBox ID="txtEditLastName" runat="server" CssClass="form-control"></asp:TextBox><asp:RequiredFieldValidator ID="rfvEditLN" runat="server" ControlToValidate="txtEditLastName" ErrorMessage="Last Name required" ValidationGroup="EditUser" Display="None" /></div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="fw-bold small text-muted">First Name</label>
+                                        <asp:TextBox ID="txtEditFirstName" runat="server" CssClass="form-control" required="required"></asp:TextBox>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="fw-bold small text-muted">Last Name</label>
+                                        <asp:TextBox ID="txtEditLastName" runat="server" CssClass="form-control" required="required"></asp:TextBox>
+                                    </div>
                                 </div>
 
-                                <div class="mb-3"><label class="fw-bold small text-muted">Date of Birth</label><asp:TextBox ID="txtEditDOB" runat="server" CssClass="form-control" TextMode="Date"></asp:TextBox><asp:RequiredFieldValidator ID="rfvEditDOB" runat="server" ControlToValidate="txtEditDOB" ErrorMessage="DOB required" ValidationGroup="EditUser" Display="None" /></div>
+                                <div class="mb-3">
+                                    <label class="fw-bold small text-muted">Date of Birth</label>
+                                    <asp:TextBox ID="txtEditDOB" runat="server" CssClass="form-control" TextMode="Date" required="required"></asp:TextBox>
+                                </div>
                                 
-                                <div class="mb-3"><label class="fw-bold small text-muted">Phone Number</label><asp:TextBox ID="txtEditPhone" runat="server" CssClass="form-control" Placeholder="01x-xxxxxxx"></asp:TextBox><asp:RequiredFieldValidator ID="rfvEditPhone" runat="server" ControlToValidate="txtEditPhone" ErrorMessage="Phone required" ValidationGroup="EditUser" Display="None" /><asp:RegularExpressionValidator ID="revEditPhone" runat="server" ControlToValidate="txtEditPhone" ValidationExpression="^01[0-9]-[0-9]{7,8}$" ErrorMessage="Invalid Format" CssClass="text-danger small" Display="Dynamic" ValidationGroup="EditUser" /></div>
+                                <div class="mb-3">
+                                    <label class="fw-bold small text-muted">Phone Number</label>
+                                    <asp:TextBox ID="txtEditPhone" runat="server" CssClass="form-control" Placeholder="01x-xxxxxxx" required="required" pattern="^01[0-9]-[0-9]{7,8}$" title="Invalid Format (e.g. 012-3456789)"></asp:TextBox>
+                                </div>
                                 
-                                <div class="mb-3"><label class="fw-bold small text-muted">Email</label><asp:TextBox ID="txtEditEmail" runat="server" CssClass="form-control" TextMode="Email"></asp:TextBox><asp:RequiredFieldValidator ID="rfvEditEmail" runat="server" ControlToValidate="txtEditEmail" ErrorMessage="Email required" ValidationGroup="EditUser" Display="None" /></div>
+                                <div class="mb-3">
+                                    <label class="fw-bold small text-muted">Email</label>
+                                    <asp:TextBox ID="txtEditEmail" runat="server" CssClass="form-control" TextMode="Email" required="required"></asp:TextBox>
+                                </div>
                                 
-                                <div class="mb-3"><label class="fw-bold small text-muted">Password</label><asp:TextBox ID="txtEditPass" runat="server" CssClass="form-control"></asp:TextBox><asp:RequiredFieldValidator ID="rfvEditPass" runat="server" ControlToValidate="txtEditPass" ErrorMessage="Password required" ValidationGroup="EditUser" Display="None" /></div>
+                                <div class="mb-3">
+                                    <label class="fw-bold small text-muted">Password</label>
+                                    <asp:TextBox ID="txtEditPass" runat="server" CssClass="form-control" required="required"></asp:TextBox>
+                                </div>
                                 
                                 <div class="row">
-                                    <div class="col-md-6 mb-3"><label class="fw-bold small text-muted">Role</label><asp:DropDownList ID="ddlEditRole" runat="server" CssClass="form-select bg-light" Enabled="false"><asp:ListItem Value="4">Student</asp:ListItem><asp:ListItem Value="3">Tutor</asp:ListItem></asp:DropDownList></div>
-                                    <div class="col-md-6 mb-3"><label class="fw-bold small text-muted">Status</label><asp:DropDownList ID="ddlEditStatus" runat="server" CssClass="form-select"><asp:ListItem Value="Active">Active</asp:ListItem><asp:ListItem Value="Locked">Locked</asp:ListItem></asp:DropDownList></div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="fw-bold small text-muted">Role</label>
+                                        <asp:DropDownList ID="ddlEditRole" runat="server" CssClass="form-select bg-light" Enabled="false">
+                                            <asp:ListItem Value="4">Student</asp:ListItem>
+                                            <asp:ListItem Value="3">Tutor</asp:ListItem>
+                                        </asp:DropDownList>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="fw-bold small text-muted">Status</label>
+                                        <asp:DropDownList ID="ddlEditStatus" runat="server" CssClass="form-select">
+                                            <asp:ListItem Value="Active">Active</asp:ListItem>
+                                            <asp:ListItem Value="Locked">Locked</asp:ListItem>
+                                        </asp:DropDownList>
+                                    </div>
                                 </div>
                             </div>
                             <div class="modal-footer ec-modal-footer">
                                 <button type="button" class="btn btn-light fw-bold rounded-pill px-4" onclick="closeEditModal()">Cancel</button>
-                                <asp:Button ID="btnUpdateUser" runat="server" Text="Save Changes" CssClass="ec-btn-primary" OnClick="btnUpdateUser_Click" ValidationGroup="EditUser" />
+                                <asp:Button ID="btnUpdateUser" runat="server" Text="Save Changes" CssClass="ec-btn-primary" OnClick="btnUpdateUser_Click" />
                             </div>
                         </div>
                     </div>
@@ -209,29 +241,58 @@
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
                             <div class="modal-body ec-modal-body">
-                                <asp:ValidationSummary ID="valSummary" runat="server" ValidationGroup="AddUser" CssClass="alert alert-danger" />
                                 
                                 <div class="row">
-                                    <div class="col-md-6 mb-3"><label class="fw-bold small text-muted">First Name</label><asp:TextBox ID="txtFirstName" runat="server" CssClass="form-control"></asp:TextBox><asp:RequiredFieldValidator ID="rfv1" runat="server" ControlToValidate="txtFirstName" ErrorMessage="Required" ValidationGroup="AddUser" Display="None" /></div>
-                                    <div class="col-md-6 mb-3"><label class="fw-bold small text-muted">Last Name</label><asp:TextBox ID="txtLastName" runat="server" CssClass="form-control"></asp:TextBox><asp:RequiredFieldValidator ID="rfv2" runat="server" ControlToValidate="txtLastName" ErrorMessage="Required" ValidationGroup="AddUser" Display="None" /></div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="fw-bold small text-muted">First Name</label>
+                                        <asp:TextBox ID="txtFirstName" runat="server" CssClass="form-control" required="required"></asp:TextBox>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="fw-bold small text-muted">Last Name</label>
+                                        <asp:TextBox ID="txtLastName" runat="server" CssClass="form-control" required="required"></asp:TextBox>
+                                    </div>
                                 </div>
 
-                                <div class="mb-3"><label class="fw-bold small text-muted">Date of Birth</label><asp:TextBox ID="txtDOB" runat="server" CssClass="form-control" TextMode="Date"></asp:TextBox><asp:RequiredFieldValidator ID="rfv3" runat="server" ControlToValidate="txtDOB" ErrorMessage="Required" ValidationGroup="AddUser" Display="None" /></div>
+                                <div class="mb-3">
+                                    <label class="fw-bold small text-muted">Date of Birth</label>
+                                    <asp:TextBox ID="txtDOB" runat="server" CssClass="form-control" TextMode="Date" required="required"></asp:TextBox>
+                                </div>
                                 
-                                <div class="mb-3"><label class="fw-bold small text-muted">Phone Number</label><asp:TextBox ID="txtPhone" runat="server" CssClass="form-control" Placeholder="01x-xxxxxxx"></asp:TextBox><asp:RequiredFieldValidator ID="rfv4" runat="server" ControlToValidate="txtPhone" ErrorMessage="Required" ValidationGroup="AddUser" Display="None" /><asp:RegularExpressionValidator ID="revPhone" runat="server" ControlToValidate="txtPhone" ValidationExpression="^01[0-9]-[0-9]{7,8}$" ErrorMessage="Invalid Format" CssClass="text-danger small" Display="Dynamic" ValidationGroup="AddUser" /></div>
+                                <div class="mb-3">
+                                    <label class="fw-bold small text-muted">Phone Number</label>
+                                    <asp:TextBox ID="txtPhone" runat="server" CssClass="form-control" Placeholder="01x-xxxxxxx" required="required" pattern="^01[0-9]-[0-9]{7,8}$" title="Invalid Format (e.g. 012-3456789)"></asp:TextBox>
+                                </div>
                                 
-                                <div class="mb-3"><label class="fw-bold small text-muted">Email</label><asp:TextBox ID="txtEmail" runat="server" CssClass="form-control" TextMode="Email"></asp:TextBox><asp:RequiredFieldValidator ID="rfv5" runat="server" ControlToValidate="txtEmail" ErrorMessage="Required" ValidationGroup="AddUser" Display="None" /></div>
+                                <div class="mb-3">
+                                    <label class="fw-bold small text-muted">Email</label>
+                                    <asp:TextBox ID="txtEmail" runat="server" CssClass="form-control" TextMode="Email" required="required"></asp:TextBox>
+                                </div>
                                 
-                                <div class="mb-3"><label class="fw-bold small text-muted">Password</label><asp:TextBox ID="txtPass" runat="server" CssClass="form-control"></asp:TextBox><asp:RequiredFieldValidator ID="rfv6" runat="server" ControlToValidate="txtPass" ErrorMessage="Required" ValidationGroup="AddUser" Display="None" /></div>
+                                <div class="mb-3">
+                                    <label class="fw-bold small text-muted">Password</label>
+                                    <asp:TextBox ID="txtPass" runat="server" CssClass="form-control" required="required"></asp:TextBox>
+                                </div>
                                 
                                 <div class="row">
-                                    <div class="col-md-6 mb-3"><label class="fw-bold small text-muted">Role</label><asp:DropDownList ID="ddlRole" runat="server" CssClass="form-select"><asp:ListItem Value="4" Selected="True">Student</asp:ListItem><asp:ListItem Value="3">Tutor</asp:ListItem></asp:DropDownList></div>
-                                    <div class="col-md-6 mb-3"><label class="fw-bold small text-muted">Status</label><asp:DropDownList ID="ddlStatus" runat="server" CssClass="form-select"><asp:ListItem Value="Active" Selected="True">Active</asp:ListItem><asp:ListItem Value="Locked">Locked</asp:ListItem></asp:DropDownList></div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="fw-bold small text-muted">Role</label>
+                                        <asp:DropDownList ID="ddlRole" runat="server" CssClass="form-select">
+                                            <asp:ListItem Value="4" Selected="True">Student</asp:ListItem>
+                                            <asp:ListItem Value="3">Tutor</asp:ListItem>
+                                        </asp:DropDownList>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="fw-bold small text-muted">Status</label>
+                                        <asp:DropDownList ID="ddlStatus" runat="server" CssClass="form-select">
+                                            <asp:ListItem Value="Active" Selected="True">Active</asp:ListItem>
+                                            <asp:ListItem Value="Locked">Locked</asp:ListItem>
+                                        </asp:DropDownList>
+                                    </div>
                                 </div>
                             </div>
                             <div class="modal-footer ec-modal-footer">
                                 <button type="button" class="btn btn-light fw-bold rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
-                                <asp:Button ID="btnSaveUser" runat="server" Text="Save User" CssClass="ec-btn-primary" OnClick="btnSaveUser_Click" ValidationGroup="AddUser" />
+                                <asp:Button ID="btnSaveUser" runat="server" Text="Save User" CssClass="ec-btn-primary" OnClick="btnSaveUser_Click" />
                             </div>
                         </div>
                     </div>

@@ -21,50 +21,86 @@ namespace WAPP.Pages.Staff
 
             if (!IsPostBack)
             {
-                BindDropdowns();
+                BindInitialDropdowns();
+                BindResourceDropdown();
                 BindGrid();
             }
         }
 
-        private void BindDropdowns()
+        private void BindInitialDropdowns()
         {
             using (SqlConnection conn = new SqlConnection(connString))
             {
-                conn.Open();
-
-                using (SqlCommand cmdTutor = new SqlCommand(@"SELECT DISTINCT u.Id, ('T' + RIGHT('000'+CAST(u.Id AS VARCHAR), 3) + '-' + u.fname) as FullTutorName 
-                                                              FROM [feedback] f 
-                                                              INNER JOIN [user] u ON f.tutor_id = u.Id", conn))
+                using (SqlDataAdapter sdaTutor = new SqlDataAdapter(@"SELECT DISTINCT u.Id, ('T' + RIGHT('000'+CAST(u.Id AS VARCHAR), 3) + '-' + u.fname) as FullTutorName 
+                                                                      FROM [feedback] f 
+                                                                      INNER JOIN [user] u ON f.tutor_id = u.Id", conn))
                 {
-                    using (SqlDataReader rdrTutor = cmdTutor.ExecuteReader())
-                    {
-                        DataTable dtTutor = new DataTable();
-                        dtTutor.Load(rdrTutor);
-                        ddlFilterTutor.DataSource = dtTutor;
-                        ddlFilterTutor.DataTextField = "FullTutorName";
-                        ddlFilterTutor.DataValueField = "Id";
-                        ddlFilterTutor.DataBind();
-                        ddlFilterTutor.Items.Insert(0, new ListItem("All", "All"));
-                    }
+                    DataTable dtTutor = new DataTable();
+                    sdaTutor.Fill(dtTutor);
+                    ddlFilterTutor.DataSource = dtTutor;
+                    ddlFilterTutor.DataTextField = "FullTutorName";
+                    ddlFilterTutor.DataValueField = "Id";
+                    ddlFilterTutor.DataBind();
+                    ddlFilterTutor.Items.Insert(0, new ListItem("All Tutors", "All"));
                 }
 
-                using (SqlCommand cmdResource = new SqlCommand(@"SELECT DISTINCT lr.Id, c.title 
-                                                                 FROM [feedback] f 
-                                                                 INNER JOIN [learningResource] lr ON f.resource_id = lr.Id
-                                                                 INNER JOIN [course] c ON lr.course_id = c.Id", conn))
+                using (SqlDataAdapter sdaCourse = new SqlDataAdapter(@"SELECT DISTINCT c.Id, c.title 
+                                                                       FROM [feedback] f 
+                                                                       INNER JOIN [learningResource] lr ON f.resource_id = lr.Id
+                                                                       INNER JOIN [course] c ON lr.course_id = c.Id", conn))
                 {
-                    using (SqlDataReader rdrResource = cmdResource.ExecuteReader())
+                    DataTable dtCourse = new DataTable();
+                    sdaCourse.Fill(dtCourse);
+                    ddlFilterCourse.DataSource = dtCourse;
+                    ddlFilterCourse.DataTextField = "title";
+                    ddlFilterCourse.DataValueField = "Id";
+                    ddlFilterCourse.DataBind();
+                    ddlFilterCourse.Items.Insert(0, new ListItem("All Courses", "All"));
+                }
+            }
+        }
+
+        private void BindResourceDropdown()
+        {
+            string selectedCourseId = ddlFilterCourse.SelectedValue;
+
+            using (SqlConnection conn = new SqlConnection(connString))
+            {
+                string sql = @"SELECT DISTINCT lr.Id, ISNULL(lr.title, 'Resource ID ' + CAST(lr.Id AS VARCHAR)) AS resource_title
+                               FROM [feedback] f 
+                               INNER JOIN [learningResource] lr ON f.resource_id = lr.Id
+                               WHERE 1=1";
+
+                if (selectedCourseId != "All")
+                {
+                    sql += " AND lr.course_id = @CourseId";
+                }
+
+                using (SqlCommand cmd = new SqlCommand(sql, conn))
+                {
+                    if (selectedCourseId != "All")
                     {
-                        DataTable dtResource = new DataTable();
-                        dtResource.Load(rdrResource);
-                        ddlFilterResource.DataSource = dtResource;
-                        ddlFilterResource.DataTextField = "title";
+                        cmd.Parameters.AddWithValue("@CourseId", Convert.ToInt32(selectedCourseId));
+                    }
+
+                    using (SqlDataAdapter sda = new SqlDataAdapter(cmd))
+                    {
+                        DataTable dt = new DataTable();
+                        sda.Fill(dt);
+                        ddlFilterResource.DataSource = dt;
+                        ddlFilterResource.DataTextField = "resource_title";
                         ddlFilterResource.DataValueField = "Id";
                         ddlFilterResource.DataBind();
-                        ddlFilterResource.Items.Insert(0, new ListItem("All", "All"));
+                        ddlFilterResource.Items.Insert(0, new ListItem("All Resources", "All"));
                     }
                 }
             }
+        }
+
+        protected void ddlFilterCourse_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            BindResourceDropdown();
+            FilterGrid_Changed(sender, e);
         }
 
         private void BindGrid()
@@ -73,7 +109,7 @@ namespace WAPP.Pages.Staff
             {
                 string sql = @"SELECT f.Id, f.created_at, f.rating, f.comment, f.status, 
                                       ('T' + RIGHT('000'+CAST(u.Id AS VARCHAR), 3) + '-' + u.fname) AS TutorName,
-                                      c.title AS ResourceTitle
+                                      (c.title + ' - ' + ISNULL(lr.title, 'Unnamed Resource')) AS CourseAndResource
                                FROM [feedback] f
                                INNER JOIN [user] u ON f.tutor_id = u.Id
                                INNER JOIN [learningResource] lr ON f.resource_id = lr.Id
@@ -81,17 +117,15 @@ namespace WAPP.Pages.Staff
                                WHERE 1=1";
 
                 string tutor = ddlFilterTutor.SelectedValue;
+                string course = ddlFilterCourse.SelectedValue;
                 string resource = ddlFilterResource.SelectedValue;
                 string rating = ddlFilterRating.SelectedValue;
-                string status = ddlFilterStatus.SelectedValue;
                 string sort = ddlSortBy.SelectedValue;
 
                 if (tutor != "All") sql += " AND f.tutor_id = @tutor";
+                if (course != "All") sql += " AND c.Id = @course";
                 if (resource != "All") sql += " AND f.resource_id = @resource";
                 if (rating != "All") sql += " AND f.rating = @rating";
-
-                if (status == "PENDING") sql += " AND f.status = 'PENDING'";
-                else if (status == "VIEWED") sql += " AND f.status IN ('APPROVED', 'REJECTED')";
 
                 if (sort == "Oldest") sql += " ORDER BY f.created_at ASC";
                 else if (sort == "RatingDesc") sql += " ORDER BY f.rating DESC, f.created_at DESC";
@@ -101,6 +135,7 @@ namespace WAPP.Pages.Staff
                 using (SqlCommand cmd = new SqlCommand(sql, conn))
                 {
                     if (tutor != "All") cmd.Parameters.AddWithValue("@tutor", Convert.ToInt32(tutor));
+                    if (course != "All") cmd.Parameters.AddWithValue("@course", Convert.ToInt32(course));
                     if (resource != "All") cmd.Parameters.AddWithValue("@resource", Convert.ToInt32(resource));
                     if (rating != "All") cmd.Parameters.AddWithValue("@rating", Convert.ToInt32(rating));
 
@@ -108,9 +143,7 @@ namespace WAPP.Pages.Staff
                     {
                         DataTable dt = new DataTable();
                         sda.Fill(dt);
-
                         ViewState["TotalFeedbackRecords"] = dt.Rows.Count;
-
                         gvFeedbacks.DataSource = dt;
                         gvFeedbacks.DataBind();
                     }
@@ -119,7 +152,6 @@ namespace WAPP.Pages.Staff
             UpdatePager();
         }
 
-        // --- NEW PERMANENT PAGER LOGIC ---
         private void UpdatePager()
         {
             int totalRecords = ViewState["TotalFeedbackRecords"] != null ? Convert.ToInt32(ViewState["TotalFeedbackRecords"]) : 0;
@@ -138,54 +170,80 @@ namespace WAPP.Pages.Staff
             btnNext.CssClass = btnNext.Enabled ? "pager-link" : "pager-link disabled";
         }
 
-        protected void btnPrev_Click(object sender, EventArgs e)
-        {
-            if (gvFeedbacks.PageIndex > 0)
-            {
-                gvFeedbacks.PageIndex--;
-                BindGrid();
-            }
-        }
-
+        protected void btnPrev_Click(object sender, EventArgs e) { if (gvFeedbacks.PageIndex > 0) { gvFeedbacks.PageIndex--; BindGrid(); } }
         protected void btnNext_Click(object sender, EventArgs e)
         {
             int totalRecords = ViewState["TotalFeedbackRecords"] != null ? Convert.ToInt32(ViewState["TotalFeedbackRecords"]) : 0;
             int totalPages = (int)Math.Ceiling((double)totalRecords / gvFeedbacks.PageSize);
+            if (gvFeedbacks.PageIndex < totalPages - 1) { gvFeedbacks.PageIndex++; BindGrid(); }
+        }
 
-            if (gvFeedbacks.PageIndex < totalPages - 1)
+        protected void FilterGrid_Changed(object sender, EventArgs e) { lblMessage.Visible = false; gvFeedbacks.PageIndex = 0; BindGrid(); }
+
+        protected void gvFeedbacks_RowCommand(object sender, GridViewCommandEventArgs e)
+        {
+            if (e.CommandName == "ViewFeedback")
             {
-                gvFeedbacks.PageIndex++;
+                int feedbackId = Convert.ToInt32(e.CommandArgument);
+
+                LoadFeedbackDetails(feedbackId);
+                MarkFeedbackAsViewed(feedbackId);
                 BindGrid();
+
+                ScriptManager.RegisterStartupScript(upFeedbackMgmt, upFeedbackMgmt.GetType(), "OpenView", "openViewModal();", true);
             }
         }
-        // ---------------------------------
 
-        protected void FilterGrid_Changed(object sender, EventArgs e)
+        private void LoadFeedbackDetails(int id)
         {
-            lblMessage.Visible = false;
-            gvFeedbacks.PageIndex = 0; // Reset to page 1 on filter
-            BindGrid();
+            using (SqlConnection conn = new SqlConnection(connString))
+            {
+                string sql = @"SELECT f.Id, f.rating, f.comment, f.created_at, 
+                                      ('T' + RIGHT('000'+CAST(u_tutor.Id AS VARCHAR), 3) + '-' + u_tutor.fname) AS TutorName,
+                                      (u_student.fname + ' ' + u_student.lname) AS StudentName,
+                                      (c.title + ' - ' + ISNULL(lr.title, 'Unnamed Resource')) AS CourseAndResource
+                               FROM [feedback] f
+                               INNER JOIN [user] u_tutor ON f.tutor_id = u_tutor.Id
+                               INNER JOIN [user] u_student ON f.student_id = u_student.Id
+                               INNER JOIN [learningResource] lr ON f.resource_id = lr.Id
+                               INNER JOIN [course] c ON lr.course_id = c.Id
+                               WHERE f.Id = @Id";
+
+                using (SqlCommand cmd = new SqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@Id", id);
+                    conn.Open();
+                    using (SqlDataReader rdr = cmd.ExecuteReader())
+                    {
+                        if (rdr.Read())
+                        {
+                            litViewId.Text = "F" + rdr["Id"].ToString().PadLeft(3, '0');
+                            litViewDate.Text = Convert.ToDateTime(rdr["created_at"]).ToString("dd/MM/yyyy HH:mm");
+                            litViewStudent.Text = rdr["StudentName"].ToString();
+                            litViewTutor.Text = rdr["TutorName"].ToString();
+                            litViewResource.Text = rdr["CourseAndResource"].ToString();
+                            litViewRating.Text = rdr["rating"].ToString();
+
+                            string comment = rdr["comment"].ToString();
+                            litViewComment.Text = string.IsNullOrWhiteSpace(comment) ? "<i class='text-muted'>No comment provided</i>" : comment;
+                        }
+                    }
+                }
+            }
         }
 
-        protected void gvFeedbacks_DataBound(object sender, EventArgs e)
+        private void MarkFeedbackAsViewed(int id)
         {
-            // Empty placeholder to fulfill the asp:GridView OnDataBound property requirement
-        }
-
-        protected string GetStatusText(object statusObj)
-        {
-            if (statusObj == null) return "Newest";
-            string status = statusObj.ToString().ToUpper();
-            if (status == "PENDING") return "Newest";
-            return "Viewed";
-        }
-
-        protected string GetStatusDotClass(object statusObj)
-        {
-            if (statusObj == null) return "status-dot dot-draft";
-            string status = statusObj.ToString().ToUpper();
-            if (status == "PENDING") return "status-dot dot-draft";
-            return "status-dot dot-active";
+            using (SqlConnection conn = new SqlConnection(connString))
+            {
+                string sql = "UPDATE [feedback] SET status = 'APPROVED' WHERE Id = @Id AND status = 'PENDING'";
+                using (SqlCommand cmd = new SqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@Id", id);
+                    conn.Open();
+                    cmd.ExecuteNonQuery();
+                }
+            }
         }
 
         protected void btnTriggerRemove_Click(object sender, EventArgs e)
@@ -198,14 +256,17 @@ namespace WAPP.Pages.Staff
                 CheckBox chk = (CheckBox)row.FindControl("chkSelect");
                 if (chk != null && chk.Checked)
                 {
-                    selectedIdsText.Add($"[{row.Cells[1].Text}]");
+                    // BULLETPROOF FIX: We now pull the ID safely from DataKeys instead of scraping the UI cell!
+                    int rawId = Convert.ToInt32(gvFeedbacks.DataKeys[row.RowIndex].Value);
+                    string formattedId = "F" + rawId.ToString().PadLeft(3, '0');
+                    selectedIdsText.Add($"[{formattedId}]");
                 }
             }
 
             if (selectedIdsText.Count > 0)
             {
                 litSelectedTitles.Text = string.Join(", ", selectedIdsText);
-                ScriptManager.RegisterStartupScript(this, this.GetType(), "OpenModal", "openRemoveModal();", true);
+                ScriptManager.RegisterStartupScript(upFeedbackMgmt, upFeedbackMgmt.GetType(), "OpenModal", "openRemoveModal();", true);
             }
             else
             {
@@ -254,7 +315,7 @@ namespace WAPP.Pages.Staff
                     lblMessage.Visible = true;
                     lblMessage.Text = "Selected feedback(s) removed successfully.";
                     lblMessage.CssClass = "alert alert-success d-block";
-                    ScriptManager.RegisterStartupScript(this, this.GetType(), "CloseModal", "closeRemoveModal();", true);
+                    ScriptManager.RegisterStartupScript(upFeedbackMgmt, upFeedbackMgmt.GetType(), "CloseModal", "closeRemoveModal();", true);
                 }
                 catch (Exception ex)
                 {

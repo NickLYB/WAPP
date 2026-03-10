@@ -13,7 +13,9 @@
 			</siteMapNode>
 		</siteMapNode>
 		<siteMapNode url="~/Pages/Tutor/AnnouncementRecord" title="Announcement Record" description=""/>
-		<siteMapNode url="~/Pages/Tutor/Chat" title="Chat Messages" description=""/>
+		<siteMapNode url="~/Pages/Shared/Chat" title="Chat Messages" description=""/>
+		<siteMapNode url="~/Pages/Tutor/Notifications" title="Notifications" description=""/>
+		<siteMapNode url="~/Pages/Tutor/TutorAppointments" title="Appointments" description=""/>
 	</siteMapNode>
 	
 </siteMap>

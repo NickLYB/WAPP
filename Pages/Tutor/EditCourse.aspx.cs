@@ -267,23 +267,23 @@ namespace WAPP.Pages.Tutor
             }
         }
 
-        protected void btnTabAbout_Click(object sender, EventArgs e)
-        {
-            mvAbout.ActiveViewIndex = 0;
-            SetActiveTab(isAbout: true);
-        }
+        //protected void btnTabAbout_Click(object sender, EventArgs e)
+        //{
+        //    mvAbout.ActiveViewIndex = 0;
+        //    SetActiveTab(isAbout: true);
+        //}
 
-        protected void btnTabReviews_Click(object sender, EventArgs e)
-        {
-            mvAbout.ActiveViewIndex = 1;
-            SetActiveTab(isAbout: false);
-        }
+        //protected void btnTabReviews_Click(object sender, EventArgs e)
+        //{
+        //    mvAbout.ActiveViewIndex = 1;
+        //    SetActiveTab(isAbout: false);
+        //}
 
-        private void SetActiveTab(bool isAbout)
-        {
-            btnTabAbout.CssClass = isAbout ? "tab active" : "tab";
-            btnTabReviews.CssClass = isAbout ? "tab" : "tab active";
-        }
+        //private void SetActiveTab(bool isAbout)
+        //{
+        //    btnTabAbout.CssClass = isAbout ? "tab active" : "tab";
+        //    btnTabReviews.CssClass = isAbout ? "tab" : "tab active";
+        //}
         private void LoadAboutCourse(int courseId)
         {
             string cs = ConfigurationManager.ConnectionStrings["MyDbConn"].ConnectionString;

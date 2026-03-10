@@ -41,7 +41,7 @@
                     noRecRow.id = 'clientNoRecordRow';
                     var cell = document.createElement('td');
                     cell.colSpan = "100"; 
-                    cell.className = "ec-no-records"; /* Updated to master CSS class */
+                    cell.className = "ec-no-records"; 
                     cell.innerText = "No applications found matching your filters.";
                     noRecRow.appendChild(cell);
                     tbody.appendChild(noRecRow);
@@ -103,6 +103,14 @@
                                     <asp:ListItem Value="REJECTED">Rejected</asp:ListItem>
                                 </asp:DropDownList>
                             </div>
+                            <%-- NEW: Sort DropDownList --%>
+                            <div class="col-md-3">
+                                <label class="form-label small text-muted mb-1 fw-bold">Sort by</label>
+                                <asp:DropDownList ID="ddlSortBy" runat="server" CssClass="form-select ec-filter-ddl w-100" AutoPostBack="true" OnSelectedIndexChanged="FilterGrid_Changed">
+                                    <asp:ListItem Value="DESC">Newest First</asp:ListItem>
+                                    <asp:ListItem Value="ASC">Oldest First</asp:ListItem>
+                                </asp:DropDownList>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -145,8 +153,8 @@
                                         </div>
                                     </ItemTemplate>
                                 </asp:TemplateField>
-
-                                <asp:BoundField DataField="reviewed_by" HeaderText="Reviewed By" NullDisplayText="None" />
+                                
+                                <asp:BoundField DataField="ReviewerName" HeaderText="Reviewed By" NullDisplayText="None" />
                                 <asp:BoundField DataField="verified_at" HeaderText="Verified Date" DataFormatString="{0:dd/MM/yyyy HH:mm}" NullDisplayText="Pending" />
                             </Columns>
                             

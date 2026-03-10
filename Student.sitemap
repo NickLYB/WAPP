@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<siteMap xmlns="http://schemas.microsoft.com/AspNet/SiteMap-File-1.0" >
+
+	<siteMapNode url="~/Pages/Student/Home" title="Home" description="">
+
+		<siteMapNode url="~/Pages/Student/MyCourses" title="My Learning" description="">
+			<siteMapNode url="~/Pages/Student/LessonView" title="Classroom" description="">
+				<siteMapNode url="~/Pages/Student/Quizzes" title="Take Quiz" description="" />
+				<siteMapNode url="~/Pages/Student/QuizReview" title="Review Answers" description="" />
+			</siteMapNode>
+		</siteMapNode>
+
+		<siteMapNode url="~/Pages/Student/Study" title="Explore" description="">
+			<siteMapNode url="~/Pages/Student/CourseDetail" title="Course Overview" description="">
+				
+			</siteMapNode>
+		</siteMapNode>
+
+		<siteMapNode url="~/Pages/Student/Results" title="My Grades" description="" />
+		<siteMapNode url="~/Pages/Student/Notifications" title="Notifications" description="" />
+
+		<siteMapNode url="~/Pages/Shared/Chat" title="Messages" description="" />
+		<siteMapNode url="~/Pages/Student/TutorProfile" title="Tutor Profile" description="" />
+	</siteMapNode>
+</siteMap>

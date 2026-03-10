@@ -43,7 +43,7 @@
                     noRecRow.id = 'clientNoRecordRow';
                     var cell = document.createElement('td');
                     cell.colSpan = "100"; 
-                    cell.className = "ec-no-records"; /* Switched to master class */
+                    cell.className = "ec-no-records"; 
                     cell.innerText = "No applications found matching your filters.";
                     noRecRow.appendChild(cell);
                     tbody.appendChild(noRecRow);
@@ -77,7 +77,6 @@
         }
     </script>
     <style>
-        /* Only page-specific logic remains here */
         .radio-verify label { color: var(--ec-success-text, #198754); font-weight: 700; cursor: pointer; margin-left: 5px; }
         .radio-reject label { color: var(--ec-danger-brand, #dc3545); font-weight: 700; cursor: pointer; margin-left: 5px; }
     </style>
@@ -102,25 +101,49 @@
                         
                         <div class="row mb-4 align-items-end">
                             <div class="col-lg-4">
-                                <label class="form-label fw-bold text-muted mb-2">Search / Filter:</label>
+                                <label class="form-label fw-bold text-muted mb-2">Search:</label>
                                 <div class="input-group">
-                                    <asp:TextBox ID="txtSearch" runat="server" CssClass="form-control ec-search-input" Placeholder="Search ID, title, category..." onkeydown="return handleEnter(event)"></asp:TextBox>
+                                    <asp:TextBox ID="txtSearch" runat="server" CssClass="form-control ec-search-input" Placeholder="Search ID, title, etc..." onkeydown="return handleEnter(event)"></asp:TextBox>
                                     <span class="input-group-text ec-search-btn"><i class="bi bi-search"></i></span>
                                 </div>
                             </div>
                             <div class="col-lg-8 text-end">
-                                <asp:LinkButton ID="btnTriggerRemove" runat="server" CssClass="btn btn-danger rounded-pill fw-bold px-4 shadow-sm" OnClick="btnTriggerRemove_Click">- Remove Application</asp:LinkButton>
+                                <asp:LinkButton ID="btnTriggerRemove" runat="server" CssClass="btn btn-danger rounded-pill fw-bold px-4 shadow-sm" OnClick="btnTriggerRemove_Click">- Remove Selected</asp:LinkButton>
                             </div>
                         </div>
                         
-                        <div class="row g-2">
-                            <div class="col-md-3">
+                        <div class="row g-3">
+                            <div class="col-md-2">
                                 <label class="form-label small text-muted mb-1 fw-bold">Status</label>
                                 <asp:DropDownList ID="ddlFilterStatus" runat="server" CssClass="form-select ec-filter-ddl w-100" AutoPostBack="true" OnSelectedIndexChanged="FilterGrid_Changed">
-                                    <asp:ListItem Value="All">All</asp:ListItem>
-                                    <asp:ListItem Value="DRAFT">Pending</asp:ListItem>
-                                    <asp:ListItem Value="ACTIVE">Approved</asp:ListItem>
-                                    <asp:ListItem Value="ARCHIVED">Rejected</asp:ListItem>
+                                    <asp:ListItem Value="All">All Statuses</asp:ListItem>
+                                    <asp:ListItem Value="PENDING">Pending</asp:ListItem>
+                                    <asp:ListItem Value="APPROVED">Approved</asp:ListItem>
+                                    <asp:ListItem Value="REJECT">Rejected</asp:ListItem>
+                                </asp:DropDownList>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small text-muted mb-1 fw-bold">Category</label>
+                                <asp:DropDownList ID="ddlFilterCategory" runat="server" CssClass="form-select ec-filter-ddl w-100" AutoPostBack="true" OnSelectedIndexChanged="FilterGrid_Changed"></asp:DropDownList>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small text-muted mb-1 fw-bold">Skill Level</label>
+                                <asp:DropDownList ID="ddlFilterSkill" runat="server" CssClass="form-select ec-filter-ddl w-100" AutoPostBack="true" OnSelectedIndexChanged="FilterGrid_Changed">
+                                    <asp:ListItem Value="All">All Levels</asp:ListItem>
+                                    <asp:ListItem Value="BEGINNER">Beginner</asp:ListItem>
+                                    <asp:ListItem Value="INTERMEDIATE">Intermediate</asp:ListItem>
+                                    <asp:ListItem Value="ADVANCED">Advanced</asp:ListItem>
+                                </asp:DropDownList>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small text-muted mb-1 fw-bold">Tutor</label>
+                                <asp:DropDownList ID="ddlFilterTutor" runat="server" CssClass="form-select ec-filter-ddl w-100" AutoPostBack="true" OnSelectedIndexChanged="FilterGrid_Changed"></asp:DropDownList>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small text-muted mb-1 fw-bold">Sort By Date</label>
+                                <asp:DropDownList ID="ddlSortDate" runat="server" CssClass="form-select ec-filter-ddl w-100" AutoPostBack="true" OnSelectedIndexChanged="FilterGrid_Changed">
+                                    <asp:ListItem Value="DESC">Latest First</asp:ListItem>
+                                    <asp:ListItem Value="ASC">Oldest First</asp:ListItem>
                                 </asp:DropDownList>
                             </div>
                         </div>
@@ -157,13 +180,12 @@
                                 
                                 <asp:BoundField DataField="category_name" HeaderText="Category" />
                                 <asp:BoundField DataField="skill_level" HeaderText="Skill Level" />
-                                <asp:BoundField DataField="tutor_id" HeaderText="Tutor ID" />
+                                <asp:BoundField DataField="tutor_name" HeaderText="Tutor" />
                                 <asp:BoundField DataField="created_at" HeaderText="Submission Date" DataFormatString="{0:dd/MM/yyyy HH:mm}" />
                                 
                                 <asp:TemplateField HeaderText="Status">
                                     <ItemTemplate>
-                                        <span class='<%# GetStatusDotClass(Eval("status")) %>'></span>
-                                        <%# GetStatusText(Eval("status")) %>
+                                        <span class='<%# GetStatusDotClass(Eval("status")) %>'></span> <%# GetStatusText(Eval("status")) %>
                                     </ItemTemplate>
                                 </asp:TemplateField>
 
@@ -206,7 +228,7 @@
                                     <asp:Literal ID="litSelectedIds" runat="server"></asp:Literal>
                                 </p>
                                 <div class="d-flex justify-content-center gap-3">
-                                    <asp:Button ID="btnConfirmRemove" runat="server" Text="Remove" CssClass="btn btn-danger px-4 rounded-pill fw-bold" OnClick="btnConfirmRemove_Click" />
+                                    <asp:Button ID="btnConfirmRemove" runat="server" Text="Delete Permanently" CssClass="btn btn-danger px-4 rounded-pill fw-bold" OnClick="btnConfirmRemove_Click" />
                                     <button type="button" class="btn btn-secondary px-4 rounded-pill fw-bold" onclick="closeRemoveModal()">Cancel</button>
                                 </div>
                             </div>

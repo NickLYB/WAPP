@@ -15,6 +15,15 @@ namespace WAPP.Pages.Student
     {
 
         /// <summary>
+        /// SiteMapPath1 control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.SiteMapPath SiteMapPath1;
+
+        /// <summary>
         /// litCourseTitle control.
         /// </summary>
         /// <remarks>
@@ -22,6 +31,15 @@ namespace WAPP.Pages.Student
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.Literal litCourseTitle;
+
+        /// <summary>
+        /// hlTutorNameLink control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.HyperLink hlTutorNameLink;
 
         /// <summary>
         /// litTutorName control.
@@ -130,5 +148,23 @@ namespace WAPP.Pages.Student
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.Button btnStart;
+
+        /// <summary>
+        /// litSidebarTutorName control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Literal litSidebarTutorName;
+
+        /// <summary>
+        /// hlTutorProfileBtn control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.HyperLink hlTutorProfileBtn;
     }
 }

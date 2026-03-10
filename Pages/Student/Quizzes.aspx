@@ -4,6 +4,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     
     <script type="text/javascript">
+        // Timer Logic
         function startTimer(duration, display) {
             var timer = duration, minutes, seconds;
             var countdown = setInterval(function () {
@@ -15,7 +16,6 @@
 
                 display.textContent = minutes + ":" + seconds;
 
-                // Color change logic for last 2 minutes
                 if (timer < 120) {
                     display.parentElement.classList.remove('text-primary');
                     display.parentElement.classList.add('text-danger');
@@ -24,47 +24,55 @@
                 if (--timer < 0) {
                     clearInterval(countdown);
                     alert("Time is up! Your quiz will be submitted automatically.");
-                    // C# ID selector for the submit button
                     document.getElementById('<%= btnSubmitQuiz.ClientID %>').click();
                 }
             }, 1000);
         }
 
         window.onload = function () {
-            // QuizDuration is passed from Code-Behind
             var duration = 60 * <%= QuizDuration %>;
             var display = document.querySelector('#time-left');
             if (display) startTimer(duration, display);
         };
+
+        // Clear Selection Logic
+        function clearSelection(rblId) {
+            var rbl = document.getElementById(rblId);
+            if (rbl) {
+                var radioButtons = rbl.getElementsByTagName("input");
+                for (var i = 0; i < radioButtons.length; i++) {
+                    if (radioButtons[i].type === "radio") {
+                        radioButtons[i].checked = false;
+                    }
+                }
+            }
+        }
     </script>
 </asp:Content>
 
 <asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
-    
-    <div class="ec-quiz-timer shadow-sm">
-        <div class="container d-flex justify-content-between align-items-center">
+
+    <div style="width: 100%; display: flex; flex-direction: column; align-items: center; padding-top: 20px;">
+
+        <div class="ec-glass-card shadow-sm" style="width: 100%; max-width: 850px; padding: 15px 25px; margin-bottom: 25px; display: flex; flex-direction: row; justify-content: space-between; align-items: center; position: sticky; top: 15px; z-index: 1000;">
             <div>
-                <h5 class="mb-0 fw-bold text-main"><asp:Literal ID="litQuizTitle" runat="server"></asp:Literal></h5>
-                <span class="text-muted small">Target Course: <asp:Literal ID="litCourseName" runat="server"></asp:Literal></span>
+                <h5 class="mb-1 fw-bold text-main"><asp:Literal ID="litQuizTitle" runat="server"></asp:Literal></h5>
+                <span class="text-muted" style="font-size: 0.8rem;"><i class="bi bi-book-half me-1"></i><asp:Literal ID="litCourseName" runat="server"></asp:Literal></span>
             </div>
-            <div class="d-flex align-items-center text-primary fw-bold fs-4">
-                <i class="bi bi-hourglass-split me-2"></i>
+            <div class="text-primary fw-bold" style="font-size: 1.3rem; font-variant-numeric: tabular-nums; background: var(--ec-bg-alt); padding: 6px 16px; border-radius: 8px; border: 1px solid var(--ec-border-subtle);">
+                <i class="bi bi-stopwatch me-2"></i>
                 <span id="time-left">00:00</span>
             </div>
         </div>
-    </div>
 
-    <div class="container pb-5">
-        <div class="ec-quiz-container">
+        <div style="width: 100%; max-width: 850px; padding-bottom: 50px;">
             
             <asp:Repeater ID="rptQuestions" runat="server" OnItemDataBound="rptQuestions_ItemDataBound">
                 <ItemTemplate>
-                    <div class="ec-glass-card mb-4 p-4 p-md-5">
+                    <div class="ec-glass-card mb-4 p-4 p-md-5 border-0 shadow-sm" style="background: white; border-top: 4px solid var(--ec-primary) !important;">
                         
-                        <h5 class="fw-bold text-main mb-4" style="line-height: 1.6;">
-                            <span class="badge me-2 px-3 py-2 rounded-pill" style="background: var(--ec-bg-alt); color: var(--ec-primary); font-size: 0.9rem;">
-                                Q<%# Container.ItemIndex + 1 %>
-                            </span>
+                        <h5 class="fw-bold mb-4 text-main" style="line-height: 1.6;">
+                            <span class="text-primary me-2">Q<%# Container.ItemIndex + 1 %>.</span>
                             <%# Eval("question_text") %>
                         </h5>
                         
@@ -73,26 +81,32 @@
                         <div class="ec-option-list">
                             <asp:RadioButtonList ID="rblOptions" runat="server" 
                                 DataTextField="option_text" DataValueField="Id" 
-                                RepeatLayout="UnorderedList" CssClass="list-unstyled p-0 m-0">
+                                RepeatLayout="UnorderedList" CssClass="m-0 p-0">
                             </asp:RadioButtonList>
+                        </div>
+                        
+                        <div class="text-end mt-2 border-top pt-3">
+                            <a href="javascript:void(0);" class="text-muted text-decoration-none small fw-bold" onclick="clearSelection('<%# ((Control)Container.FindControl("rblOptions")).ClientID %>')">
+                                <i class="bi bi-eraser-fill me-1"></i>Clear Selection
+                            </a>
                         </div>
 
                     </div>
                 </ItemTemplate>
             </asp:Repeater>
 
-            <div class="text-center mt-5">
+            <div class="d-flex justify-content-center gap-3 mt-5">
+                <asp:Button ID="btnCancelQuiz" runat="server" Text="Cancel Attempt" 
+                    CssClass="btn btn-sub rounded-pill px-4 fw-bold shadow-sm" OnClick="btnCancelQuiz_Click" 
+                    OnClientClick="return confirm('Exit quiz? Progress will not be saved.');" />
                 
-                <div class="p-4 rounded-4 border mb-4" style="background-color: var(--ec-bg-alt); border-color: var(--ec-border-light) !important;">
-                    <p class="text-muted mb-0 fw-bold"><i class="bi bi-exclamation-circle-fill text-warning me-2"></i>Once you submit, you cannot change your answers. Please review your work carefully.</p>
-                </div>
-                
-                <asp:Button ID="btnSubmitQuiz" runat="server" Text="Confirm and Submit Assessment" 
-                    CssClass="btn btn-success rounded-pill px-5 py-3 fw-bold shadow-lg fs-5" 
-                    OnClick="btnSubmitQuiz_Click" 
-                    OnClientClick="return confirm('Ready to finalize your answers?');" />
+                <asp:Button ID="btnSubmitQuiz" runat="server" Text="Submit Assessment" 
+                    CssClass="btn btn-primary rounded-pill px-5 fw-bold shadow-sm" OnClick="btnSubmitQuiz_Click" 
+                    OnClientClick="return confirm('Are you sure you want to submit your final answers?');" />
             </div>
 
         </div>
+
     </div>
+
 </asp:Content>

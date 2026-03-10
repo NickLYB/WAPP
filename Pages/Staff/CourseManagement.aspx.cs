@@ -20,14 +20,34 @@ namespace WAPP.Pages.Staff
 
             if (!IsPostBack)
             {
+                // NEW: Check if redirected from AddCourse.aspx with a success message!
                 if (Request.QueryString["msg"] == "success")
                 {
                     lblMessage.Visible = true;
                     lblMessage.Text = "New course added successfully!";
-                    lblMessage.CssClass = "alert alert-success d-block";
+                    lblMessage.CssClass = "alert alert-success d-block mb-4";
                 }
 
+                // 1. MUST BE FIRST: Load the dropdowns so they aren't empty!
                 BindDropdowns();
+
+                // 2. Catch the URL parameter from the Dashboard (BULLETPROOF METHOD)
+                if (Request.QueryString["status"] != null)
+                {
+                    string passedStatus = Request.QueryString["status"].ToUpper();
+
+                    foreach (ListItem item in ddlFilterStatus.Items)
+                    {
+                        if (item.Value.ToUpper() == passedStatus)
+                        {
+                            ddlFilterStatus.ClearSelection();
+                            item.Selected = true;
+                            break;
+                        }
+                    }
+                }
+
+                // 3. MUST BE LAST: Bind the grid after dropdowns and URL filters are set
                 BindGrid();
             }
         }
@@ -44,7 +64,6 @@ namespace WAPP.Pages.Staff
                     {
                         DataTable dtCat = new DataTable();
                         dtCat.Load(rdrCat);
-
                         ddlFilterCategory.DataSource = dtCat;
                         ddlFilterCategory.DataTextField = "name";
                         ddlFilterCategory.DataValueField = "Id";
@@ -53,13 +72,14 @@ namespace WAPP.Pages.Staff
                     }
                 }
 
-                using (SqlCommand cmdTutor = new SqlCommand("SELECT Id, ('T' + RIGHT('000'+CAST(Id AS VARCHAR), 3) + '-' + fname) as FullTutorName FROM [user] WHERE role_id = 3", conn))
+                // Fetches T000-Firstname Lastname for the filter dropdown
+                string tutorSql = "SELECT Id, ('T' + RIGHT('000'+CAST(Id AS VARCHAR), 3) + '-' + fname + ' ' + ISNULL(lname, '')) as FullTutorName FROM [user] WHERE role_id = 3";
+                using (SqlCommand cmdTutor = new SqlCommand(tutorSql, conn))
                 {
                     using (SqlDataReader rdrTutor = cmdTutor.ExecuteReader())
                     {
                         DataTable dtTutor = new DataTable();
                         dtTutor.Load(rdrTutor);
-
                         ddlFilterTutor.DataSource = dtTutor;
                         ddlFilterTutor.DataTextField = "FullTutorName";
                         ddlFilterTutor.DataValueField = "Id";
@@ -87,7 +107,7 @@ namespace WAPP.Pages.Staff
             using (SqlConnection conn = new SqlConnection(connString))
             {
                 string sql = @"SELECT c.Id, c.title, c.description, ct.name AS category_name, c.skill_level, 
-                                      ('T' + RIGHT('000'+CAST(u.Id AS VARCHAR), 3) + '-' + u.fname) AS tutor_name,
+                                      ('T' + RIGHT('000'+CAST(u.Id AS VARCHAR), 3) + '-' + u.fname + ' ' + ISNULL(u.lname, '')) AS tutor_name,
                                       c.created_at, c.status, c.average_rating
                                FROM [course] c
                                INNER JOIN [courseType] ct ON c.course_type_id = ct.Id
@@ -105,7 +125,19 @@ namespace WAPP.Pages.Staff
                 if (cat != "All") sql += " AND c.course_type_id = @cat";
                 if (tutor != "All") sql += " AND c.tutor_id = @tutor";
                 if (status != "All") sql += " AND c.status = @status";
-                if (rating != "All") sql += " AND c.average_rating = @rating";
+
+                if (rating != "All")
+                {
+                    if (rating == "NoRating")
+                    {
+                        sql += " AND c.average_rating IS NULL";
+                    }
+                    else
+                    {
+                        sql += " AND c.average_rating = @rating";
+                    }
+                }
+
                 if (month != "All") sql += " AND MONTH(c.created_at) = @month";
                 if (year != "All") sql += " AND YEAR(c.created_at) = @year";
 
@@ -115,12 +147,25 @@ namespace WAPP.Pages.Staff
 
                 using (SqlCommand cmd = new SqlCommand(sql, conn))
                 {
-                    if (cat != "All") cmd.Parameters.AddWithValue("@cat", Convert.ToInt32(cat));
-                    if (tutor != "All") cmd.Parameters.AddWithValue("@tutor", Convert.ToInt32(tutor));
-                    if (status != "All") cmd.Parameters.AddWithValue("@status", status);
-                    if (rating != "All") cmd.Parameters.AddWithValue("@rating", Convert.ToInt32(rating));
-                    if (month != "All") cmd.Parameters.AddWithValue("@month", Convert.ToInt32(month));
-                    if (year != "All") cmd.Parameters.AddWithValue("@year", Convert.ToInt32(year));
+                    int parsedId;
+
+                    if (!string.IsNullOrWhiteSpace(cat) && cat != "All" && int.TryParse(cat, out parsedId))
+                        cmd.Parameters.AddWithValue("@cat", parsedId);
+
+                    if (!string.IsNullOrWhiteSpace(tutor) && tutor != "All" && int.TryParse(tutor, out parsedId))
+                        cmd.Parameters.AddWithValue("@tutor", parsedId);
+
+                    if (!string.IsNullOrWhiteSpace(status) && status != "All")
+                        cmd.Parameters.AddWithValue("@status", status);
+
+                    if (!string.IsNullOrWhiteSpace(rating) && rating != "All" && rating != "NoRating" && int.TryParse(rating, out parsedId))
+                        cmd.Parameters.AddWithValue("@rating", parsedId);
+
+                    if (!string.IsNullOrWhiteSpace(month) && month != "All" && int.TryParse(month, out parsedId))
+                        cmd.Parameters.AddWithValue("@month", parsedId);
+
+                    if (!string.IsNullOrWhiteSpace(year) && year != "All" && int.TryParse(year, out parsedId))
+                        cmd.Parameters.AddWithValue("@year", parsedId);
 
                     using (SqlDataAdapter sda = new SqlDataAdapter(cmd))
                     {
@@ -128,7 +173,6 @@ namespace WAPP.Pages.Staff
                         sda.Fill(dt);
 
                         ViewState["TotalCourseRecords"] = dt.Rows.Count;
-
                         gvCourses.DataSource = dt;
                         gvCourses.DataBind();
                     }
@@ -137,7 +181,6 @@ namespace WAPP.Pages.Staff
             UpdatePager();
         }
 
-        // --- NEW PERMANENT PAGER LOGIC ---
         private void UpdatePager()
         {
             int totalRecords = ViewState["TotalCourseRecords"] != null ? Convert.ToInt32(ViewState["TotalCourseRecords"]) : 0;
@@ -146,15 +189,11 @@ namespace WAPP.Pages.Staff
             if (endRecord > totalRecords) endRecord = totalRecords;
             if (totalRecords == 0) { startRecord = 0; endRecord = 0; }
 
-            litPagerInfo.Text = $"Showing {startRecord}-{endRecord} of {totalRecords} courses";
+            litPagerInfo.Text = $"Showing {startRecord} to {endRecord} of {totalRecords} courses";
 
             btnPrev.Enabled = gvCourses.PageIndex > 0;
-            btnPrev.CssClass = btnPrev.Enabled ? "pager-link" : "pager-link disabled";
-
-            // Use Math.Ceiling to determine total pages accurately
             int totalPages = (int)Math.Ceiling((double)totalRecords / gvCourses.PageSize);
             btnNext.Enabled = gvCourses.PageIndex < (totalPages - 1);
-            btnNext.CssClass = btnNext.Enabled ? "pager-link" : "pager-link disabled";
         }
 
         protected void btnPrev_Click(object sender, EventArgs e)
@@ -177,17 +216,13 @@ namespace WAPP.Pages.Staff
                 BindGrid();
             }
         }
-        // ---------------------------------
 
-        protected void gvCourses_DataBound(object sender, EventArgs e)
-        {
-            // Empty placeholder to fulfill the asp:GridView OnDataBound property requirement
-        }
+        protected void gvCourses_DataBound(object sender, EventArgs e) { }
 
         protected void FilterGrid_Changed(object sender, EventArgs e)
         {
             lblMessage.Visible = false;
-            gvCourses.PageIndex = 0; // Reset to page 1 on filter
+            gvCourses.PageIndex = 0;
             BindGrid();
         }
 
@@ -195,18 +230,20 @@ namespace WAPP.Pages.Staff
         {
             if (statusObj == null) return "Pending";
             string status = statusObj.ToString().ToUpper();
-            if (status == "APPROVED" || status == "PUBLISHED") return "Approved";
+            if (status == "APPROVED") return "Approved";
+            if (status == "PUBLISHED") return "Published";
+            if (status == "PRIVATE") return "Private";
             if (status == "REJECT") return "Rejected";
             return "Pending";
         }
 
         protected string GetStatusDotClass(object statusObj)
         {
-            if (statusObj == null) return "status-dot dot-draft";
+            if (statusObj == null) return "badge bg-warning text-dark";
             string status = statusObj.ToString().ToUpper();
-            if (status == "APPROVED" || status == "PUBLISHED") return "status-dot dot-active";
-            if (status == "REJECT") return "status-dot dot-archived";
-            return "status-dot dot-draft";
+            if (status == "APPROVED" || status == "PUBLISHED") return "badge bg-success";
+            if (status == "REJECT" || status == "PRIVATE") return "badge bg-danger";
+            return "badge bg-warning text-dark";
         }
 
         protected void btnAddCourseRedirect_Click(object sender, EventArgs e)
@@ -237,7 +274,7 @@ namespace WAPP.Pages.Staff
             {
                 lblMessage.Visible = true;
                 lblMessage.Text = "Please select at least one course to remove.";
-                lblMessage.CssClass = "alert alert-warning d-block";
+                lblMessage.CssClass = "alert alert-warning d-block mb-4";
             }
         }
 
@@ -279,14 +316,14 @@ namespace WAPP.Pages.Staff
                     BindGrid();
                     lblMessage.Visible = true;
                     lblMessage.Text = "Selected course(s) removed successfully.";
-                    lblMessage.CssClass = "alert alert-success d-block";
+                    lblMessage.CssClass = "alert alert-success d-block mb-4";
                     ScriptManager.RegisterStartupScript(this, this.GetType(), "CloseModal", "closeRemoveModal();", true);
                 }
                 catch (Exception ex)
                 {
                     lblMessage.Visible = true;
                     lblMessage.Text = "Cannot delete course: It is tied to existing enrollments. Error: " + ex.Message;
-                    lblMessage.CssClass = "alert alert-danger d-block";
+                    lblMessage.CssClass = "alert alert-danger d-block mb-4";
                 }
             }
         }

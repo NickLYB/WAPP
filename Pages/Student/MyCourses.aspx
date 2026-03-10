@@ -6,7 +6,10 @@
 
 <asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
     <div class="ec-content-wrapper">
-        
+        <div class="ec-section-gap mb-3">
+            <asp:SiteMapPath ID="SiteMapPath1" runat="server" SiteMapProvider="StudentMap" 
+                PathSeparator=" > " CssClass="small text-muted text-decoration-none" RenderCurrentNodeAsLink="false" />
+        </div>
         <div class="ec-section-gap">
             <div class="ec-section-header border-0">
                 <div>

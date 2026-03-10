@@ -105,15 +105,6 @@ namespace WAPP.Pages.Staff
         protected global::System.Web.UI.WebControls.LinkButton btnNext;
 
         /// <summary>
-        /// valSummaryEdit control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.ValidationSummary valSummaryEdit;
-
-        /// <summary>
         /// hfEditUserId control.
         /// </summary>
         /// <remarks>
@@ -141,15 +132,6 @@ namespace WAPP.Pages.Staff
         protected global::System.Web.UI.WebControls.TextBox txtEditFirstName;
 
         /// <summary>
-        /// rfvEditFN control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.RequiredFieldValidator rfvEditFN;
-
-        /// <summary>
         /// txtEditLastName control.
         /// </summary>
         /// <remarks>
@@ -157,15 +139,6 @@ namespace WAPP.Pages.Staff
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.TextBox txtEditLastName;
-
-        /// <summary>
-        /// rfvEditLN control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.RequiredFieldValidator rfvEditLN;
 
         /// <summary>
         /// txtEditDOB control.
@@ -177,15 +150,6 @@ namespace WAPP.Pages.Staff
         protected global::System.Web.UI.WebControls.TextBox txtEditDOB;
 
         /// <summary>
-        /// rfvEditDOB control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.RequiredFieldValidator rfvEditDOB;
-
-        /// <summary>
         /// txtEditPhone control.
         /// </summary>
         /// <remarks>
@@ -193,24 +157,6 @@ namespace WAPP.Pages.Staff
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.TextBox txtEditPhone;
-
-        /// <summary>
-        /// rfvEditPhone control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.RequiredFieldValidator rfvEditPhone;
-
-        /// <summary>
-        /// revEditPhone control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.RegularExpressionValidator revEditPhone;
 
         /// <summary>
         /// txtEditEmail control.
@@ -222,15 +168,6 @@ namespace WAPP.Pages.Staff
         protected global::System.Web.UI.WebControls.TextBox txtEditEmail;
 
         /// <summary>
-        /// rfvEditEmail control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.RequiredFieldValidator rfvEditEmail;
-
-        /// <summary>
         /// txtEditPass control.
         /// </summary>
         /// <remarks>
@@ -238,15 +175,6 @@ namespace WAPP.Pages.Staff
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.TextBox txtEditPass;
-
-        /// <summary>
-        /// rfvEditPass control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.RequiredFieldValidator rfvEditPass;
 
         /// <summary>
         /// ddlEditRole control.
@@ -276,15 +204,6 @@ namespace WAPP.Pages.Staff
         protected global::System.Web.UI.WebControls.Button btnUpdateUser;
 
         /// <summary>
-        /// valSummary control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.ValidationSummary valSummary;
-
-        /// <summary>
         /// txtFirstName control.
         /// </summary>
         /// <remarks>
@@ -292,15 +211,6 @@ namespace WAPP.Pages.Staff
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.TextBox txtFirstName;
-
-        /// <summary>
-        /// rfv1 control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.RequiredFieldValidator rfv1;
 
         /// <summary>
         /// txtLastName control.
@@ -312,15 +222,6 @@ namespace WAPP.Pages.Staff
         protected global::System.Web.UI.WebControls.TextBox txtLastName;
 
         /// <summary>
-        /// rfv2 control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.RequiredFieldValidator rfv2;
-
-        /// <summary>
         /// txtDOB control.
         /// </summary>
         /// <remarks>
@@ -328,15 +229,6 @@ namespace WAPP.Pages.Staff
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.TextBox txtDOB;
-
-        /// <summary>
-        /// rfv3 control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.RequiredFieldValidator rfv3;
 
         /// <summary>
         /// txtPhone control.
@@ -348,24 +240,6 @@ namespace WAPP.Pages.Staff
         protected global::System.Web.UI.WebControls.TextBox txtPhone;
 
         /// <summary>
-        /// rfv4 control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.RequiredFieldValidator rfv4;
-
-        /// <summary>
-        /// revPhone control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.RegularExpressionValidator revPhone;
-
-        /// <summary>
         /// txtEmail control.
         /// </summary>
         /// <remarks>
@@ -375,15 +249,6 @@ namespace WAPP.Pages.Staff
         protected global::System.Web.UI.WebControls.TextBox txtEmail;
 
         /// <summary>
-        /// rfv5 control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.RequiredFieldValidator rfv5;
-
-        /// <summary>
         /// txtPass control.
         /// </summary>
         /// <remarks>
@@ -391,15 +256,6 @@ namespace WAPP.Pages.Staff
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.TextBox txtPass;
-
-        /// <summary>
-        /// rfv6 control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.RequiredFieldValidator rfv6;
 
         /// <summary>
         /// ddlRole control.

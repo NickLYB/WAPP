@@ -48,8 +48,40 @@
                     <asp:HyperLink ID="hlViewAllFeedback" runat="server" NavigateUrl="~/Pages/Staff/FeedbackManagement.aspx" CssClass="ec-link-primary m-0">View All &rarr;</asp:HyperLink>
                 </div>
                 <div class="px-4 pb-4">
-                    <asp:GridView ID="gvFeedback" runat="server" CssClass="table table-striped align-middle mb-0" AutoGenerateColumns="False" GridLines="None">
-                        </asp:GridView>
+                    
+                <asp:GridView ID="gvFeedback" runat="server" CssClass="table ec-table-dark align-middle mb-0" AutoGenerateColumns="False" GridLines="None" ShowHeaderWhenEmpty="true">
+                    <Columns>
+                        <asp:BoundField DataField="created_at" HeaderText="Date" DataFormatString="{0:dd/MMM}" 
+                            HeaderStyle-CssClass="text-muted small text-uppercase" ItemStyle-CssClass="text-white-50 small" />
+        
+                        <asp:TemplateField HeaderText="Tutor / Resource" HeaderStyle-CssClass="text-muted small text-uppercase">
+                            <ItemTemplate>
+                                <div class="text-white fw-bold"><%# Eval("TutorName") %></div>
+                                <div class="text-muted small"><%# Eval("ResourceTitle") %></div>
+                            </ItemTemplate>
+                        </asp:TemplateField>
+
+                        <asp:TemplateField HeaderText="Rating" HeaderStyle-CssClass="text-muted small text-uppercase">
+                            <ItemTemplate>
+                                <span class="text-white fw-bold"><%# Eval("rating") %></span> 
+                                <i class="bi bi-star-fill text-warning small ms-1"></i>
+                            </ItemTemplate>
+                        </asp:TemplateField>
+
+                        <asp:TemplateField HeaderText="Status" HeaderStyle-CssClass="text-muted small text-uppercase text-end" ItemStyle-CssClass="text-end">
+                            <ItemTemplate>
+                                <span class='<%# Eval("status").ToString() == "PENDING" ? "badge bg-danger rounded-pill" : "badge bg-success rounded-pill opacity-75" %>' 
+                                      style="font-size: 0.7rem;">
+                                    <%# Eval("status").ToString() == "PENDING" ? "NEW" : "VIEWED" %>
+                                </span>
+                            </ItemTemplate>
+                        </asp:TemplateField>
+                    </Columns>
+                    <EmptyDataTemplate>
+                        <tr><td colspan="100%" class="text-center text-muted py-4">No recent feedback tickets.</td></tr>
+                    </EmptyDataTemplate>
+                </asp:GridView>
+
                 </div>
             </div>
 
@@ -99,7 +131,8 @@
                             <strong>Active Courses:</strong> 
                             <asp:Label ID="lblActiveCourses" runat="server" CssClass="ec-highlight-num text-primary">0</asp:Label>
                         </span>
-                        <asp:HyperLink ID="hlGoToCoursesMain" runat="server" NavigateUrl="~/Pages/Staff/CourseManagement.aspx" CssClass="btn-sub">View</asp:HyperLink>
+                        <asp:HyperLink ID="hlGoToCoursesMain" runat="server" NavigateUrl="~/Pages/Staff/CourseManagement.aspx?status=PUBLISHED" CssClass="btn-sub">View</asp:HyperLink>
+                        
                     </li>
                     <li class="d-flex justify-content-between align-items-center pt-2">
                         <strong>Server Load:</strong> <span class="text-success fw-bold">Normal</span>

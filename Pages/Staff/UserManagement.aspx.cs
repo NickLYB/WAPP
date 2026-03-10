@@ -73,7 +73,6 @@ namespace WAPP.Pages.Staff
             UpdatePager();
         }
 
-        // --- NEW PERMANENT PAGER LOGIC ---
         private void UpdatePager()
         {
             int totalRecords = ViewState["TotalRecords"] != null ? Convert.ToInt32(ViewState["TotalRecords"]) : 0;
@@ -108,7 +107,6 @@ namespace WAPP.Pages.Staff
                 BindGrid();
             }
         }
-        // ---------------------------------
 
         protected void FilterGrid_Changed(object sender, EventArgs e)
         {
@@ -186,8 +184,22 @@ namespace WAPP.Pages.Staff
 
         protected void btnUpdateUser_Click(object sender, EventArgs e)
         {
+            // 1. Manual Validation Check
+            if (string.IsNullOrWhiteSpace(txtEditFirstName.Text) ||
+                string.IsNullOrWhiteSpace(txtEditLastName.Text) ||
+                string.IsNullOrWhiteSpace(txtEditDOB.Text) ||
+                string.IsNullOrWhiteSpace(txtEditPhone.Text) ||
+                string.IsNullOrWhiteSpace(txtEditEmail.Text) ||
+                string.IsNullOrWhiteSpace(txtEditPass.Text))
+            {
+                lblMessage.Visible = true;
+                lblMessage.Text = "Please fill out all required fields.";
+                lblMessage.CssClass = "alert alert-danger d-block";
+                ScriptManager.RegisterStartupScript(this, this.GetType(), "OpenModal", "openEditModal();", true);
+                return;
+            }
+
             if (string.IsNullOrEmpty(hfEditUserId.Value)) return;
-            if (!Page.IsValid) return;
 
             try
             {
@@ -214,6 +226,19 @@ namespace WAPP.Pages.Staff
                 lblMessage.CssClass = "alert alert-success d-block";
                 ScriptManager.RegisterStartupScript(this, this.GetType(), "CloseModal", "closeEditModal();", true);
             }
+            catch (SqlException sqlEx)
+            {
+                lblMessage.Visible = true;
+                if (sqlEx.Number == 2627 || sqlEx.Number == 2601)
+                {
+                    lblMessage.Text = "Cannot save: The email address entered is already registered to another user.";
+                }
+                else
+                {
+                    lblMessage.Text = "Database Error: " + sqlEx.Message;
+                }
+                lblMessage.CssClass = "alert alert-danger d-block";
+            }
             catch (Exception ex)
             {
                 lblMessage.Visible = true;
@@ -224,7 +249,20 @@ namespace WAPP.Pages.Staff
 
         protected void btnSaveUser_Click(object sender, EventArgs e)
         {
-            if (!Page.IsValid) return;
+            // 1. Manual Validation Check
+            if (string.IsNullOrWhiteSpace(txtFirstName.Text) ||
+                string.IsNullOrWhiteSpace(txtLastName.Text) ||
+                string.IsNullOrWhiteSpace(txtDOB.Text) ||
+                string.IsNullOrWhiteSpace(txtPhone.Text) ||
+                string.IsNullOrWhiteSpace(txtEmail.Text) ||
+                string.IsNullOrWhiteSpace(txtPass.Text))
+            {
+                lblMessage.Visible = true;
+                lblMessage.Text = "Please fill out all required fields.";
+                lblMessage.CssClass = "alert alert-danger d-block";
+                return;
+            }
+
             int selectedRole = Convert.ToInt32(ddlRole.SelectedValue);
             if (selectedRole == 1 || selectedRole == 2) return;
 
@@ -250,9 +288,26 @@ namespace WAPP.Pages.Staff
                 lblMessage.Visible = true;
                 lblMessage.Text = "User added successfully!";
                 lblMessage.CssClass = "alert alert-success d-block";
+
                 txtFirstName.Text = ""; txtLastName.Text = ""; txtDOB.Text = "";
                 txtPhone.Text = ""; txtEmail.Text = ""; txtPass.Text = "";
+
                 BindGrid();
+
+                ScriptManager.RegisterStartupScript(this, this.GetType(), "CloseAddModal", "bootstrap.Modal.getOrCreateInstance(document.getElementById('addUserModal')).hide(); $('.modal-backdrop').remove(); $('body').removeClass('modal-open').css('overflow', '').css('padding-right', '');", true);
+            }
+            catch (SqlException sqlEx)
+            {
+                lblMessage.Visible = true;
+                if (sqlEx.Number == 2627 || sqlEx.Number == 2601)
+                {
+                    lblMessage.Text = "Cannot add user: The email address entered is already registered to another user.";
+                }
+                else
+                {
+                    lblMessage.Text = "Database Error: " + sqlEx.Message;
+                }
+                lblMessage.CssClass = "alert alert-danger d-block";
             }
             catch (Exception ex)
             {

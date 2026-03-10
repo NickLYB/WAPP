@@ -7,7 +7,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace WAPP.Pages.Tutor
+namespace WAPP.Pages.Shared
 {
 
 
@@ -33,6 +33,15 @@ namespace WAPP.Pages.Tutor
         protected global::System.Web.UI.WebControls.TextBox txtSearch;
 
         /// <summary>
+        /// upContacts control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.UpdatePanel upContacts;
+
+        /// <summary>
         /// btnSearchTrigger control.
         /// </summary>
         /// <remarks>
@@ -42,13 +51,13 @@ namespace WAPP.Pages.Tutor
         protected global::System.Web.UI.WebControls.Button btnSearchTrigger;
 
         /// <summary>
-        /// upContacts control.
+        /// btnRefreshSidebar control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.UpdatePanel upContacts;
+        protected global::System.Web.UI.WebControls.Button btnRefreshSidebar;
 
         /// <summary>
         /// rptContacts control.

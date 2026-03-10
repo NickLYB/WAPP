@@ -54,7 +54,11 @@ namespace WAPP.Pages.Staff
                     }
                 }
 
-                using (SqlCommand cmdTutor = new SqlCommand("SELECT Id, ('T' + RIGHT('000'+CAST(Id AS VARCHAR), 3) + '-' + fname) as FullTutorName FROM [user] WHERE role_id = 3", conn))
+                // FIXED: SQL query now formats as "T004-John Doe"
+                using (SqlCommand cmdTutor = new SqlCommand(@"SELECT Id, 
+                                                                     ('T' + RIGHT('000'+CAST(Id AS VARCHAR), 3) + '-' + fname + ' ' + lname) as FullTutorName 
+                                                              FROM [user] 
+                                                              WHERE role_id = 3", conn))
                 {
                     using (SqlDataReader rdrTutor = cmdTutor.ExecuteReader())
                     {
@@ -87,8 +91,9 @@ namespace WAPP.Pages.Staff
         {
             using (SqlConnection conn = new SqlConnection(connString))
             {
+                // FIXED: SQL query now formats as "T004-John Doe" for the data table
                 string sql = @"SELECT lr.Id, c.title AS CourseTitle, lr.created_at, rt.name AS ResourceTypeName, 
-                                      ('T' + RIGHT('000'+CAST(u.Id AS VARCHAR), 3) + '-' + u.fname) AS TutorName,
+                                      ('T' + RIGHT('000'+CAST(u.Id AS VARCHAR), 3) + '-' + u.fname + ' ' + u.lname) AS TutorName,
                                       lr.resource_link
                                FROM [learningResource] lr
                                INNER JOIN [course] c ON lr.course_id = c.Id

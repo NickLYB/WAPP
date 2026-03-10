@@ -1,21 +1,18 @@
 ﻿using System;
 using System.IO;
-using System.Data.SqlClient;
 using System.Configuration;
 using System.Web.UI;
+using WAPP.Utils; // Ensure your OtpHelper and EmailHelper are here
 
 namespace WAPP.Controls
 {
     public partial class SignUpModal : System.Web.UI.UserControl
     {
-        string connStr = ConfigurationManager.ConnectionStrings["MyDbConn"].ConnectionString;
-
         protected void Page_Load(object sender, EventArgs e)
         {
-            // Forces the HTML form to support file uploads, 
-            // even if the FileUpload control starts off hidden!
             Page.Form.Attributes.Add("enctype", "multipart/form-data");
         }
+
         protected void rblRole_SelectedIndexChanged(object sender, EventArgs e)
         {
             pnlTutorDocs.Visible = (rblRole.SelectedValue == "3");
@@ -28,12 +25,12 @@ namespace WAPP.Controls
             int roleId = int.Parse(rblRole.SelectedValue);
 
             // 1. Validation 
-            if (string.IsNullOrWhiteSpace(txtFirstName.Text) || string.IsNullOrWhiteSpace(txtEmail.Text))
+            if (string.IsNullOrWhiteSpace(txtFirstName.Text) || string.IsNullOrWhiteSpace(email))
             {
                 ShowModalAndError("Please fill in all required fields.");
                 return;
             }
-            if (string.IsNullOrWhiteSpace(txtDob.Text)) // Added DOB check to prevent SQL date conversion errors
+            if (string.IsNullOrWhiteSpace(txtDob.Text))
             {
                 ShowModalAndError("Please select a Date of Birth.");
                 return;
@@ -49,76 +46,68 @@ namespace WAPP.Controls
                 return;
             }
 
-            bool isSuccess = false; // Add a flag to track if the transaction worked
-
-            using (SqlConnection conn = new SqlConnection(connStr))
+            // 2. Handle File Upload BEFORE DB creation
+            string savedFileName = null;
+            if (roleId == 3)
             {
-                conn.Open();
-                SqlTransaction transaction = conn.BeginTransaction();
-
                 try
                 {
-                    // 2. Insert into [user] table
-                    string userSql = @"INSERT INTO [dbo].[user] (fname, lname, dob, contact, email, password_hash, role_id) 
-                              VALUES (@fname, @lname, @dob, @contact, @email, @pass, @role);
-                              SELECT SCOPE_IDENTITY();";
+                    savedFileName = Guid.NewGuid().ToString() + Path.GetExtension(fileVerification.FileName);
+                    string folderPath = Server.MapPath("~/Uploads/Verification/");
 
-                    SqlCommand cmdUser = new SqlCommand(userSql, conn, transaction);
-                    cmdUser.Parameters.AddWithValue("@fname", txtFirstName.Text.Trim());
-                    cmdUser.Parameters.AddWithValue("@lname", txtLastName.Text.Trim());
-                    cmdUser.Parameters.AddWithValue("@dob", txtDob.Text);
-                    cmdUser.Parameters.AddWithValue("@contact", txtContact.Text.Trim());
-                    cmdUser.Parameters.AddWithValue("@email", email);
-                    cmdUser.Parameters.AddWithValue("@pass", password); // Remember to hash this later!
-                    cmdUser.Parameters.AddWithValue("@role", roleId);
-
-                    int newUserId = Convert.ToInt32(cmdUser.ExecuteScalar());
-
-                    // 3. If Tutor, Insert into [tutorApplication]
-                    if (roleId == 3)
+                    if (!Directory.Exists(folderPath))
                     {
-                        string fileName = Guid.NewGuid().ToString() + Path.GetExtension(fileVerification.FileName);
-                        string folderPath = Server.MapPath("~/Uploads/Verification/");
-
-                        if (!Directory.Exists(folderPath))
-                        {
-                            Directory.CreateDirectory(folderPath);
-                        }
-
-                        fileVerification.SaveAs(folderPath + fileName);
-
-                        string appSql = @"INSERT INTO [dbo].[tutorApplication] (tutor_id, verification_document, submitted_at, status) 
-                                 VALUES (@tid, @doc, @date, 'PENDING')";
-
-                        SqlCommand cmdApp = new SqlCommand(appSql, conn, transaction);
-                        cmdApp.Parameters.AddWithValue("@tid", newUserId);
-                        cmdApp.Parameters.AddWithValue("@doc", fileName);
-                        cmdApp.Parameters.AddWithValue("@date", DateTime.Now);
-                        cmdApp.ExecuteNonQuery();
+                        Directory.CreateDirectory(folderPath);
                     }
-
-                    // 4. Commit 
-                    transaction.Commit();
-                    isSuccess = true; // Mark as success!
+                    fileVerification.SaveAs(folderPath + savedFileName);
                 }
                 catch (Exception ex)
                 {
-                    // Only roll back if something actually failed
-                    transaction.Rollback();
-                    ShowModalAndError("Registration failed: " + ex.Message);
+                    ShowModalAndError("File upload failed: " + ex.Message);
+                    return;
                 }
             }
 
-            // 5. Redirect outside the try-catch block so we don't trigger rollback errors
-            if (isSuccess)
+            // 3. Hash Password and Store Data in Session temporarily
+            PasswordManager pwdManager = new PasswordManager();
+            string hashedPassword = pwdManager.HashPassword(password);
+
+            Session["Reg_Fname"] = txtFirstName.Text.Trim();
+            Session["Reg_Lname"] = txtLastName.Text.Trim();
+            Session["Reg_Dob"] = txtDob.Text;
+            Session["Reg_Contact"] = txtContact.Text.Trim();
+            Session["Reg_Email"] = email;
+
+            // SECURITY UPGRADE: Store the securely hashed password, never the plain text!
+            Session["Reg_Password"] = hashedPassword;
+
+            Session["Reg_RoleId"] = roleId;
+            Session["Reg_FileName"] = savedFileName;
+
+            // 4. Generate OTP and Redirect
+            try
             {
-                // Using false prevents the ThreadAbortException
-                Response.Redirect("Login.aspx?msg=RegistrationSuccess", false);
+                string otp = OtpHelper.GenerateNumericOtp();
+                string secret = ConfigurationManager.AppSettings["OtpSecret"];
+                string otpHash = OtpHelper.HmacOtp(otp, secret);
+
+                // Save OTP to DB tied to EMAIL, not UserId
+                OtpHelper.SaveOtpToDb(email, otpHash, DateTime.Now.AddMinutes(10));
+
+                // Send OTP email
+                EmailHelper.SendOtpEmail(email, otp, txtFirstName.Text.Trim());
+
+                // Redirect to universal OTP page, passing the next destination
+                string redirectUrl = $"~/Pages/Guest/VerifyOtp.aspx?email={Server.UrlEncode(email)}&next=ProcessSignUp.aspx";
+                Response.Redirect(redirectUrl, false);
                 Context.ApplicationInstance.CompleteRequest();
+            }
+            catch (Exception ex)
+            {
+                ShowModalAndError("Failed to initiate verification: " + ex.Message);
             }
         }
 
-        // Helper Method: Shows the error text and injects JS to re-open the Bootstrap Modal
         private void ShowModalAndError(string errorMsg)
         {
             lblError.Text = errorMsg;

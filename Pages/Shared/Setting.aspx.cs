@@ -2,6 +2,7 @@
 using System.Configuration;
 using System.Data.SqlClient;
 using System.Web.UI;
+using WAPP.Utils;
 
 namespace WAPP.Pages.Shared
 {
@@ -9,12 +10,11 @@ namespace WAPP.Pages.Shared
     {
         string connString = ConfigurationManager.ConnectionStrings["MyDbConn"].ConnectionString;
 
-        // Dynamic Master Page
         protected void Page_PreInit(object sender, EventArgs e)
         {
             if (Session["role_id"] == null)
             {
-                Response.Redirect("~/Pages/Guest/Login.aspx");
+                Response.Redirect("~/Pages/Guest/Home.aspx");
                 return;
             }
 
@@ -31,81 +31,114 @@ namespace WAPP.Pages.Shared
 
         protected void Page_Load(object sender, EventArgs e) { }
 
+        // --- BULLETPROOF PASSWORD UPDATE ---
         protected void btnChangePassword_Click(object sender, EventArgs e)
         {
+            Page.Validate("PasswordGroup");
             if (!Page.IsValid) return;
+            if (Session["UserId"] == null) return;
 
-            int userId = Convert.ToInt32(Session["Id"]);
-            string currentPass = txtCurrentPass.Text;
-            string newPass = txtNewPass.Text;
+            int userId = Convert.ToInt32(Session["UserId"]);
+            string currentPassTyped = txtCurrentPass.Text.Trim();
+            string newPassTyped = txtNewPass.Text.Trim();
 
-            using (SqlConnection conn = new SqlConnection(connString))
-            {
-                // Verify old password
-                string verifySql = "SELECT COUNT(*) FROM [user] WHERE Id = @Id AND password_hash = @oldPass";
-                using (SqlCommand cmdVerify = new SqlCommand(verifySql, conn))
-                {
-                    cmdVerify.Parameters.AddWithValue("@Id", userId);
-                    cmdVerify.Parameters.AddWithValue("@oldPass", currentPass);
-                    conn.Open();
-                    int exists = (int)cmdVerify.ExecuteScalar();
+            // Instantiate your PasswordManager
+            PasswordManager pwdManager = new PasswordManager();
 
-                    if (exists > 0)
-                    {
-                        // Proceed to update
-                        string updateSql = "UPDATE [user] SET password_hash = @newPass WHERE Id = @Id";
-                        using (SqlCommand cmdUpdate = new SqlCommand(updateSql, conn))
-                        {
-                            cmdUpdate.Parameters.AddWithValue("@newPass", newPass);
-                            cmdUpdate.Parameters.AddWithValue("@Id", userId);
-                            cmdUpdate.ExecuteNonQuery();
-
-                            lblMessage.Visible = true;
-                            lblMessage.Text = "Password changed successfully!";
-                            lblMessage.CssClass = "alert alert-success d-block";
-
-                            txtCurrentPass.Text = ""; txtNewPass.Text = ""; txtConfirmPass.Text = "";
-                        }
-                    }
-                    else
-                    {
-                        lblMessage.Visible = true;
-                        lblMessage.Text = "Incorrect current password.";
-                        lblMessage.CssClass = "alert alert-danger d-block";
-                    }
-                }
-            }
-        }
-
-        protected void btnDeleteAccount_Click(object sender, EventArgs e)
-        {
-            int userId = Convert.ToInt32(Session["Id"]);
             try
             {
                 using (SqlConnection conn = new SqlConnection(connString))
                 {
-                    // Note: If you have foreign key constraints in Course/Enrollment tables, 
-                    // a direct DELETE might fail. If so, a soft delete is safer:
-                    // "UPDATE [user] SET is_locked = 1, role_id = NULL WHERE Id = @Id"
+                    conn.Open();
 
-                    string sql = "DELETE FROM [user] WHERE Id = @Id";
-                    using (SqlCommand cmd = new SqlCommand(sql, conn))
+                    // Step 1: Get the actual current password hash from the database
+                    string dbPasswordHash = "";
+                    string fetchSql = "SELECT password_hash FROM [user] WHERE Id = @Id";
+                    using (SqlCommand cmdFetch = new SqlCommand(fetchSql, conn))
                     {
-                        cmd.Parameters.AddWithValue("@Id", userId);
-                        conn.Open();
-                        cmd.ExecuteNonQuery();
+                        cmdFetch.Parameters.AddWithValue("@Id", userId);
+                        object result = cmdFetch.ExecuteScalar();
+                        if (result != null)
+                        {
+                            dbPasswordHash = result.ToString();
+                        }
+                    }
+
+                    // Step 2: Compare what they typed with the database hash using BCrypt
+                    if (pwdManager.VerifyPassword(currentPassTyped, dbPasswordHash))
+                    {
+                        // Step 3: It matches! Hash the new password and update it.
+                        string newHashedPass = pwdManager.HashPassword(newPassTyped);
+
+                        string updateSql = "UPDATE [user] SET password_hash = @newPass WHERE Id = @Id";
+                        using (SqlCommand cmdUpdate = new SqlCommand(updateSql, conn))
+                        {
+                            // Save the HASH, not the plain text password
+                            cmdUpdate.Parameters.AddWithValue("@newPass", newHashedPass);
+                            cmdUpdate.Parameters.AddWithValue("@Id", userId);
+                            cmdUpdate.ExecuteNonQuery();
+
+                            lblMessage.Visible = true;
+                            lblMessage.Text = "Password updated successfully!";
+                            lblMessage.CssClass = "alert alert-success d-block";
+                        }
+                    }
+                    else
+                    {
+                        // It failed. Tell the user EXACTLY why.
+                        lblMessage.Visible = true;
+                        lblMessage.Text = "The current password you entered is incorrect.";
+                        lblMessage.CssClass = "alert alert-danger d-block";
                     }
                 }
-
-                // Log the user out after deletion
-                Session.Clear();
-                Session.Abandon();
-                Response.Redirect("~/Pages/Guest/Home.aspx");
             }
             catch (Exception ex)
             {
                 lblMessage.Visible = true;
-                lblMessage.Text = "Could not delete account. Ensure you have no active courses linked. Error: " + ex.Message;
+                lblMessage.Text = "Database Error: " + ex.Message;
+                lblMessage.CssClass = "alert alert-danger d-block";
+            }
+        }
+
+        // --- BULLETPROOF ACCOUNT LOCK ---
+        protected void btnDeleteAccount_Click(object sender, EventArgs e)
+        {
+            if (Session["UserId"] == null) return;
+            int userId = Convert.ToInt32(Session["UserId"]);
+
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(connString))
+                {
+                    // This sets is_locked to 1 (True) exactly like your UserManagement page
+                    string sql = "UPDATE [user] SET is_locked = 1 WHERE Id = @Id";
+                    using (SqlCommand cmd = new SqlCommand(sql, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@Id", userId);
+
+                        conn.Open();
+                        int rowsAffected = cmd.ExecuteNonQuery();
+
+                        if (rowsAffected > 0)
+                        {
+                            // It worked! Clear the session and kick them to login
+                            Session.Clear();
+                            Session.Abandon();
+                            Response.Redirect("~/Pages/Guest/Login.aspx");
+                        }
+                        else
+                        {
+                            lblMessage.Visible = true;
+                            lblMessage.Text = "Failed to lock account. User not found.";
+                            lblMessage.CssClass = "alert alert-warning d-block";
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                lblMessage.Visible = true;
+                lblMessage.Text = "Error locking account: " + ex.Message;
                 lblMessage.CssClass = "alert alert-danger d-block";
             }
         }

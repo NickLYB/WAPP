@@ -41,7 +41,7 @@
                     noRecRow.id = 'clientNoRecordRow';
                     var cell = document.createElement('td');
                     cell.colSpan = "100"; 
-                    cell.className = "ec-no-records"; /* Updated to Master CSS class */
+                    cell.className = "ec-no-records text-center py-4"; 
                     cell.innerText = "No courses found matching your filters.";
                     noRecRow.appendChild(cell);
                     tbody.appendChild(noRecRow);
@@ -65,21 +65,21 @@
             $('.modal-backdrop').remove(); $('body').removeClass('modal-open').css('overflow', '').css('padding-right', '');
         }
     </script>
-    </asp:Content>
+</asp:Content>
 
 <asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
     <asp:UpdateProgress ID="UpdateProgress1" runat="server" AssociatedUpdatePanelID="upCourseMgmt">
         <ProgressTemplate><div class="ec-loading-overlay"><div class="spinner-border text-primary"></div></div></ProgressTemplate>
     </asp:UpdateProgress>
 
-    <div class="ec-staff-wrapper">
+    <div class="ec-staff-wrapper container-fluid mt-4">
         <h2 class="ec-staff-title text-uppercase mb-4">Course Management</h2>
             
         <asp:UpdatePanel ID="upCourseMgmt" runat="server">
             <ContentTemplate>
                 <asp:Label ID="lblMessage" runat="server" CssClass="alert" Visible="false"></asp:Label>
 
-                <div class="ec-staff-card mb-4">
+                <div class="ec-staff-card mb-4 card shadow-sm">
                     <div class="card-body p-4">
                         
                         <div class="row mb-4 align-items-end">
@@ -117,9 +117,11 @@
                                 <label class="form-label small text-muted mb-1 fw-bold">Status</label>
                                 <asp:DropDownList ID="ddlFilterStatus" runat="server" CssClass="form-select ec-filter-ddl w-100" AutoPostBack="true" OnSelectedIndexChanged="FilterGrid_Changed">
                                     <asp:ListItem Value="All">All</asp:ListItem>
-                                    <asp:ListItem Value="ACTIVE">Approved</asp:ListItem>
-                                    <asp:ListItem Value="DRAFT">Pending</asp:ListItem>
-                                    <asp:ListItem Value="ARCHIVED">Rejected</asp:ListItem>
+                                    <asp:ListItem Value="APPROVED">Approved</asp:ListItem>
+                                    <asp:ListItem Value="PENDING">Pending</asp:ListItem>
+                                    <asp:ListItem Value="REJECT">Rejected</asp:ListItem>
+                                    <asp:ListItem Value="PUBLISHED">Published</asp:ListItem>
+                                    <asp:ListItem Value="PRIVATE">Private</asp:ListItem>
                                 </asp:DropDownList>
                             </div>
                             <div class="col-md-2">
@@ -131,6 +133,7 @@
                                     <asp:ListItem Value="3">3 Stars</asp:ListItem>
                                     <asp:ListItem Value="2">2 Stars</asp:ListItem>
                                     <asp:ListItem Value="1">1 Star</asp:ListItem>
+                                    <asp:ListItem Value="NoRating">No Rating</asp:ListItem>
                                 </asp:DropDownList>
                             </div>
                             <div class="col-md-2">
@@ -156,57 +159,58 @@
                                 <asp:DropDownList ID="ddlFilterYear" runat="server" CssClass="form-select ec-filter-ddl w-100" AutoPostBack="true" OnSelectedIndexChanged="FilterGrid_Changed"></asp:DropDownList>
                             </div>
                         </div>
-
                     </div>
                 </div>
 
-                <div class="ec-staff-card">
+                <div class="ec-staff-card card shadow-sm">
                     <div class="card-body p-0"> 
                         
-                        <asp:GridView ID="gvCourses" runat="server" CssClass="table table-hover ec-table-custom align-middle mb-0 border-top" 
-                            AutoGenerateColumns="False" GridLines="None" 
-                            DataKeyNames="Id" 
-                            ShowHeaderWhenEmpty="true"
-                            AllowPaging="True" 
-                            PageSize="10" 
-                            PagerSettings-Visible="false"
-                            OnDataBound="gvCourses_DataBound">
-                            
-                            <Columns>
-                                <asp:TemplateField><ItemTemplate><asp:CheckBox ID="chkSelect" runat="server" /></ItemTemplate></asp:TemplateField>
-                                <asp:BoundField DataField="title" HeaderText="Title" />
-                                <asp:TemplateField HeaderText="Description">
-                                    <ItemTemplate>
-                                        <span class="ec-desc-truncate" title='<%# Eval("description") %>'><%# Eval("description") %></span>
-                                    </ItemTemplate>
-                                </asp:TemplateField>
-                                <asp:BoundField DataField="category_name" HeaderText="Category" />
-                                <asp:BoundField DataField="skill_level" HeaderText="Skill Level" />
-                                <asp:BoundField DataField="tutor_name" HeaderText="Tutor ID & Name" />
-                                <asp:BoundField DataField="created_at" HeaderText="Date Created" DataFormatString="{0:dd/MM/yyyy}" />
-                                <asp:TemplateField HeaderText="Status">
-                                    <ItemTemplate>
-                                        <span class='<%# GetStatusDotClass(Eval("status")) %>'></span>
-                                        <%# GetStatusText(Eval("status")) %>
-                                    </ItemTemplate>
-                                </asp:TemplateField>
-                                <asp:TemplateField HeaderText="Rating">
-                                    <ItemTemplate>
-                                        <span class="fw-bold"><%# Eval("average_rating") ?? "N/A" %> <i class="bi bi-star-fill text-warning"></i></span>
-                                    </ItemTemplate>
-                                </asp:TemplateField>
-                            </Columns>
+                        <div class="table-responsive">
+                            <asp:GridView ID="gvCourses" runat="server" CssClass="table table-hover ec-table-custom align-middle mb-0 border-top" 
+                                AutoGenerateColumns="False" GridLines="None" 
+                                DataKeyNames="Id" 
+                                ShowHeaderWhenEmpty="true"
+                                AllowPaging="True" 
+                                PageSize="10" 
+                                PagerSettings-Visible="false"
+                                OnDataBound="gvCourses_DataBound">
+                                
+                                <Columns>
+                                    <asp:TemplateField><ItemTemplate><asp:CheckBox ID="chkSelect" runat="server" /></ItemTemplate></asp:TemplateField>
+                                    <asp:BoundField DataField="title" HeaderText="Title" />
+                                    <asp:TemplateField HeaderText="Description">
+                                        <ItemTemplate>
+                                            <span class="d-inline-block text-truncate" style="max-width: 200px;" title='<%# Eval("description") %>'><%# Eval("description") %></span>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                    <asp:BoundField DataField="category_name" HeaderText="Category" />
+                                    <asp:BoundField DataField="skill_level" HeaderText="Skill Level" />
+                                    <asp:BoundField DataField="tutor_name" HeaderText="Tutor" />
+                                    <asp:BoundField DataField="created_at" HeaderText="Date Created" DataFormatString="{0:dd/MM/yyyy}" />
+                                    <asp:TemplateField HeaderText="Status">
+                                        <ItemTemplate>
+                                            <span class='<%# GetStatusDotClass(Eval("status")) %>'></span>
+                                            <%# GetStatusText(Eval("status")) %>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                    <asp:TemplateField HeaderText="Rating">
+                                        <ItemTemplate>
+                                            <span class="fw-bold"><%# Eval("average_rating") != DBNull.Value ? Eval("average_rating") : "N/A" %> <i class="bi bi-star-fill text-warning"></i></span>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                </Columns>
 
-                            <EmptyDataTemplate><tr><td colspan="100%" class="ec-no-records">No courses found matching your filters.</td></tr></EmptyDataTemplate>
-                        </asp:GridView>
+                                <EmptyDataTemplate><tr><td colspan="100%" class="text-center py-4 text-muted">No courses found matching your filters.</td></tr></EmptyDataTemplate>
+                            </asp:GridView>
+                        </div>
 
-                        <div class="ec-pager-wrapper">
-                            <div class="ec-pager-info">
+                        <div class="d-flex justify-content-between align-items-center p-3 border-top">
+                            <div class="text-muted small">
                                 <asp:Literal ID="litPagerInfo" runat="server"></asp:Literal>
                             </div>
-                            <div class="d-flex gap-4">
-                                <asp:LinkButton ID="btnPrev" runat="server" CssClass="ec-pager-link" OnClick="btnPrev_Click"><i class="bi bi-chevron-left me-1"></i>Previous</asp:LinkButton>
-                                <asp:LinkButton ID="btnNext" runat="server" CssClass="ec-pager-link" OnClick="btnNext_Click">Next<i class="bi bi-chevron-right ms-1"></i></asp:LinkButton>
+                            <div class="d-flex gap-2">
+                                <asp:LinkButton ID="btnPrev" runat="server" CssClass="btn btn-outline-primary btn-sm" OnClick="btnPrev_Click"><i class="bi bi-chevron-left"></i> Prev</asp:LinkButton>
+                                <asp:LinkButton ID="btnNext" runat="server" CssClass="btn btn-outline-primary btn-sm" OnClick="btnNext_Click">Next <i class="bi bi-chevron-right"></i></asp:LinkButton>
                             </div>
                         </div>
 
@@ -215,13 +219,13 @@
 
                 <div class="modal fade" id="removeModal" tabindex="-1" aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content ec-modal-content border-danger" style="border-width: 4px !important;">
-                            <div class="ec-modal-header bg-danger text-white border-0">
-                                <h5 class="modal-title fw-bold text-uppercase">REMOVE COURSE CONFIRMATION</h5>
+                        <div class="modal-content border-danger" style="border-width: 4px !important;">
+                            <div class="modal-header bg-danger text-white border-0">
+                                <h5 class="modal-title fw-bold text-uppercase">Confirm Removal</h5>
                                 <button type="button" class="btn-close btn-close-white" onclick="closeRemoveModal()"></button>
                             </div>
-                            <div class="ec-modal-body text-center p-4">
-                                <h4 class="mb-3 fw-normal">Are you sure to remove the selected course(s)?</h4>
+                            <div class="modal-body text-center p-4">
+                                <h4 class="mb-3 fw-normal">Are you sure you want to remove these courses?</h4>
                                 <p class="text-danger fw-bold fs-5 mb-4"><asp:Literal ID="litSelectedTitles" runat="server"></asp:Literal></p>
                                 <div class="d-flex justify-content-center gap-3">
                                     <asp:Button ID="btnConfirmRemove" runat="server" Text="Remove" CssClass="btn btn-danger px-4 fw-bold rounded-pill" OnClick="btnConfirmRemove_Click" />

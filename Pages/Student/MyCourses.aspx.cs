@@ -4,6 +4,8 @@ using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Net.NetworkInformation;
+using System.Security.Cryptography;
 using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
@@ -34,12 +36,12 @@ namespace WAPP.Pages.Student
             using (SqlConnection conn = new SqlConnection(connStr))
             {
 
-                string query = @"
-                    SELECT e.course_id, c.title, e.status, c.image_path,
-                           (SELECT COUNT(*) FROM learningResource lr WHERE lr.course_id = e.course_id) as TotalLessons,
-                           (SELECT COUNT(*) FROM resourceProgress rp 
-                            JOIN learningResource lr2 ON rp.resource_id = lr2.Id
-                            WHERE rp.enrollment_id = e.Id) as CompletedLessons
+                 string query = @"
+                     SELECT e.course_id, c.title, e.status, c.image_path,
+                        (SELECT COUNT(*) FROM learningResource lr WHERE lr.course_id = e.course_id) as TotalLessons,
+                        (SELECT COUNT(*) FROM resourceProgress rp
+                        JOIN learningResource lr2 ON rp.resource_id = lr2.Id
+                        WHERE rp.enrollment_id = e.Id AND rp.completed_at IS NOT NULL) as CompletedLessons
                     FROM enrollment e
                     JOIN course c ON e.course_id = c.Id
                     WHERE e.student_id = @sid AND e.status = 'ENROLLED'";

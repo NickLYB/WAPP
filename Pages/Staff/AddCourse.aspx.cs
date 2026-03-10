@@ -28,35 +28,45 @@ namespace WAPP.Pages.Staff
         {
             using (SqlConnection conn = new SqlConnection(connString))
             {
-                conn.Open();
-
-                using (SqlCommand cmdCat = new SqlCommand("SELECT Id, name FROM [courseType]", conn))
+                // 1. Load Categories
+                using (SqlDataAdapter sdaCat = new SqlDataAdapter("SELECT Id, name FROM [courseType]", conn))
                 {
-                    using (SqlDataReader rdrCat = cmdCat.ExecuteReader())
-                    {
-                        ddlAddCategory.DataSource = rdrCat;
-                        ddlAddCategory.DataTextField = "name";
-                        ddlAddCategory.DataValueField = "Id";
-                        ddlAddCategory.DataBind();
-                    }
+                    DataTable dtCat = new DataTable();
+                    sdaCat.Fill(dtCat);
+                    ddlAddCategory.DataSource = dtCat;
+                    ddlAddCategory.DataTextField = "name";
+                    ddlAddCategory.DataValueField = "Id";
+                    ddlAddCategory.DataBind();
                 }
 
-                using (SqlCommand cmdTutor = new SqlCommand("SELECT Id, ('T' + RIGHT('000'+CAST(Id AS VARCHAR), 3) + '-' + fname) as FullTutorName FROM [user] WHERE role_id = 3", conn))
+                // 2. Load Tutors (Formatted as: T004-John Doe)
+                string tutorSql = @"SELECT Id, 
+                                           'T' + RIGHT('000' + CAST(Id AS VARCHAR(10)), 3) + '-' + fname + ' ' + lname AS FullTutorName 
+                                    FROM [user] 
+                                    WHERE role_id = 3";
+                using (SqlDataAdapter sdaTutor = new SqlDataAdapter(tutorSql, conn))
                 {
-                    using (SqlDataReader rdrTutor = cmdTutor.ExecuteReader())
-                    {
-                        ddlAddTutor.DataSource = rdrTutor;
-                        ddlAddTutor.DataTextField = "FullTutorName";
-                        ddlAddTutor.DataValueField = "Id";
-                        ddlAddTutor.DataBind();
-                    }
+                    DataTable dtTutor = new DataTable();
+                    sdaTutor.Fill(dtTutor);
+                    ddlAddTutor.DataSource = dtTutor;
+                    ddlAddTutor.DataTextField = "FullTutorName";
+                    ddlAddTutor.DataValueField = "Id";
+                    ddlAddTutor.DataBind();
                 }
             }
         }
 
         protected void btnSaveCourse_Click(object sender, EventArgs e)
         {
-            if (!Page.IsValid) return;
+            if (string.IsNullOrWhiteSpace(txtAddTitle.Text) ||
+                string.IsNullOrWhiteSpace(txtAddDesc.Text) ||
+                string.IsNullOrWhiteSpace(txtAddDuration.Text))
+            {
+                lblMessage.Visible = true;
+                lblMessage.Text = "Please fill out all required fields.";
+                lblMessage.CssClass = "alert alert-danger d-block";
+                return;
+            }
 
             try
             {

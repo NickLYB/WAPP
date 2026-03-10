@@ -43,6 +43,15 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="BCrypt.Net-Next, Version=4.1.0.0, Culture=neutral, PublicKeyToken=1e11be04b6288443, processorArchitecture=MSIL">
+      <HintPath>packages\BCrypt.Net-Next.4.1.0\lib\net472\BCrypt.Net-Next.dll</HintPath>
+    </Reference>
+    <Reference Include="Hangfire.Core, Version=1.8.23.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\Hangfire.Core.1.8.23\lib\net46\Hangfire.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Hangfire.SqlServer, Version=1.8.23.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\Hangfire.SqlServer.1.8.23\lib\net451\Hangfire.SqlServer.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.AspNet.SignalR.Core, Version=2.4.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>packages\Microsoft.AspNet.SignalR.Core.2.4.3\lib\net45\Microsoft.AspNet.SignalR.Core.dll</HintPath>
     </Reference>
@@ -68,11 +77,24 @@
     <Reference Include="Owin, Version=1.0.0.0, Culture=neutral, PublicKeyToken=f0ebd12fd5e55cc5, processorArchitecture=MSIL">
       <HintPath>packages\Owin.1.0\lib\net40\Owin.dll</HintPath>
     </Reference>
+    <Reference Include="System.Buffers, Version=4.0.5.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>packages\System.Buffers.4.6.1\lib\net462\System.Buffers.dll</HintPath>
+    </Reference>
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Memory, Version=4.0.5.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>packages\System.Memory.4.6.3\lib\net462\System.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors, Version=4.1.6.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>packages\System.Numerics.Vectors.4.6.1\lib\net462\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>packages\System.Runtime.CompilerServices.Unsafe.6.1.2\lib\net462\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
     <Reference Include="System.Security" />
     <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Xml.Linq" />
@@ -139,6 +161,8 @@
     <Content Include="Content\bootstrap.rtl.min.css" />
     <Content Include="Content\Site.css" />
     <Content Include="Controls\LoginModal.ascx" />
+    <Content Include="MigratePasswords.aspx" />
+    <Content Include="Pages\Guest\ProcessSignUp.aspx" />
     <Content Include="Controls\ProfileDropdown.ascx" />
     <Content Include="Controls\SignUpModal.ascx" />
     <Content Include="CSS\site.css" />
@@ -157,6 +181,7 @@
     <Content Include="Pages\Guest\Login.aspx" />
     <Content Include="Pages\Guest\Privacy.aspx" />
     <Content Include="Pages\Guest\Terms.aspx" />
+    <Content Include="Pages\Guest\VerifyOtp.aspx" />
     <Content Include="Pages\Shared\EditProfile.aspx" />
     <Content Include="Pages\Shared\ProfileDropdown.ascx" />
     <Content Include="Pages\Shared\Setting.aspx" />
@@ -178,20 +203,20 @@
     <Content Include="Pages\Student\Home.aspx" />
     <Content Include="Pages\Student\LessonView.aspx" />
     <Content Include="Pages\Student\MyCourses.aspx" />
-    <Content Include="Pages\Student\Notifications.ascx" />
+    <Content Include="Pages\Student\Notifications.aspx" />
     <Content Include="Pages\Student\ProfileDropdown.ascx" />
     <Content Include="Pages\Student\QuizReview.aspx" />
     <Content Include="Pages\Student\Quizzes.aspx" />
-    <Content Include="Pages\Student\RecentActivity.ascx" />
-    <Content Include="Pages\Student\RecentCourse.ascx" />
+    <Content Include="Pages\Student\Results.aspx" />
     <Content Include="Pages\Student\Setting.aspx" />
     <Content Include="Pages\Student\StudentCalendar.ascx" />
     <Content Include="Pages\Student\Study.aspx" />
+    <Content Include="Pages\Student\TutorProfile.aspx" />
     <Content Include="Pages\Tutor\About.aspx" />
     <Content Include="Pages\Tutor\Announcement.aspx" />
     <Content Include="Pages\Tutor\AnnouncementRecord.aspx" />
     <Content Include="Pages\Tutor\Calendar.ascx" />
-    <Content Include="Pages\Tutor\Chat.aspx" />
+    <Content Include="Pages\Shared\Chat.aspx" />
     <Content Include="Pages\Tutor\CreateCourseModal.ascx" />
     <Content Include="Pages\Tutor\CreateNewCourse.aspx" />
     <Content Include="Pages\Tutor\CreateQuiz.aspx" />
@@ -199,11 +224,13 @@
     <Content Include="Pages\Tutor\EditCourseOverviewModal.ascx" />
     <Content Include="Pages\Tutor\EditLessonModal.ascx" />
     <Content Include="Pages\Tutor\Home.aspx" />
+    <Content Include="Pages\Tutor\Notifications.aspx" />
     <Content Include="Pages\Tutor\ProfileDropdown.ascx" />
     <Content Include="Pages\Tutor\RecentAnnouncement.ascx" />
     <Content Include="Pages\Tutor\Setting.aspx" />
     <Content Include="Pages\Tutor\StudentProgress.aspx" />
     <Content Include="Pages\Tutor\Teaching.aspx" />
+    <Content Include="Pages\Tutor\TutorAppointments.aspx" />
     <Content Include="Pages\Tutor\UploadCourseMaterial.aspx" />
     <Content Include="Masters\Guest.Master" />
     <Content Include="Masters\Tutor.Master" />
@@ -278,6 +305,20 @@
     </Compile>
     <Compile Include="Controls\LoginModal.ascx.designer.cs">
       <DependentUpon>LoginModal.ascx</DependentUpon>
+    </Compile>
+    <Compile Include="MigratePasswords.aspx.cs">
+      <DependentUpon>MigratePasswords.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="MigratePasswords.aspx.designer.cs">
+      <DependentUpon>MigratePasswords.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Guest\ProcessSignUp.aspx.cs">
+      <DependentUpon>ProcessSignUp.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Guest\ProcessSignUp.aspx.designer.cs">
+      <DependentUpon>ProcessSignUp.aspx</DependentUpon>
     </Compile>
     <Compile Include="Controls\ProfileDropdown.ascx.cs">
       <DependentUpon>ProfileDropdown.ascx</DependentUpon>
@@ -414,6 +455,13 @@
     </Compile>
     <Compile Include="Pages\Guest\Terms.aspx.designer.cs">
       <DependentUpon>Terms.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Guest\VerifyOtp.aspx.cs">
+      <DependentUpon>VerifyOtp.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Guest\VerifyOtp.aspx.designer.cs">
+      <DependentUpon>VerifyOtp.aspx</DependentUpon>
     </Compile>
     <Compile Include="Pages\Shared\EditProfile.aspx.cs">
       <DependentUpon>EditProfile.aspx</DependentUpon>
@@ -562,12 +610,12 @@
     <Compile Include="Pages\Student\MyCourses.aspx.designer.cs">
       <DependentUpon>MyCourses.aspx</DependentUpon>
     </Compile>
-    <Compile Include="Pages\Student\Notifications.ascx.cs">
-      <DependentUpon>Notifications.ascx</DependentUpon>
+    <Compile Include="Pages\Student\Notifications.aspx.cs">
+      <DependentUpon>Notifications.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
-    <Compile Include="Pages\Student\Notifications.ascx.designer.cs">
-      <DependentUpon>Notifications.ascx</DependentUpon>
+    <Compile Include="Pages\Student\Notifications.aspx.designer.cs">
+      <DependentUpon>Notifications.aspx</DependentUpon>
     </Compile>
     <Compile Include="Pages\Student\ProfileDropdown.ascx.cs">
       <DependentUpon>ProfileDropdown.ascx</DependentUpon>
@@ -590,19 +638,12 @@
     <Compile Include="Pages\Student\Quizzes.aspx.designer.cs">
       <DependentUpon>Quizzes.aspx</DependentUpon>
     </Compile>
-    <Compile Include="Pages\Student\RecentActivity.ascx.cs">
-      <DependentUpon>RecentActivity.ascx</DependentUpon>
+    <Compile Include="Pages\Student\Results.aspx.cs">
+      <DependentUpon>Results.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
-    <Compile Include="Pages\Student\RecentActivity.ascx.designer.cs">
-      <DependentUpon>RecentActivity.ascx</DependentUpon>
-    </Compile>
-    <Compile Include="Pages\Student\RecentCourse.ascx.cs">
-      <DependentUpon>RecentCourse.ascx</DependentUpon>
-      <SubType>ASPXCodeBehind</SubType>
-    </Compile>
-    <Compile Include="Pages\Student\RecentCourse.ascx.designer.cs">
-      <DependentUpon>RecentCourse.ascx</DependentUpon>
+    <Compile Include="Pages\Student\Results.aspx.designer.cs">
+      <DependentUpon>Results.aspx</DependentUpon>
     </Compile>
     <Compile Include="Pages\Student\Setting.aspx.cs">
       <DependentUpon>Setting.aspx</DependentUpon>
@@ -624,6 +665,13 @@
     </Compile>
     <Compile Include="Pages\Student\Study.aspx.designer.cs">
       <DependentUpon>Study.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Student\TutorProfile.aspx.cs">
+      <DependentUpon>TutorProfile.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Student\TutorProfile.aspx.designer.cs">
+      <DependentUpon>TutorProfile.aspx</DependentUpon>
     </Compile>
     <Compile Include="Pages\Tutor\About.aspx.cs">
       <DependentUpon>About.aspx</DependentUpon>
@@ -653,11 +701,11 @@
     <Compile Include="Pages\Tutor\Calendar.ascx.designer.cs">
       <DependentUpon>Calendar.ascx</DependentUpon>
     </Compile>
-    <Compile Include="Pages\Tutor\Chat.aspx.cs">
+    <Compile Include="Pages\Shared\Chat.aspx.cs">
       <DependentUpon>Chat.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
-    <Compile Include="Pages\Tutor\Chat.aspx.designer.cs">
+    <Compile Include="Pages\Shared\Chat.aspx.designer.cs">
       <DependentUpon>Chat.aspx</DependentUpon>
     </Compile>
     <Compile Include="Pages\Tutor\CreateCourseModal.ascx.cs">
@@ -708,6 +756,13 @@
     <Compile Include="Pages\Tutor\Home.aspx.designer.cs">
       <DependentUpon>Home.aspx</DependentUpon>
     </Compile>
+    <Compile Include="Pages\Tutor\Notifications.aspx.cs">
+      <DependentUpon>Notifications.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Tutor\Notifications.aspx.designer.cs">
+      <DependentUpon>Notifications.aspx</DependentUpon>
+    </Compile>
     <Compile Include="Pages\Tutor\ProfileDropdown.ascx.cs">
       <DependentUpon>ProfileDropdown.ascx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
@@ -741,6 +796,13 @@
     </Compile>
     <Compile Include="Pages\Tutor\Teaching.aspx.designer.cs">
       <DependentUpon>Teaching.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Tutor\TutorAppointments.aspx.cs">
+      <DependentUpon>TutorAppointments.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Tutor\TutorAppointments.aspx.designer.cs">
+      <DependentUpon>TutorAppointments.aspx</DependentUpon>
     </Compile>
     <Compile Include="Pages\Tutor\UploadCourseMaterial.aspx.cs">
       <DependentUpon>UploadCourseMaterial.aspx</DependentUpon>
@@ -779,6 +841,9 @@
       <DependentUpon>Site.Mobile.Master</DependentUpon>
     </Compile>
     <Compile Include="Startup.cs" />
+    <Compile Include="Utils\EmailHelper.cs" />
+    <Compile Include="Utils\OtpHelper.cs" />
+    <Compile Include="Utils\PasswordManager.cs" />
     <Compile Include="ViewSwitcher.ascx.cs">
       <DependentUpon>ViewSwitcher.ascx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
@@ -817,6 +882,7 @@
     <Content Include="Scripts\bootstrap.bundle.js.map" />
     <Content Include="Scripts\jquery-3.7.1.slim.min.map" />
     <Content Include="Scripts\jquery-3.7.1.min.map" />
+    <Content Include="Student.sitemap" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

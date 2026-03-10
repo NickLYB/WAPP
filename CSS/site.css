@@ -32,7 +32,7 @@
     --ec-shadow-hover: 0 10px 20px rgba(0,0,0,0.05);
 }
 
-/* --- 2. GLOBAL RESET & BASE --- */
+/* --- 2. GLOBAL BASE & TYPOGRAPHY --- */
 html, body, form {
     margin: 0;
     min-height: 100vh;
@@ -51,8 +51,6 @@ form {
     flex-direction: column;
 }
 
-/* --- 3. TYPOGRAPHY & TEXT UTILITIES --- */
-/* Grouped Title Twins */
 .ec-page-title, .ec-staff-title {
     font-size: 1.75rem;
     font-weight: 700;
@@ -79,7 +77,6 @@ form {
     margin: 0;
 }
 
-/* Grouped Standard Text Colors */
 .text-primary {
     color: var(--ec-primary) !important;
 }
@@ -96,10 +93,7 @@ form {
     color: var(--ec-danger-brand) !important;
 }
 
-/* Removed .ec-section-gap and .ec-item-gap entirely. Use Bootstrap's mb-4 and mb-3 instead. */
-/* Removed .lesson-view-font entirely. Let the system font inherit naturally. */
-
-/* --- 4. LAYOUT CONTAINERS --- */
+/* --- 3. LAYOUT CONTAINERS & NAV --- */
 .page-content {
     display: flex;
     justify-content: center;
@@ -107,7 +101,6 @@ form {
     min-height: calc(100vh - 80px);
 }
 
-/* Grouped Wrapper Clones */
 .ec-content-wrapper, .ec-staff-wrapper {
     margin: 0 auto;
     width: 100%;
@@ -116,7 +109,7 @@ form {
 
 .ec-content-wrapper {
     max-width: 1300px;
-    padding: 12px 24px 40px 24px;
+    padding: 12px 24px 40px;
 }
 
 .ec-staff-wrapper {
@@ -124,14 +117,12 @@ form {
     padding: 40px 24px;
 }
 
-/* Split Layouts */
 .page-layout-split {
     display: flex;
     gap: 24px;
     width: 100%;
     max-width: 1400px;
     margin: 0 auto;
-    box-sizing: border-box;
     align-items: flex-start;
 }
 
@@ -183,7 +174,6 @@ form {
     }
 }
 
-/* --- 5. NAVIGATION --- */
 .ec-navbar {
     width: 100%;
     height: 80px;
@@ -221,7 +211,7 @@ form {
     font-weight: 500;
     padding: 8px 12px;
     border-radius: var(--ec-radius-sm);
-    transition: all 0.2s ease;
+    transition: 0.2s ease;
 }
 
     .nav-item:hover {
@@ -229,8 +219,7 @@ form {
         background-color: rgba(13, 110, 253, 0.05);
     }
 
-/* --- 6. BUTTONS & LINKS (Consolidated) --- */
-/* Core Button Baseline for ALL Custom Buttons */
+/* --- 4. BUTTONS & LINKS --- */
 .btn-main, .btn-primary.w-100, .ec-btn-primary, .btn-sub, .ec-btn-edit {
     display: inline-block;
     font-weight: 600;
@@ -241,7 +230,10 @@ form {
     box-sizing: border-box;
 }
 
-/* Dark Buttons (Merged .btn-main and modal's .btn-primary.w-100) */
+.btn-primary.w-100, .ec-btn-primary, .btn-sub, .ec-btn-edit, .btn-pill {
+    border-radius: var(--ec-radius-pill) !important;
+}
+
 .btn-main, .btn-primary.w-100 {
     background-color: var(--ec-dark);
     color: #fff !important;
@@ -252,11 +244,6 @@ form {
     padding: 10px 20px;
 }
 
-.btn-primary.w-100, .ec-btn-primary, .btn-sub, .ec-btn-edit, .btn-pill {
-    border-radius: var(--ec-radius-pill) !important;
-}
-
-    /* Grouped Hover Effects for Solid Buttons */
     .btn-main:hover, .btn-primary.w-100:hover, .ec-btn-primary:hover {
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
@@ -266,7 +253,6 @@ form {
         background-color: var(--ec-dark-hover);
     }
 
-/* Blue Primary Buttons */
 .ec-btn-primary {
     background-color: var(--ec-primary) !important;
     color: white !important;
@@ -278,7 +264,6 @@ form {
         background-color: var(--ec-primary-hover) !important;
     }
 
-/* Hollow/Secondary Buttons */
 .btn-sub, .ec-btn-edit {
     background-color: transparent !important;
 }
@@ -308,7 +293,6 @@ form {
         background-color: rgba(13, 110, 253, 0.05) !important;
     }
 
-/* Links Grouped */
 .ec-link-primary {
     display: block;
     text-align: center;
@@ -331,7 +315,6 @@ form {
     transition: color 0.2s;
 }
 
-/* FAB & Profile Trigger */
 .ec-fab {
     position: fixed;
     bottom: 30px;
@@ -394,13 +377,12 @@ form {
         transform: scale(0.95);
     }
 
-/* --- 7. CARDS & SURFACES --- */
+/* --- 5. CARDS & SURFACES --- */
 .ec-hero {
     background: linear-gradient(135deg, #fff9c4 0%, #fdf396 100%);
     border-radius: var(--ec-radius-lg);
     box-shadow: 0 4px 15px rgba(0,0,0,0.05);
     display: flex;
-    flex-direction: row;
     align-items: center;
     gap: 24px;
     padding: 30px 40px;
@@ -425,7 +407,6 @@ form {
     background-color: #ddd;
 }
 
-/* Grouped Glass and Standard Cards */
 .ec-glass-card, .ec-staff-card {
     border-radius: var(--ec-radius-lg);
     overflow: hidden;
@@ -475,7 +456,6 @@ form {
     padding-top: 15px;
 }
 
-/* Course Grid */
 .ec-course-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -536,14 +516,14 @@ form {
     align-items: center;
 }
 
-/* Stats & Data Displays */
+/* --- 6. STATS & STATUS PILLS --- */
 .ec-stat-box {
     background-color: var(--ec-bg-alt);
     border: 1px solid var(--ec-border-light);
     border-radius: var(--ec-radius-md);
     padding: 20px 15px;
     text-align: center;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: 0.2s;
 }
 
     .ec-stat-box:hover {
@@ -613,7 +593,6 @@ form {
     border-bottom: 2px solid var(--ec-border-subtle);
 }
 
-/* Grouped List Items */
 .ec-item-row, .ec-feed-item {
     display: flex;
     justify-content: space-between;
@@ -681,7 +660,7 @@ form {
     transition: width 0.6s ease;
 }
 
-/* --- 8. CHAT & VIDEO INTERFACES --- */
+/* --- 7. CHAT & MEDIA INTERFACES --- */
 .ec-chat-layout {
     display: flex;
     height: 70vh;
@@ -827,8 +806,7 @@ form {
         border: 0;
     }
 
-/* --- 9. MODALS, INPUTS & TABS --- */
-/* Grouped Modal Containers */
+/* --- 8. MODALS, INPUTS, TABLES & TABS --- */
 .modal-content, .ec-modal-content {
     border: none !important;
     border-radius: var(--ec-radius-lg) !important;
@@ -893,7 +871,7 @@ form {
     padding: 10px 20px;
     font-weight: 500;
     color: #444;
-    transition: background-color 0.2s ease, color 0.2s ease;
+    transition: 0.2s ease;
 }
 
     .dropdown-item:hover {
@@ -931,7 +909,7 @@ form {
         background: rgba(0,0,0,0.02) !important;
     }
 
-/* --- 10. ASP.NET OVERRIDES (!important) --- */
+/* ASP.NET Overrides */
 .ec-search-input {
     border: 1px solid var(--ec-border-light) !important;
     border-radius: 50px 0 0 50px !important;
@@ -1057,7 +1035,7 @@ form {
     border-radius: var(--ec-radius-md);
     position: relative;
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: 0.3s;
     border: none;
     text-decoration: none;
     vertical-align: middle;
@@ -1091,17 +1069,13 @@ form {
         left: 2px;
     }
 
-.ec-calendar {
+/* Calendar */
+.ec-calendar, .ec-calendar table {
     width: 100% !important;
     border-collapse: collapse !important;
     border: none !important;
     background-color: transparent !important;
 }
-
-    .ec-calendar table {
-        width: 100% !important;
-        background: transparent !important;
-    }
 
     .ec-calendar th {
         background-color: transparent !important;
@@ -1143,9 +1117,37 @@ form {
                 background-color: var(--ec-primary) !important;
                 color: #fff !important;
             }
-/* --- 11. GLOBAL UTILITIES (Add to Master CSS) --- */
 
-/* Standard Text Truncation (Prevents long descriptions from breaking tables) */
+.ec-table-dark {
+    background: transparent !important;
+    border-collapse: separate;
+    border-spacing: 0 8px;
+}
+
+    .ec-table-dark thead th {
+        background: rgba(255, 255, 255, 0.05) !important;
+        color: #a0aec0 !important;
+        border: none !important;
+        padding: 12px;
+    }
+
+    .ec-table-dark tbody tr {
+        background: rgba(255, 255, 255, 0.03) !important;
+        transition: transform 0.2s;
+    }
+
+        .ec-table-dark tbody tr:hover {
+            background: rgba(255, 255, 255, 0.07) !important;
+            transform: scale(1.01);
+        }
+
+    .ec-table-dark td {
+        border: none !important;
+        padding: 12px !important;
+        color: #e2e8f0 !important;
+    }
+
+/* --- 9. UTILITIES --- */
 .ec-desc-truncate {
     display: inline-block;
     max-width: 250px;
@@ -1155,7 +1157,6 @@ form {
     vertical-align: middle;
 }
 
-/* Universal Loading Overlay */
 .ec-loading-overlay {
     position: fixed;
     top: 0;
@@ -1169,7 +1170,6 @@ form {
     align-items: center;
 }
 
-/* Universal Status Dots (Matches your C# code-behind classes) */
 .status-dot {
     display: inline-block;
     width: 12px;
@@ -1178,43 +1178,33 @@ form {
     margin-right: 6px;
     vertical-align: middle;
 }
-/* Covers Tutor App */
-.dot-verified {
+
+.dot-verified, .dot-active {
     background-color: var(--ec-success-text);
 }
 
-.dot-rejected {
+.dot-rejected, .dot-archived {
     background-color: var(--ec-danger-brand);
 }
 
-.dot-pending {
-    background-color: #ffc107;
-}
-/* Covers Course App */
-.dot-active {
-    background-color: var(--ec-success-text);
-}
-
-.dot-archived {
-    background-color: var(--ec-danger-brand);
-}
-
-.dot-draft {
+.dot-pending, .dot-draft {
     background-color: #ffc107;
 }
 
 .dot-scheduled {
     background-color: #0dcaf0;
 }
-/* ==========================================================================
-   14. QUIZ INTERFACE
-   ========================================================================== */
+
+.text-muted.small:hover {
+    color: #3b82f6 !important;
+}
+
+/* --- 10. QUIZ & LESSON INTERFACES --- */
 .ec-quiz-container {
     max-width: 850px;
     margin: 0 auto;
 }
 
-/* Sticky Timer Header */
 .ec-quiz-timer {
     position: sticky;
     top: 0;
@@ -1225,7 +1215,6 @@ form {
     margin-bottom: 30px;
 }
 
-/* Radio Button List Styling */
 .ec-option-list li {
     list-style: none;
     margin-bottom: 12px;
@@ -1237,7 +1226,7 @@ form {
     border: 1px solid var(--ec-border-light);
     border-radius: var(--ec-radius-md);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: 0.2s ease;
     color: var(--ec-text-main);
     background-color: var(--ec-bg-surface);
 }
@@ -1258,7 +1247,7 @@ form {
 .ec-option-list label:hover {
     background-color: var(--ec-bg-alt);
 }
-/* Quiz Review Statuses (Mapped to C# Code-Behind) */
+
 .option-item {
     padding: 12px 20px;
     border-radius: var(--ec-radius-md);
@@ -1269,20 +1258,20 @@ form {
     background-color: var(--ec-bg-alt);
     color: var(--ec-text-main);
 }
-/* Highlight the correct answer */
+
 .is-correct-choice {
     background-color: var(--ec-success-bg) !important;
     border-color: var(--ec-success-text) !important;
     color: var(--ec-success-text) !important;
     font-weight: bold;
 }
-/* Highlight the wrong answer picked by student */
+
 .is-wrong-choice {
     background-color: var(--ec-danger-bg) !important;
     border-color: var(--ec-danger-brand) !important;
     color: var(--ec-danger-text) !important;
 }
-/* Highlight the correct answer the student missed */
+
 .is-missed-correct {
     border: 2px dashed var(--ec-success-text) !important;
     color: var(--ec-success-text) !important;
@@ -1297,6 +1286,7 @@ form {
     width: 32px;
     margin-right: 12px;
 }
+
 .ec-lesson-container {
     background: #ffffff;
     border: 1px solid #e2e8f0;
@@ -1305,7 +1295,7 @@ form {
 }
 
 .lesson-main-row {
-    border: none !important; /* Remove the old row border */
+    border: none !important;
     padding-top: 1rem;
     padding-bottom: 1rem;
 }
@@ -1318,20 +1308,13 @@ form {
         background-color: #f1f5f9 !important;
     }
 
-/* Subtle indentation for the "Add Quiz" link */
-.text-muted.small:hover {
-    color: #3b82f6 !important;
-}
-
-/* ==========================================================================
-   15. GLOBAL FOOTER (Rich Dark Variant)
-   ========================================================================== */
+/* --- 11. GLOBAL FOOTER --- */
 .ec-footer {
     background-color: var(--ec-dark);
     color: white;
     padding: 60px 0 20px;
     width: 100%;
-    margin-top: auto; /* Pushes footer to the absolute bottom of the screen */
+    margin-top: auto;
 }
 
     .ec-footer h3 {
@@ -1365,13 +1348,13 @@ form {
     .ec-footer a {
         color: rgba(255, 255, 255, 0.8);
         text-decoration: none;
-        transition: color 0.3s ease, padding-left 0.3s ease;
+        transition: 0.3s ease;
         display: inline-block;
     }
 
         .ec-footer a:hover {
             color: var(--ec-bg-nav);
-            padding-left: 6px; /* Adds a nice sliding hover effect */
+            padding-left: 6px;
         }
 
     .ec-footer .footer-bottom {
@@ -1381,4 +1364,274 @@ form {
         border-top: 1px solid rgba(255, 255, 255, 0.1);
         color: rgba(255, 255, 255, 0.6);
         font-size: 0.9rem;
+    }
+
+/* ==========================================================================
+   12. FULLY COMPLETE GLOBAL DARK MODE (Consolidated & Optimized)
+   ========================================================================== */
+
+/* Level 0: Pure Dark Backgrounds (#121212) */
+html.dark-mode, html.dark-mode body, html.dark-mode form#form1, html.dark-mode .page-content {
+    background-color: #121212 !important;
+    color: #ffffff !important;
+}
+
+    /* Level 1: Core Navigation & Headers (#1a1a1a) */
+    html.dark-mode .ec-navbar, html.dark-mode .ec-footer, html.dark-mode .ec-modal-header, html.dark-mode .ec-modal-footer {
+        background-color: #1a1a1a !important;
+        border-color: #333 !important;
+    }
+
+    /* Level 2: Main Surface Containers (#1e1e1e) */
+    html.dark-mode .ec-staff-card, html.dark-mode .ec-glass-card, html.dark-mode .ec-course-box,
+    html.dark-mode .ec-stat-box, html.dark-mode .settings-card, html.dark-mode .card,
+    html.dark-mode .profile-wrapper, html.dark-mode .profile-card, html.dark-mode .modal-content,
+    html.dark-mode .dropdown-menu, html.dark-mode .ec-modal-body, html.dark-mode .ec-table-custom > tbody > tr > td,
+    html.dark-mode .ec-lesson-container, html.dark-mode .list-group-item, html.dark-mode .ec-glass-card[style*="top: 15px"],
+    html.dark-mode .ec-glass-card-body .bg-white .badge.bg-light {
+        background-color: #1e1e1e !important;
+        border-color: #333 !important;
+        color: #ffffff !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.5) !important;
+    }
+
+        /* Level 3: Elevated Surfaces & Interactive Hovers (#2a2a2a) */
+        html.dark-mode .ec-table-custom.table-hover > tbody > tr:hover > td, html.dark-mode .ec-glass-card-body .bg-light,
+        html.dark-mode .ec-glass-card-body .bg-light.border, html.dark-mode .btn-sub, html.dark-mode .list-group-item:hover,
+        html.dark-mode .ec-glass-card-body .bg-white, html.dark-mode .ec-glass-card-header[style*="--ec-bg-alt"],
+        html.dark-mode .ec-item-row.p-3.rounded, html.dark-mode .option-item, html.dark-mode .ec-option-list label,
+        html.dark-mode table.ec-table-dark tbody tr, html.dark-mode table.ec-table-dark tbody tr td,
+        html.dark-mode .ec-glass-card .text-primary.fw-bold[style*="background: var(--ec-bg-alt)"], html.dark-mode .modern-calendar td:hover {
+            background-color: #2a2a2a !important;
+            border-color: #444 !important;
+            color: #e2e8f0 !important;
+        }
+
+    /* Level 4: Deep Form Inputs & Table Headers (#2d2d2d) */
+    html.dark-mode input[type="text"], html.dark-mode input[type="password"], html.dark-mode input[type="email"],
+    html.dark-mode input[type="date"], html.dark-mode textarea, html.dark-mode select, html.dark-mode .form-control,
+    html.dark-mode .form-select, html.dark-mode .ec-search-input, html.dark-mode .ec-filter-ddl,
+    html.dark-mode .ec-pager-wrapper, html.dark-mode .theme-switch, html.dark-mode .sortable-ghost,
+    html.dark-mode .ec-table-custom thead, html.dark-mode .ec-table-custom thead tr, html.dark-mode .ec-table-custom th,
+    html.dark-mode .table thead, html.dark-mode .table thead tr, html.dark-mode .table th,
+    html.dark-mode tr[style*="background-color: White"], html.dark-mode tr[style*="background-color: white"],
+    html.dark-mode tr[style*="background-color:#FFFFFF"], html.dark-mode tr[style*="background-color:#ffffff"] {
+        background-color: #2d2d2d !important;
+        color: #ffffff !important;
+        border-color: #555 !important;
+    }
+
+    html.dark-mode tr[style*="background-color: White"], html.dark-mode tr[style*="background-color: white"],
+    html.dark-mode tr[style*="background-color:#FFFFFF"], html.dark-mode tr[style*="background-color:#ffffff"] {
+        border-bottom: 2px solid #555 !important;
+    }
+
+    /* Text Utilities (Whites & Lights) */
+    html.dark-mode h1, html.dark-mode h2, html.dark-mode h3, html.dark-mode h4, html.dark-mode h5, html.dark-mode h6,
+    html.dark-mode p, html.dark-mode span, html.dark-mode label, html.dark-mode div, html.dark-mode .text-dark,
+    html.dark-mode .text-main, html.dark-mode .ec-staff-title, html.dark-mode .ec-section-title, html.dark-mode .card-title,
+    html.dark-mode .dropdown-item, html.dark-mode .ec-navbar .nav-item, html.dark-mode .ec-navbar .dropdown-toggle,
+    html.dark-mode .ec-table-custom thead tr th, html.dark-mode .ec-table-custom thead tr th a, html.dark-mode .table thead tr th,
+    html.dark-mode .ec-pager-info, html.dark-mode .ec-pager-link, html.dark-mode .ec-calendar th, html.dark-mode .ec-calendar td,
+    html.dark-mode .ec-lesson-container .fw-bold, html.dark-mode .list-group-item .text-dark,
+    html.dark-mode .ec-glass-card-body .bg-white .text-main, html.dark-mode .ec-glass-card-body .bg-white .text-dark {
+        color: #ffffff !important;
+    }
+
+    /* Text Utilities (Muted) */
+    html.dark-mode .text-muted, html.dark-mode .ec-page-subtitle, html.dark-mode .ec-glass-card-body .bg-light .text-muted,
+    html.dark-mode .ec-glass-card-body .bg-light.border .text-muted, html.dark-mode .list-group-item .text-secondary,
+    html.dark-mode .modern-calendar th {
+        color: #a1a1aa !important;
+    }
+
+    html.dark-mode input::placeholder {
+        color: #888 !important;
+    }
+
+    /* Alerts, Colors & Statuses (Red/Danger) */
+    html.dark-mode .alert-danger {
+        background-color: #4a191f !important;
+        color: #ffb3b8 !important;
+        border-color: #6b2229 !important;
+    }
+
+    html.dark-mode .text-danger, html.dark-mode .ec-glass-card-body .bg-light .text-danger,
+    html.dark-mode .ec-glass-card-body .bg-light.border h4 .text-danger, html.dark-mode span.ec-stat-giant,
+    html.dark-mode label.ec-stat-giant, html.dark-mode .ec-stat-giant, html.dark-mode .is-wrong-choice,
+    html.dark-mode .is-wrong-choice span, html.dark-mode .is-wrong-choice i, html.dark-mode .ec-status-danger,
+    html.dark-mode .ec-hero [style*="#f8d7da"], html.dark-mode .ec-hero span[style*="background-color: #f8d7da"] {
+        color: #f87171 !important;
+    }
+
+    html.dark-mode .is-wrong-choice, html.dark-mode .ec-hero [style*="#f8d7da"], html.dark-mode .ec-hero span[style*="background-color: #f8d7da"],
+    html.dark-mode .ec-status-danger {
+        background-color: rgba(239, 68, 68, 0.15) !important;
+        border-color: #ef4444 !important;
+    }
+
+    html.dark-mode .ec-glass-card-body .bg-light .bg-danger.bg-opacity-10 {
+        background-color: rgba(248, 113, 113, 0.15) !important;
+    }
+
+    /* Alerts, Colors & Statuses (Green/Success) */
+    html.dark-mode .alert-success {
+        background-color: #123524 !important;
+        color: #a3e6cd !important;
+        border-color: #1a4d35 !important;
+    }
+
+    html.dark-mode .text-success, html.dark-mode .ec-status-active, html.dark-mode .is-correct-choice,
+    html.dark-mode .is-correct-choice span, html.dark-mode .is-correct-choice i, html.dark-mode .is-missed-correct,
+    html.dark-mode .is-missed-correct span, html.dark-mode .is-missed-correct i, html.dark-mode .ec-hero [style*="#d1e7dd"],
+    html.dark-mode .ec-hero span[style*="background-color: #d1e7dd"], html.dark-mode .ec-hero-student span[style*="background-color: #d1e7dd"] {
+        color: #4ade80 !important;
+    }
+
+    html.dark-mode .is-correct-choice, html.dark-mode .ec-hero [style*="#d1e7dd"], html.dark-mode .ec-hero span[style*="background-color: #d1e7dd"],
+    html.dark-mode .ec-hero-student span[style*="background-color: #d1e7dd"], html.dark-mode .ec-status-active {
+        background-color: rgba(34, 197, 94, 0.15) !important;
+        border-color: #22c55e !important;
+    }
+
+    html.dark-mode .is-missed-correct {
+        border-color: #4ade80 !important;
+    }
+
+    /* Alerts, Colors & Statuses (Yellow/Warning) */
+    html.dark-mode .text-warning, html.dark-mode .ec-status-pending, html.dark-mode .ec-hero [style*="#fff3cd"],
+    html.dark-mode .ec-hero span[style*="background-color: #fff3cd"] {
+        color: #fde047 !important;
+    }
+
+    html.dark-mode .ec-hero [style*="#fff3cd"], html.dark-mode .ec-hero span[style*="background-color: #fff3cd"], html.dark-mode .ec-status-pending {
+        background-color: rgba(133, 77, 14, 0.3) !important;
+        border-color: #854d0e !important;
+    }
+
+    html.dark-mode .border-warning {
+        border-color: #f59e0b !important;
+    }
+
+    /* Alerts, Colors & Statuses (Blue/Primary) */
+    html.dark-mode .text-primary, html.dark-mode .lesson-btn.active-lesson .text-main,
+    html.dark-mode .badge[style*="--ec-bg-alt"], html.dark-mode .ec-option-list input[type="radio"]:checked + label {
+        color: #60a5fa !important;
+    }
+
+    html.dark-mode .lesson-btn.active-lesson, html.dark-mode .badge[style*="--ec-bg-alt"],
+    html.dark-mode .ec-option-list input[type="radio"]:checked + label {
+        background-color: rgba(13, 110, 253, 0.15) !important;
+        border-color: var(--ec-primary) !important;
+    }
+
+    /* Specific Components & Transparent Overrides */
+    html.dark-mode .ec-hero, html.dark-mode .ec-hero-student {
+        background: linear-gradient(135deg, #2a2a2a 0%, #121212 100%) !important;
+        border: 1px solid #444 !important;
+    }
+
+    html.dark-mode .btn-close {
+        filter: invert(1) grayscale(100%) brightness(200%);
+    }
+
+    html.dark-mode .avatar-preview {
+        border-color: #2d2d2d !important;
+    }
+
+    html.dark-mode .border-dashed {
+        border-color: #444 !important;
+    }
+
+    html.dark-mode .ec-lesson-container .drag-handle {
+        color: #64748b !important;
+    }
+
+    /* Nav Hovers & Buttons */
+    html.dark-mode .ec-navbar .nav-item:hover, html.dark-mode .btn-sub:hover, html.dark-mode table.ec-table-dark tbody tr:hover td, html.dark-mode .ec-option-list label:hover {
+        background-color: #3f3f46 !important;
+    }
+
+    html.dark-mode .dropdown-item:hover {
+        background-color: #333 !important;
+        color: var(--ec-primary) !important;
+    }
+
+    html.dark-mode a.lesson-btn:hover {
+        background: #333 !important;
+    }
+
+        html.dark-mode a.lesson-btn:hover .text-main, html.dark-mode a.lesson-btn:hover p {
+            color: var(--ec-primary) !important;
+        }
+
+    /* Transparent Fixes (Tables, Calendars, Ghost elements) */
+    html.dark-mode .ec-table-custom, html.dark-mode .modern-calendar, html.dark-mode .modern-calendar table,
+    html.dark-mode .modern-calendar > tbody > tr:first-child > td, html.dark-mode .modern-calendar > tbody > tr:first-child table td,
+    html.dark-mode .modern-calendar th, html.dark-mode .modern-calendar td, html.dark-mode .ec-calendar, html.dark-mode .ec-calendar table {
+        background-color: transparent !important;
+        border: none !important;
+    }
+
+        html.dark-mode .modern-calendar td, html.dark-mode .ec-calendar th, html.dark-mode .ec-calendar td {
+            border-color: #333 !important;
+        }
+
+            html.dark-mode .modern-calendar td a {
+                color: #f8fafc !important;
+            }
+
+                html.dark-mode .modern-calendar td a:hover, html.dark-mode .ec-calendar td a:hover {
+                    color: var(--ec-primary) !important;
+                    background-color: #333 !important;
+                }
+
+            /* Calendar Special Dates */
+            html.dark-mode .modern-calendar td[style*="cbd5e1" i] a, html.dark-mode .modern-calendar a[style*="cbd5e1" i],
+            html.dark-mode .modern-calendar td[style*="CBD5E1"] a, html.dark-mode .modern-calendar a[style*="CBD5E1"] {
+                color: #3f3f46 !important;
+                opacity: 0.3 !important;
+                pointer-events: none;
+            }
+
+            html.dark-mode .modern-calendar td[style*="background-color"] {
+                background-color: rgba(13, 110, 253, 0.15) !important;
+                border: 1px solid var(--ec-primary) !important;
+            }
+
+                html.dark-mode .modern-calendar td[style*="background-color"] a {
+                    color: var(--ec-primary) !important;
+                    font-weight: bold !important;
+                }
+
+    /* Media, Notifications & Tags */
+    html.dark-mode .ec-video-container.bg-light {
+        background-color: #000000 !important;
+        border: 1px solid #333 !important;
+    }
+
+    html.dark-mode .list-group-item.notif-unread {
+        background-color: rgba(13, 110, 253, 0.08) !important;
+        border-left: 3px solid var(--ec-primary) !important;
+    }
+
+    html.dark-mode .list-group-item.notif-read {
+        border-left: 3px solid transparent !important;
+    }
+
+    html.dark-mode .bg-primary.bg-opacity-10 {
+        background-color: rgba(59, 130, 246, 0.15) !important;
+        border-color: rgba(59, 130, 246, 0.3) !important;
+        color: #60a5fa !important;
+    }
+
+    html.dark-mode .bg-success.bg-opacity-10 {
+        background-color: rgba(16, 185, 129, 0.15) !important;
+        border-color: rgba(16, 185, 129, 0.3) !important;
+        color: #34d399 !important;
+    }
+
+    html.dark-mode .ec-status-locked {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+        color: #e2e8f0 !important;
     }

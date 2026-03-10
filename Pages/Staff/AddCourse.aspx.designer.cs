@@ -33,15 +33,6 @@ namespace WAPP.Pages.Staff
         protected global::System.Web.UI.WebControls.TextBox txtAddTitle;
 
         /// <summary>
-        /// rfvTitle control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.RequiredFieldValidator rfvTitle;
-
-        /// <summary>
         /// txtAddDesc control.
         /// </summary>
         /// <remarks>
@@ -49,15 +40,6 @@ namespace WAPP.Pages.Staff
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.TextBox txtAddDesc;
-
-        /// <summary>
-        /// rfvDesc control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.RequiredFieldValidator rfvDesc;
 
         /// <summary>
         /// ddlAddCategory control.
@@ -76,15 +58,6 @@ namespace WAPP.Pages.Staff
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.TextBox txtAddDuration;
-
-        /// <summary>
-        /// rfvDur control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.RequiredFieldValidator rfvDur;
 
         /// <summary>
         /// ddlAddSkill control.

@@ -12,20 +12,24 @@ namespace WAPP.Pages.Student
         string connStr = ConfigurationManager.ConnectionStrings["MyDbConn"].ConnectionString;
         public int QuizDuration = 15;
 
+        int enrollmentId;
+        int quizId;
+
         protected void Page_Load(object sender, EventArgs e)
         {
+            if (Request.QueryString["quizId"] == null || Request.QueryString["enrollmentId"] == null)
+            {
+                Response.Redirect("Study.aspx");
+                return;
+            }
+
+            quizId = Convert.ToInt32(Request.QueryString["quizId"]);
+            enrollmentId = Convert.ToInt32(Request.QueryString["enrollmentId"]);
+
             if (!IsPostBack)
             {
-                if (Request.QueryString["quizId"] == null || Request.QueryString["enrollmentId"] == null)
-                    Response.Redirect("MyCourses.aspx");
-
-                int quizId = Convert.ToInt32(Request.QueryString["quizId"]);
-                int enrollmentId = Convert.ToInt32(Request.QueryString["enrollmentId"]);
-
                 LoadQuizInfo(quizId);
                 LoadQuestions(quizId);
-
-                // Initialize the attempt record if one doesn't exist for this session
                 StartAttempt(quizId, enrollmentId);
             }
         }
@@ -35,7 +39,7 @@ namespace WAPP.Pages.Student
             using (SqlConnection conn = new SqlConnection(connStr))
             {
                 string query = @"SELECT q.title, q.duration_minutes, c.title as CourseName 
-                               FROM quiz q JOIN course c ON q.course_id = c.Id WHERE q.Id = @qid";
+                               FROM quiz q WITH (NOLOCK) JOIN course c WITH (NOLOCK) ON q.course_id = c.Id WHERE q.Id = @qid";
                 SqlCommand cmd = new SqlCommand(query, conn);
                 cmd.Parameters.AddWithValue("@qid", quizId);
                 conn.Open();
@@ -53,7 +57,7 @@ namespace WAPP.Pages.Student
         {
             using (SqlConnection conn = new SqlConnection(connStr))
             {
-                string query = "SELECT Id, question_text FROM question WHERE quiz_id = @qid";
+                string query = "SELECT Id, question_text FROM question WITH (NOLOCK) WHERE quiz_id = @qid";
                 SqlDataAdapter da = new SqlDataAdapter(query, conn);
                 da.SelectCommand.Parameters.AddWithValue("@qid", quizId);
                 DataTable dt = new DataTable();
@@ -72,7 +76,7 @@ namespace WAPP.Pages.Student
 
                 using (SqlConnection conn = new SqlConnection(connStr))
                 {
-                    string query = "SELECT Id, text AS option_text FROM [answerOption] WHERE question_id = @qid";
+                    string query = "SELECT Id, text AS option_text FROM [answerOption] WITH (NOLOCK) WHERE question_id = @qid";
                     SqlCommand cmd = new SqlCommand(query, conn);
                     cmd.Parameters.AddWithValue("@qid", questionId);
                     conn.Open();
@@ -82,94 +86,168 @@ namespace WAPP.Pages.Student
             }
         }
 
-        private void StartAttempt(int quizId, int enrollmentId)
+        private void StartAttempt(int qid, int eid)
         {
             using (SqlConnection conn = new SqlConnection(connStr))
             {
-                string checkQuery = "SELECT COUNT(*) FROM quizAttempt WHERE enrollment_id=@eid AND quiz_id=@qid AND status='IN_PROGRESS'";
-                SqlCommand checkCmd = new SqlCommand(checkQuery, conn);
-                checkCmd.Parameters.AddWithValue("@eid", enrollmentId);
-                checkCmd.Parameters.AddWithValue("@qid", quizId);
-
                 conn.Open();
-                int existing = (int)checkCmd.ExecuteScalar();
+                string query = @"
+                IF NOT EXISTS (SELECT 1 FROM quizAttempt WITH (NOLOCK) WHERE enrollment_id=@eid AND quiz_id=@qid AND status='IN_PROGRESS')
+                BEGIN
+                    INSERT INTO quizAttempt (enrollment_id, quiz_id, started_at, status) 
+                    VALUES (@eid, @qid, GETDATE(), 'IN_PROGRESS')
+                END";
 
-                if (existing == 0)
+                SqlCommand cmd = new SqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@eid", eid);
+                cmd.Parameters.AddWithValue("@qid", qid);
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        private bool CheckAllQuestionsAnswered()
+        {
+            foreach (RepeaterItem item in rptQuestions.Items)
+            {
+                RadioButtonList rbl = (RadioButtonList)item.FindControl("rblOptions");
+                // If any question is left completely blank, this stops the submission
+                if (rbl.SelectedItem == null)
                 {
-                    string query = "INSERT INTO quizAttempt (enrollment_id, quiz_id, started_at, status) VALUES (@eid, @qid, GETDATE(), 'IN_PROGRESS')";
-                    SqlCommand cmd = new SqlCommand(query, conn);
-                    cmd.Parameters.AddWithValue("@eid", enrollmentId);
-                    cmd.Parameters.AddWithValue("@qid", quizId);
-                    cmd.ExecuteNonQuery();
+                    return false;
                 }
             }
+            return true;
         }
 
         protected void btnSubmitQuiz_Click(object sender, EventArgs e)
         {
+            // 1. Validation check
+            if (!CheckAllQuestionsAnswered())
+            {
+                ScriptManager.RegisterStartupScript(this, GetType(), "MissingAnswersAlert",
+                    "alert('Please answer all questions before submitting the quiz.');", true);
+                return;
+            }
+
             int score = 0;
             int totalQuestions = rptQuestions.Items.Count;
 
+            // 2. Calculate the score
             foreach (RepeaterItem item in rptQuestions.Items)
             {
                 RadioButtonList rbl = (RadioButtonList)item.FindControl("rblOptions");
-                if (rbl.SelectedItem != null)
+                if (rbl.SelectedItem != null && int.TryParse(rbl.SelectedValue, out int selectedOptionId))
                 {
-                    int selectedOptionId = Convert.ToInt32(rbl.SelectedValue);
                     if (IsCorrect(selectedOptionId)) score++;
                 }
             }
 
             int finalPercentage = (totalQuestions > 0) ? (score * 100) / totalQuestions : 0;
-            UpdateAttempt(finalPercentage);
 
-            // LOGIC: If they pass (>= 50%), update lesson progress
+            // 3. Update the attempt to GRADED and get the Attempt ID
+            int currentAttemptId = UpdateAttempt(finalPercentage);
+
+            // 4. Save the exact answers to the database so Review page can see them
+            if (currentAttemptId > 0)
+            {
+                using (SqlConnection conn = new SqlConnection(connStr))
+                {
+                    conn.Open();
+                    foreach (RepeaterItem item in rptQuestions.Items)
+                    {
+                        RadioButtonList rbl = (RadioButtonList)item.FindControl("rblOptions");
+                        HiddenField hfQid = (HiddenField)item.FindControl("hfQuestionId");
+
+                        string query = "INSERT INTO quizAnswer (attempt_id, question_id, selected_option_id) VALUES (@aid, @qid, @sid)";
+                        using (SqlCommand cmd = new SqlCommand(query, conn))
+                        {
+                            cmd.Parameters.AddWithValue("@aid", currentAttemptId);
+                            cmd.Parameters.AddWithValue("@qid", hfQid.Value);
+
+                            if (rbl.SelectedItem != null && !string.IsNullOrEmpty(rbl.SelectedValue))
+                                cmd.Parameters.AddWithValue("@sid", rbl.SelectedValue);
+                            else
+                                cmd.Parameters.AddWithValue("@sid", DBNull.Value);
+
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+                }
+            }
+
+            // 5. Apply progression logic
             if (finalPercentage >= 50)
             {
                 MarkLessonAsCompleted();
-                CheckAndCompleteCourse(); // New check for overall course completion
+                CheckAndCompleteCourse();
             }
 
-            string resourceId = GetResourceIdByQuiz(Convert.ToInt32(Request.QueryString["quizId"]));
-            Response.Redirect("LessonView.aspx?resourceId=" + resourceId);
+            Response.Redirect("LessonView.aspx?resourceId=" + GetResourceIdByQuiz(quizId));
         }
 
         private bool IsCorrect(int optionId)
         {
             using (SqlConnection conn = new SqlConnection(connStr))
             {
-                SqlCommand cmd = new SqlCommand("SELECT is_correct FROM [answerOption] WHERE Id = @oid", conn);
+                SqlCommand cmd = new SqlCommand("SELECT is_correct FROM [answerOption] WITH (NOLOCK) WHERE Id = @oid", conn);
                 cmd.Parameters.AddWithValue("@oid", optionId);
                 conn.Open();
-                return Convert.ToBoolean(cmd.ExecuteScalar());
+                object res = cmd.ExecuteScalar();
+                return res != null ? Convert.ToBoolean(res) : false;
             }
         }
 
-        private void UpdateAttempt(int finalScore)
+        private int UpdateAttempt(int finalScore)
         {
-            int enrollmentId = Convert.ToInt32(Request.QueryString["enrollmentId"]);
-            int quizId = Convert.ToInt32(Request.QueryString["quizId"]);
-
+            int attemptId = 0;
             using (SqlConnection conn = new SqlConnection(connStr))
             {
-                string query = @"UPDATE quizAttempt SET finished_at = GETDATE(), score = @score, status = 'GRADED' 
-                               WHERE enrollment_id = @eid AND quiz_id = @qid AND status = 'IN_PROGRESS'";
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@score", finalScore);
-                cmd.Parameters.AddWithValue("@eid", enrollmentId);
-                cmd.Parameters.AddWithValue("@qid", quizId);
                 conn.Open();
-                cmd.ExecuteNonQuery();
+
+                string getQuery = @"SELECT TOP 1 Id FROM quizAttempt WITH (NOLOCK) 
+                                    WHERE enrollment_id = @eid AND quiz_id = @qid AND status = 'IN_PROGRESS' 
+                                    ORDER BY started_at DESC";
+                using (SqlCommand cmdGet = new SqlCommand(getQuery, conn))
+                {
+                    cmdGet.Parameters.AddWithValue("@eid", enrollmentId);
+                    cmdGet.Parameters.AddWithValue("@qid", quizId);
+                    object res = cmdGet.ExecuteScalar();
+                    if (res != null) attemptId = Convert.ToInt32(res);
+                }
+
+                if (attemptId == 0)
+                {
+                    string getFallback = "SELECT TOP 1 Id FROM quizAttempt WITH (NOLOCK) WHERE enrollment_id=@eid AND quiz_id=@qid ORDER BY started_at DESC";
+                    using (SqlCommand cmdFallback = new SqlCommand(getFallback, conn))
+                    {
+                        cmdFallback.Parameters.AddWithValue("@eid", enrollmentId);
+                        cmdFallback.Parameters.AddWithValue("@qid", quizId);
+                        object resF = cmdFallback.ExecuteScalar();
+                        if (resF != null) attemptId = Convert.ToInt32(resF);
+                    }
+                }
+
+                if (attemptId > 0)
+                {
+                    string updateQ = "UPDATE quizAttempt SET finished_at = GETDATE(), score = @score, status = 'GRADED' WHERE Id = @aid";
+                    using (SqlCommand cmdUp = new SqlCommand(updateQ, conn))
+                    {
+                        cmdUp.Parameters.AddWithValue("@score", finalScore);
+                        cmdUp.Parameters.AddWithValue("@aid", attemptId);
+                        cmdUp.ExecuteNonQuery();
+                    }
+                }
             }
+            return attemptId;
         }
 
-        private string GetResourceIdByQuiz(int quizId)
+        private string GetResourceIdByQuiz(int qId)
         {
             using (SqlConnection conn = new SqlConnection(connStr))
             {
-                string query = "SELECT Id FROM learningResource WHERE quiz_id = @qid";
+                string query = "SELECT Id FROM learningResource WITH (NOLOCK) WHERE quiz_id = @qid";
                 SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@qid", quizId);
+                cmd.Parameters.AddWithValue("@qid", qId);
                 conn.Open();
                 return cmd.ExecuteScalar()?.ToString();
             }
@@ -177,17 +255,16 @@ namespace WAPP.Pages.Student
 
         private void MarkLessonAsCompleted()
         {
-            int enrollmentId = Convert.ToInt32(Request.QueryString["enrollmentId"]);
-            int quizId = Convert.ToInt32(Request.QueryString["quizId"]);
             int resId = Convert.ToInt32(GetResourceIdByQuiz(quizId));
-
             using (SqlConnection conn = new SqlConnection(connStr))
             {
                 string query = @"
-                    IF NOT EXISTS (SELECT 1 FROM resourceProgress WHERE enrollment_id=@eid AND resource_id=@rid)
-                        INSERT INTO resourceProgress (enrollment_id, resource_id, completed_at,last_accessed) VALUES (@eid, @rid, GETDATE(), GETDATE())
-                    ELSE
-                        UPDATE resourceProgress SET last_accessed = GETDATE(),completed_at  = GETDATE() WHERE enrollment_id=@eid AND resource_id=@rid";
+            IF NOT EXISTS (SELECT 1 FROM resourceProgress WITH (NOLOCK) WHERE enrollment_id=@eid AND resource_id=@rid)
+                INSERT INTO resourceProgress (enrollment_id, resource_id, last_accessed, completed_at) 
+                VALUES (@eid, @rid, GETDATE(), GETDATE())
+            ELSE
+                UPDATE resourceProgress SET last_accessed = GETDATE(), completed_at = GETDATE() 
+                WHERE enrollment_id=@eid AND resource_id=@rid";
 
                 SqlCommand cmd = new SqlCommand(query, conn);
                 cmd.Parameters.AddWithValue("@eid", enrollmentId);
@@ -197,22 +274,18 @@ namespace WAPP.Pages.Student
             }
         }
 
-        // NEW METHOD: Checks if all resources in the course are finished
         private void CheckAndCompleteCourse()
         {
-            int enrollmentId = Convert.ToInt32(Request.QueryString["enrollmentId"]);
-
             using (SqlConnection conn = new SqlConnection(connStr))
             {
-                // Query compares total resources in the course vs completed resources for this enrollment
                 string query = @"
-                    DECLARE @CourseID INT = (SELECT course_id FROM enrollment WHERE Id = @eid);
-                    DECLARE @TotalResources INT = (SELECT COUNT(*) FROM learningResource WHERE course_id = @CourseID);
-                    DECLARE @CompletedResources INT = (SELECT COUNT(*) FROM resourceProgress WHERE enrollment_id = @eid);
+                    DECLARE @CourseID INT = (SELECT course_id FROM enrollment WITH (NOLOCK) WHERE Id = @eid);
+                    DECLARE @TotalResources INT = (SELECT COUNT(*) FROM learningResource WITH (NOLOCK) WHERE course_id = @CourseID);
+                    DECLARE @CompletedResources INT = (SELECT COUNT(*) FROM resourceProgress WITH (NOLOCK) WHERE enrollment_id = @eid AND completed_at IS NOT NULL);
 
                     IF (@TotalResources = @CompletedResources AND @TotalResources > 0)
                     BEGIN
-                        UPDATE enrollment SET status = 'COMPLETED', completed_at = GETDATE() WHERE Id = @eid;
+                        UPDATE enrollment SET status = 'COMPLETED', completed_at = GETDATE() WHERE Id = @eid AND status != 'COMPLETED';
                     END";
 
                 SqlCommand cmd = new SqlCommand(query, conn);
@@ -220,6 +293,20 @@ namespace WAPP.Pages.Student
                 conn.Open();
                 cmd.ExecuteNonQuery();
             }
+        }
+
+        protected void btnCancelQuiz_Click(object sender, EventArgs e)
+        {
+            using (SqlConnection conn = new SqlConnection(connStr))
+            {
+                string query = "DELETE FROM quizAttempt WHERE enrollment_id = @eid AND quiz_id = @qid AND status = 'IN_PROGRESS'";
+                SqlCommand cmd = new SqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@eid", enrollmentId);
+                cmd.Parameters.AddWithValue("@qid", quizId);
+                conn.Open();
+                cmd.ExecuteNonQuery();
+            }
+            Response.Redirect("LessonView.aspx?resourceId=" + GetResourceIdByQuiz(quizId));
         }
     }
 }

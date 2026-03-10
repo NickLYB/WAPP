@@ -39,12 +39,19 @@ namespace WAPP.Pages.Staff
             Response.Redirect("~/Pages/Staff/AddResource.aspx");
         }
 
+        // This method handles the redirect if you are using an <asp:LinkButton> or <asp:Button>
+        protected void btnViewActiveCourses_Click(object sender, EventArgs e)
+        {
+            Response.Redirect("~/Pages/Staff/CourseManagement.aspx?status=PUBLISHED");
+        }
+
         private void BindSystemStats()
         {
             using (SqlConnection conn = new SqlConnection(connString))
             {
                 conn.Open();
 
+                // 1. Pending Tutors
                 try
                 {
                     using (SqlCommand cmd = new SqlCommand("SELECT COUNT(*) FROM [tutorApplication] WHERE status = 'PENDING'", conn))
@@ -64,6 +71,7 @@ namespace WAPP.Pages.Staff
                     catch { lblPendingTutors.Text = "0"; }
                 }
 
+                // 2. Total Students
                 try
                 {
                     using (SqlCommand cmd = new SqlCommand("SELECT COUNT(*) FROM [user] WHERE role_id = 4", conn))
@@ -73,6 +81,7 @@ namespace WAPP.Pages.Staff
                 }
                 catch { lblTotalStudents.Text = "0"; }
 
+                // 3. Total Tutors
                 try
                 {
                     using (SqlCommand cmd = new SqlCommand("SELECT COUNT(*) FROM [user] WHERE role_id = 3", conn))
@@ -82,9 +91,10 @@ namespace WAPP.Pages.Staff
                 }
                 catch { lblTotalTutors.Text = "0"; }
 
+                // 4. Active Courses (Strictly counts 'PUBLISHED')
                 try
                 {
-                    using (SqlCommand cmd = new SqlCommand("SELECT COUNT(*) FROM [course] WHERE status = 'ACTIVE'", conn))
+                    using (SqlCommand cmd = new SqlCommand("SELECT COUNT(*) FROM [course] WHERE status = 'PUBLISHED'", conn))
                     {
                         lblActiveCourses.Text = cmd.ExecuteScalar().ToString();
                     }
@@ -97,10 +107,11 @@ namespace WAPP.Pages.Staff
         {
             using (SqlConnection conn = new SqlConnection(connString))
             {
+                // Pulls TOP 8 newest feedbacks and formats names beautifully
                 string sql = @"SELECT TOP 8 
                                       f.created_at, 
                                       ('T' + RIGHT('000'+CAST(u.Id AS VARCHAR), 3) + '-' + u.fname) AS TutorName,
-                                      c.title AS ResourceTitle,
+                                      (c.title + ' - ' + ISNULL(lr.title, 'Unnamed Resource')) AS ResourceTitle,
                                       f.rating,
                                       f.comment,
                                       f.status

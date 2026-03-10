@@ -90,38 +90,57 @@
                         </div> </div>
                 </div>
 
-                <div class="ec-glass-card">
+<div class="ec-glass-card">
                     <div class="ec-glass-card-body">
-                        <div class="d-flex gap-2 mb-4">
-                            <asp:LinkButton ID="btnTabAbout" runat="server" CssClass="btn-sub active" OnClick="btnTabAbout_Click" CausesValidation="false">About</asp:LinkButton>
-                            <asp:LinkButton ID="btnTabReviews" runat="server" CssClass="btn-sub" OnClick="btnTabReviews_Click" CausesValidation="false">Reviews</asp:LinkButton>
-                        </div>
+                        
+                        <ul class="nav nav-tabs border-bottom mb-4" id="courseTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" 
+                                        id="about-tab" 
+                                        data-bs-toggle="tab" 
+                                        data-bs-target="#about" 
+                                        type="button" role="tab">About Course</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" 
+                                        id="reviews-tab" 
+                                        data-bs-toggle="tab" 
+                                        data-bs-target="#reviews" 
+                                        type="button" role="tab">Reviews</button>
+                            </li>
+                        </ul>
 
-                        <asp:MultiView ID="mvAbout" runat="server" ActiveViewIndex="0">
-                            <asp:View ID="viewAbout" runat="server">
-                                <div class="p-3 bg-light rounded-3 text-muted">
+                        <div class="tab-content pt-2">
+
+                            <div class="tab-pane fade show active" id="about" role="tabpanel">
+                                <p class="text-dark" style="line-height: 1.8;">
                                     <asp:Label ID="lblCourseDesc" runat="server" />
-                                </div>
-                            </asp:View>
-                            <asp:View ID="viewReviews" runat="server">
+                                </p>
+                            </div>
+
+                            <div class="tab-pane fade" id="reviews" role="tabpanel">
                                 <asp:Label ID="lblReviewSummary" runat="server" CssClass="d-block mb-3 fw-bold" />
+                                
                                 <asp:Repeater ID="rptReviews" runat="server">
                                     <ItemTemplate>
-                                        <div class="ec-item-row py-3">
-                                            <div>
-                                                <div class="fw-bold"><%# Eval("reviewer_name") %></div>
-                                                <small class="text-muted"><%# Eval("created_at", "{0:dd MMM yyyy}") %></small>
+                                        <div class="ec-item-row py-3" style="flex-direction: column; align-items: flex-start;">
+                                            <div style="display: flex; justify-content: space-between; width: 100%;">
+                                                <strong class="text-dark"><%# Eval("reviewer_name") %></strong>
+                                                <span class="text-warning small">
+                                                    <%# new String('★', Convert.ToInt32(Eval("rating"))) %>
+                                                </span>
                                             </div>
-                                            <div class="text-end">
-                                                <span class="text-warning"><i class="bi bi-star-fill me-1"></i><%# Eval("rating") %></span>
-                                                <p class="mb-0 small text-muted mt-1"><%# Eval("comment") %></p>
-                                            </div>
+                                            <small class="text-muted mb-2"><%# Eval("created_at", "{0:MMM dd, yyyy}") %></small>
+                                            <p class="mb-0 text-secondary" style="font-size: 0.95rem;"><%# Eval("comment") %></p>
                                         </div>
                                     </ItemTemplate>
                                 </asp:Repeater>
+                                
                                 <asp:Label ID="lblNoReviews" runat="server" Visible="false" CssClass="ec-empty-state" Text="No reviews yet." />
-                            </asp:View>
-                        </asp:MultiView>
+                            </div>
+
+                        </div>
+
                     </div>
                 </div>
             </div>

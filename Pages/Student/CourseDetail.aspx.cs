@@ -9,6 +9,7 @@ using System.Net.NetworkInformation;
 using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
+using WAPP.Masters;
 
 namespace WAPP.Pages.Student
 {
@@ -65,6 +66,7 @@ namespace WAPP.Pages.Student
                     c.duration_minutes,
                     c.skill_level,
                     c.average_rating,
+                    c.tutor_id,
                     ct.name as Category, 
                     (u.fname + ' ' + u.lname) as TutorName,
                     (SELECT COUNT(*)
@@ -86,6 +88,11 @@ namespace WAPP.Pages.Student
                     litTutorName.Text = dr["TutorName"].ToString();
                     litCategory.Text = dr["Category"].ToString();
                     litDescription.Text = dr["description"].ToString();
+
+                    litSidebarTutorName.Text = litTutorName.Text;
+                    int tutorId = Convert.ToInt32(dr["tutor_id"]);
+                    hlTutorNameLink.NavigateUrl = $"TutorProfile.aspx?id={tutorId}";
+                    hlTutorProfileBtn.NavigateUrl = $"TutorProfile.aspx?id={tutorId}";
 
                     int minutes = Convert.ToInt32(dr["duration_minutes"]);
                     litDuration.Text = FormatDuration(minutes);
@@ -135,12 +142,13 @@ namespace WAPP.Pages.Student
         {
             using (SqlConnection conn = new SqlConnection(connStr))
             {
+                // Changed ORDER BY to sequence_order
                 string query = @"
             SELECT TOP 3 lr.Id, rt.name as TypeName, lr.resource_type
             FROM learningResource lr
             JOIN resourceType rt ON lr.resource_type = rt.Id
             WHERE lr.course_id = @id
-            ORDER BY lr.created_at ASC";
+            ORDER BY lr.sequence_order ASC, lr.created_at ASC";
 
                 SqlCommand cmd = new SqlCommand(query, conn);
                 cmd.Parameters.AddWithValue("@id", id);
@@ -160,12 +168,13 @@ namespace WAPP.Pages.Student
         {
             using (SqlConnection conn = new SqlConnection(connStr))
             {
+                // Changed ORDER BY to sequence_order
                 string query = @"
-                    SELECT lr.Id, rt.name as TypeName, lr.resource_type
-                    FROM learningResource lr
-                    JOIN resourceType rt ON lr.resource_type = rt.Id
-                    WHERE lr.course_id = @id
-                    ORDER BY lr.created_at ASC";
+            SELECT lr.Id, rt.name as TypeName, lr.resource_type
+            FROM learningResource lr
+            JOIN resourceType rt ON lr.resource_type = rt.Id
+            WHERE lr.course_id = @id
+            ORDER BY lr.sequence_order ASC, lr.created_at ASC";
 
                 SqlCommand cmd = new SqlCommand(query, conn);
                 cmd.Parameters.AddWithValue("@id", id);
@@ -181,14 +190,12 @@ namespace WAPP.Pages.Student
         {
             using (SqlConnection conn = new SqlConnection(connStr))
             {
-                // Pulls approved feedback linked to any resource in this course
                 string query = @"
-                    SELECT f.rating, f.comment, (u.fname + ' ' + u.lname) as StudentName, f.created_at
-                    FROM feedback f
-                    JOIN [user] u ON f.student_id = u.Id
-                    JOIN learningResource lr ON f.resource_id = lr.Id
-                    WHERE lr.course_id = @id AND f.status = 'APPROVED'
-                    ORDER BY f.created_at DESC";
+            SELECT f.rating, f.comment, (u.fname + ' ' + u.lname) as StudentName, f.created_at
+            FROM feedback f
+            JOIN [user] u ON f.student_id = u.Id
+            WHERE f.course_id = @id AND f.resource_id IS NULL AND f.status = 'APPROVED'
+            ORDER BY f.created_at DESC";
 
                 SqlCommand cmd = new SqlCommand(query, conn);
                 cmd.Parameters.AddWithValue("@id", id);
@@ -267,18 +274,15 @@ namespace WAPP.Pages.Student
 
             using (SqlConnection conn = new SqlConnection(connStr))
             {
-                // 2. Use 'IF NOT EXISTS' to prevent unique constraint crashes
-                // This ensures we only insert if the student isn't already enrolled
+                // Ensures we only insert if the student isn't already enrolled
                 string query = @"
-            IF NOT EXISTS (SELECT 1 FROM enrollment WHERE student_id = @sid AND course_id = @cid)
-            BEGIN
-                INSERT INTO enrollment (student_id, course_id, status)
-                VALUES (@sid, @cid, 'ENROLLED')
-            END";
+                IF NOT EXISTS (SELECT 1 FROM enrollment WHERE student_id = @sid AND course_id = @cid)
+                BEGIN
+                    INSERT INTO enrollment (student_id, course_id, status)
+                    VALUES (@sid, @cid, 'ENROLLED')
+                END";
 
                 SqlCommand cmd = new SqlCommand(query, conn);
-
-                // 3. Explicitly define parameter types to match the database
                 cmd.Parameters.Add("@sid", SqlDbType.Int).Value = studentId;
                 cmd.Parameters.Add("@cid", SqlDbType.Int).Value = courseId;
 
@@ -286,9 +290,6 @@ namespace WAPP.Pages.Student
                 {
                     conn.Open();
                     cmd.ExecuteNonQuery();
-
-                    // 4. Redirect to the actual learning view after successful enrollment
-                    Response.Redirect("LessonView.aspx?id=" + courseId);
                 }
                 catch (SqlException ex)
                 {
@@ -320,13 +321,13 @@ namespace WAPP.Pages.Student
             {
                 conn.Open();
 
-                // Last accessed
+                // 1. Check if they have existing progress (Resume where they left off)
                 string lastQuery = @"SELECT TOP 1 rp.resource_id
-                                     FROM resourceProgress rp
-                                     JOIN learningResource lr ON rp.resource_id = lr.Id
-                                     WHERE rp.enrollment_id=@eid
-                                     AND lr.course_id=@cid
-                                     ORDER BY rp.last_accessed DESC";
+                             FROM resourceProgress rp
+                             JOIN learningResource lr ON rp.resource_id = lr.Id
+                             WHERE rp.enrollment_id=@eid
+                             AND lr.course_id=@cid
+                             ORDER BY rp.last_accessed DESC";
 
                 SqlCommand cmd = new SqlCommand(lastQuery, conn);
                 cmd.Parameters.AddWithValue("@eid", enrollmentId);
@@ -336,11 +337,11 @@ namespace WAPP.Pages.Student
                 if (result != null && result != DBNull.Value)
                     return Convert.ToInt32(result);
 
-                // If never accessed → first lesson
+                // 2. If NO progress found, get the VERY FIRST lesson by sequence
                 string firstQuery = @"SELECT TOP 1 Id
-                                      FROM learningResource
-                                      WHERE course_id=@cid
-                                      ORDER BY created_at ASC";
+                              FROM learningResource
+                              WHERE course_id=@cid
+                              ORDER BY sequence_order ASC, created_at ASC"; // Prioritize sequence_order
 
                 SqlCommand cmd2 = new SqlCommand(firstQuery, conn);
                 cmd2.Parameters.AddWithValue("@cid", courseId);

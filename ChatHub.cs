@@ -15,5 +15,13 @@ namespace WAPP
             // The client-side Javascript will decide if the message belongs to them.
             Clients.All.receiveNewMessage(senderId, receiverId);
         }
+
+        public void SendVideoSignal(string senderId, string receiverId, string signalData)
+        {
+            // Broadcast the signal to all connected clients.
+            // The JavaScript on Chat.aspx will filter it using the receiverId 
+            // so only the correct student actually receives the call.
+            Clients.All.receiveVideoSignal(senderId, receiverId, signalData);
+        }
     }
 }

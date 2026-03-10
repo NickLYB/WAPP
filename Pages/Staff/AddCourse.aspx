@@ -1,7 +1,7 @@
 ﻿<%@ Page Title="Add New Course" Language="C#" MasterPageFile="~/Masters/Staff.Master" AutoEventWireup="true" CodeBehind="AddCourse.aspx.cs" Inherits="WAPP.Pages.Staff.AddCourse" %>
 
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
-    </asp:Content>
+</asp:Content>
 
 <asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
     
@@ -16,16 +16,14 @@
             <div class="row mb-4 align-items-center">
                 <label class="col-md-2 col-form-label fw-bold text-muted text-md-end">Course Title:</label>
                 <div class="col-md-10">
-                    <asp:TextBox ID="txtAddTitle" runat="server" CssClass="form-control ec-form-control" Placeholder="Enter Course Title..."></asp:TextBox>
-                    <asp:RequiredFieldValidator ID="rfvTitle" runat="server" ControlToValidate="txtAddTitle" ErrorMessage="Title is required" ForeColor="#ef4444" Display="Dynamic" ValidationGroup="AddCourse" CssClass="fw-bold mt-2 d-block" />
+                    <asp:TextBox ID="txtAddTitle" runat="server" CssClass="form-control ec-form-control" Placeholder="Enter Course Title..." required="required"></asp:TextBox>
                 </div>
             </div>
 
             <div class="row mb-4">
                 <label class="col-md-2 col-form-label fw-bold text-muted text-md-end">Description:</label>
                 <div class="col-md-10">
-                    <asp:TextBox ID="txtAddDesc" runat="server" CssClass="form-control ec-form-control" TextMode="MultiLine" Rows="5" Placeholder="Enter Course Description..."></asp:TextBox>
-                    <asp:RequiredFieldValidator ID="rfvDesc" runat="server" ControlToValidate="txtAddDesc" ErrorMessage="Description is required" ForeColor="#ef4444" Display="Dynamic" ValidationGroup="AddCourse" CssClass="fw-bold mt-2 d-block" />
+                    <asp:TextBox ID="txtAddDesc" runat="server" CssClass="form-control ec-form-control" TextMode="MultiLine" Rows="5" Placeholder="Enter Course Description..." required="required"></asp:TextBox>
                 </div>
             </div>
 
@@ -37,8 +35,7 @@
                 
                 <label class="col-md-2 col-form-label fw-bold text-muted text-md-end">Duration (Mins):</label>
                 <div class="col-md-4">
-                    <asp:TextBox ID="txtAddDuration" runat="server" CssClass="form-control ec-form-control" TextMode="Number" Placeholder="e.g. 120"></asp:TextBox>
-                    <asp:RequiredFieldValidator ID="rfvDur" runat="server" ControlToValidate="txtAddDuration" ErrorMessage="Duration is required" ForeColor="#ef4444" Display="Dynamic" ValidationGroup="AddCourse" CssClass="fw-bold mt-2 d-block" />
+                    <asp:TextBox ID="txtAddDuration" runat="server" CssClass="form-control ec-form-control" TextMode="Number" Placeholder="e.g. 120" required="required" min="1"></asp:TextBox>
                 </div>
             </div>
 
@@ -60,16 +57,16 @@
                 <label class="col-md-2 col-form-label fw-bold text-muted text-md-end">Status:</label>
                 <div class="col-md-2">
                     <asp:DropDownList ID="ddlAddStatus" runat="server" CssClass="form-select ec-form-control">
-                        <asp:ListItem Value="ACTIVE">Approved / Active</asp:ListItem>
-                        <asp:ListItem Value="DRAFT">Pending / Draft</asp:ListItem>
-                        <asp:ListItem Value="ARCHIVED">Rejected / Archived</asp:ListItem>
+                        <asp:ListItem Value="APPROVED">Approved / Active</asp:ListItem>
+                        <asp:ListItem Value="PENDING">Pending / Draft</asp:ListItem>
+                        <asp:ListItem Value="REJECT">Rejected / Archived</asp:ListItem>
                     </asp:DropDownList>
                 </div>
             </div>
 
             <div class="row">
                 <div class="col-md-10 offset-md-2 d-flex gap-3">
-                    <asp:Button ID="btnSaveCourse" runat="server" Text="Save Course" CssClass="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" OnClick="btnSaveCourse_Click" ValidationGroup="AddCourse" />
+                    <asp:Button ID="btnSaveCourse" runat="server" Text="Save Course" CssClass="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" OnClick="btnSaveCourse_Click" />
                     <asp:HyperLink ID="hlCancel" runat="server" NavigateUrl="~/Pages/Staff/CourseManagement.aspx" CssClass="btn btn-secondary rounded-pill px-4 fw-bold shadow-sm text-white">Cancel</asp:HyperLink>
                 </div>
             </div>

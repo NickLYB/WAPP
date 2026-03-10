@@ -6,24 +6,28 @@
 
 <asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
 
-    <!-- ===== PAGE HEADER ===== -->
     <div class="ec-content-wrapper">
-
+        <div class="ec-section-gap mb-3">
+            <asp:SiteMapPath ID="SiteMapPath1" runat="server" SiteMapProvider="StudentMap" 
+                PathSeparator=" > " CssClass="small text-muted text-decoration-none" RenderCurrentNodeAsLink="false" />
+        </div>
         <div class="ec-section-gap">
             <h1 class="ec-page-title">
                 <asp:Literal ID="litCourseTitle" runat="server"></asp:Literal>
             </h1>
             <p class="ec-page-subtitle">
-                By <strong><asp:Literal ID="litTutorName" runat="server"></asp:Literal></strong>
+                By <strong>
+                    <asp:HyperLink ID="hlTutorNameLink" runat="server" CssClass="text-primary text-decoration-none">
+                        <asp:Literal ID="litTutorName" runat="server"></asp:Literal>
+                    </asp:HyperLink>
+                </strong>
             </p>
         </div>
 
         <div class="page-layout-split">
 
-            <!-- ===== LEFT MAIN CONTENT ===== -->
             <div class="layout-main-70">
 
-                <!-- Course Content -->
                 <div class="ec-glass-card">
                     <div class="ec-glass-card-header">
                         <h5 class="ec-section-title">Course Content</h5>
@@ -50,12 +54,10 @@
                     </div>
                 </div>
 
-                <!-- About + Reviews Tabs -->
-                <div class="ec-glass-card">
+                <div class="ec-glass-card mt-4">
                     
                     <div class="ec-glass-card-body">
 
-                        <!-- Tab Navigation -->
                         <ul class="nav nav-tabs border-bottom mb-4" id="courseTab" role="tablist">
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link active" 
@@ -73,10 +75,8 @@
                             </li>
                         </ul>
 
-                        <!-- Tab Content -->
                         <div class="tab-content pt-2">
 
-                            <!-- ABOUT TAB -->
                             <div class="tab-pane fade show active"
                                  id="about"
                                  role="tabpanel">
@@ -87,7 +87,6 @@
 
                             </div>
 
-                            <!-- REVIEWS TAB -->
                             <div class="tab-pane fade"
                                  id="reviews"
                                  role="tabpanel">
@@ -116,10 +115,10 @@
                 </div>
 
             </div>
-            <!-- ===== RIGHT SIDEBAR ===== -->
+            
             <div class="layout-sidebar-30">
 
-                <div class="ec-glass-card">
+                <div class="ec-glass-card mb-4">
                     <div class="ec-glass-card-header">
                         <h5 class="ec-section-title">Course Overview</h5>
                     </div>
@@ -155,6 +154,23 @@
                             CssClass="btn btn-primary w-100 btn-start shadow-sm" 
                             OnClick="btnStart_Click" />
 
+                    </div>
+                </div>
+
+                <div class="ec-glass-card">
+                    <div class="ec-glass-card-header">
+                        <h5 class="ec-section-title">Instructor</h5>
+                    </div>
+                    <div class="ec-glass-card-body text-center pb-4">
+                        <div class="mb-3 mt-2">
+                            <i class="bi bi-person-circle text-primary opacity-50" style="font-size: 3.5rem;"></i>
+                        </div>
+                        <h6 class="fw-bold text-main mb-1"><asp:Literal ID="litSidebarTutorName" runat="server"></asp:Literal></h6>
+                        <span class="text-muted small d-block mb-3">EduConnect Educator</span>
+                        
+                        <asp:HyperLink ID="hlTutorProfileBtn" runat="server" CssClass="btn btn-sub rounded-pill w-100 fw-bold shadow-sm">
+                            View Full Profile
+                        </asp:HyperLink>
                     </div>
                 </div>
 

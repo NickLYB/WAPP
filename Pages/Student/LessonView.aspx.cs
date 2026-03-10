@@ -2,6 +2,7 @@
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
+using System.Web;
 using System.Web.UI.WebControls;
 
 namespace WAPP.Pages.Student
@@ -19,7 +20,7 @@ namespace WAPP.Pages.Student
         {
             if (Session["UserName"] == null || Session["role_id"] == null || (int)Session["role_id"] != 4)
             {
-                Response.Redirect("~/Pages/Guest/Home.aspx");
+                Response.Redirect("~/Pages/Student/Home.aspx");
             }
             else{
                 studentId = Convert.ToInt32(Session["UserId"]);
@@ -39,18 +40,95 @@ namespace WAPP.Pages.Student
             {
                 
                 LoadCourseTitle(courseId);
-                LoadLessons(courseId);
-                LoadLesson(resourceId);
+                LoadLessonList(courseId);
+                LoadLessonContent(resourceId);
 
-                UpdateProgress(enrollmentId, resourceId);
+                TrackLessonVisit(enrollmentId, resourceId);
 
-                UpdateOverallProgress();
+                UpdateProgressBar();
 
-                CheckExistingFeedback();
+                CheckExistingCourseFeedback();
                 LoadCommunityFeedback(resourceId);
             }
         }
+        protected override void OnInit(EventArgs e)
+        {
+            base.OnInit(e);
 
+            // 1. Explicitly bind to the StudentMap provider instead of the default SiteMap
+            var provider = SiteMap.Providers["StudentMap"];
+            if (provider != null)
+            {
+                provider.SiteMapResolve += SiteMap_Resolve;
+            }
+        }
+
+        protected override void OnUnload(EventArgs e)
+        {
+            var provider = SiteMap.Providers["StudentMap"];
+            if (provider != null)
+            {
+                provider.SiteMapResolve -= SiteMap_Resolve;
+            }
+
+            base.OnUnload(e);
+        }
+
+        private SiteMapNode SiteMap_Resolve(object sender, SiteMapResolveEventArgs e)
+        {
+            var ctx = e.Context;
+            if (ctx?.Request == null) return null;
+
+            string path = ctx.Request.Path;
+            if (!path.EndsWith("/LessonView.aspx", StringComparison.OrdinalIgnoreCase) &&
+                !path.EndsWith("/LessonView", StringComparison.OrdinalIgnoreCase))
+            {
+                return null; // Return null to let the provider handle other pages normally
+            }
+
+            SiteMapProvider provider = (SiteMapProvider)sender;
+
+            // 2. Try to get CurrentNode. If it's null (due to query strings or .aspx), force it to find the base URL.
+            SiteMapNode current = provider.CurrentNode ?? provider.FindSiteMapNode("~/Pages/Student/LessonView");
+
+            if (current == null) return null;
+
+            // Clone the node and its ancestors so we don't overwrite the global sitemap
+            SiteMapNode clone = current.Clone(true);
+
+            if (int.TryParse(ctx.Request.QueryString["resourceId"], out int currentResourceId))
+            {
+                string cId = GetCourseIdByResource(currentResourceId);
+                if (!string.IsNullOrEmpty(cId))
+                {
+                    string courseTitle = GetCourseNameForBreadcrumb(cId);
+                    if (!string.IsNullOrWhiteSpace(courseTitle))
+                    {
+                        // 3. Dynamically update the title and ensure the URL keeps the resourceId
+                        clone.Title = courseTitle;
+                        clone.Url = $"~/Pages/Student/LessonView.aspx?resourceId={currentResourceId}";
+                    }
+                }
+            }
+
+            return clone;
+        }
+
+        // Helper method to fetch the course title safely
+        private string GetCourseNameForBreadcrumb(string cId)
+        {
+            using (SqlConnection conn = new SqlConnection(connStr))
+            {
+                string query = "SELECT title FROM course WITH (NOLOCK) WHERE Id=@id";
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue("@id", cId);
+                    conn.Open();
+                    object result = cmd.ExecuteScalar();
+                    return result != null && result != DBNull.Value ? result.ToString() : null;
+                }
+            }
+        }
         private void LoadCourseTitle(string courseId)
         {
             using (SqlConnection conn = new SqlConnection(connStr))
@@ -62,13 +140,11 @@ namespace WAPP.Pages.Student
             }
         }
 
-        private void LoadLessons(string courseId)
+        private void LoadLessonList(string courseId)
         {
             using (SqlConnection conn = new SqlConnection(connStr))
             {
-                // NEW SQL LOGIC: 
-                // 1. If there is NO quiz (quiz_id IS NULL), then simply viewing it (resourceProgress) counts as complete.
-                // 2. If there IS a quiz, it only counts as complete if they have a 'GRADED' attempt with a score >= 50.
+                // UPDATED SQL: Added lr.sequence_order to the ORDER BY clause
                 string query = @"
             SELECT lr.Id, rt.name as TypeName,
                    CASE 
@@ -86,7 +162,7 @@ namespace WAPP.Pages.Student
             JOIN resourceType rt ON lr.resource_type = rt.Id
             LEFT JOIN resourceProgress rp ON rp.resource_id = lr.Id AND rp.enrollment_id = @eid
             WHERE lr.course_id = @cid
-            ORDER BY lr.created_at ASC";
+            ORDER BY lr.sequence_order ASC, lr.created_at ASC"; // Sorted by sequence first
 
                 SqlDataAdapter da = new SqlDataAdapter(query, conn);
                 da.SelectCommand.Parameters.AddWithValue("@cid", courseId);
@@ -114,45 +190,52 @@ namespace WAPP.Pages.Student
             }
         }
 
-        private void LoadLesson(int resourceId)
+        private void LoadLessonContent(int resourceId)
         {
+            int? pendingQuizId = null; // Store the quiz ID to load it AFTER we close the connection
+
             using (SqlConnection conn = new SqlConnection(connStr))
             {
-                // UPDATED QUERY: Directly selects the quiz_id from your new column
                 string query = "SELECT resource_link, note, quiz_id FROM learningResource WHERE Id=@rid";
-
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@rid", resourceId);
-                conn.Open();
-                SqlDataReader dr = cmd.ExecuteReader();
-
-                if (dr.Read())
+                using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
-                    string link = dr["resource_link"].ToString();
-                    string note = dr["note"].ToString();
+                    cmd.Parameters.AddWithValue("@rid", resourceId);
+                    conn.Open();
 
-                    if (link.Contains("youtube.com") || link.Contains("youtu.be"))
-                        litVideoPlayer.Text = $"<iframe src='{link}' allowfullscreen></iframe>";
-                    else
-                        litVideoPlayer.Text = $"<div class='p-5 text-center'><a href='{link}' class='btn btn-primary rounded-pill'>Download File</a></div>";
-
-                    litLessonNote.Text = string.IsNullOrEmpty(note) ? "No detailed notes available for this lesson." : note;
-                    lblCurrentLessonName.Text = "Lesson ID: " + resourceId;
-
-                    // UPDATED LOGIC: Shows the button ONLY if quiz_id is NOT NULL
-                    if (dr["quiz_id"] != DBNull.Value)
+                    // USING block ensures the DataReader is instantly closed when finished
+                    using (SqlDataReader dr = cmd.ExecuteReader())
                     {
-                        phQuizTrigger.Visible = true;
-                        int qid = Convert.ToInt32(dr["quiz_id"]);
-                        ViewState["CurrentQuizId"] = qid;
+                        if (dr.Read())
+                        {
+                            string link = dr["resource_link"].ToString();
+                            string note = dr["note"].ToString();
 
-                        DisplayQuizResult(qid);
-                    }
+                            if (link.Contains("youtube.com") || link.Contains("youtu.be"))
+                                litVideoPlayer.Text = $"<iframe src='{link}' allowfullscreen></iframe>";
+                            else
+                                litVideoPlayer.Text = $"<div class='p-5 text-center'><a href='{link}' class='btn btn-primary rounded-pill'>Download File</a></div>";
+
+                            litLessonNote.Text = string.IsNullOrEmpty(note) ? "No detailed notes available for this lesson." : note;
+                            lblCurrentLessonName.Text = "Lesson ID: " + resourceId;
+
+                            if (dr["quiz_id"] != DBNull.Value)
+                            {
+                                phQuizTrigger.Visible = true;
+                                pendingQuizId = Convert.ToInt32(dr["quiz_id"]);
+                                ViewState["CurrentQuizId"] = pendingQuizId;
+                            }
+                            else
+                            {
+                                phQuizTrigger.Visible = false;
+                            }
+                        }
+                    } 
                 }
-                else
-                {
-                    phQuizTrigger.Visible = false;
-                }
+            } 
+
+            if (pendingQuizId.HasValue)
+            {
+                DisplayQuizResult(pendingQuizId.Value);
             }
         }
 
@@ -160,55 +243,59 @@ namespace WAPP.Pages.Student
         {
             using (SqlConnection conn = new SqlConnection(connStr))
             {
-                // Get the highest score/latest attempt for this student enrollment
-                string query = @"SELECT TOP 1 score, status FROM quizAttempt 
-                        WHERE quiz_id = @qid AND enrollment_id = @eid 
+                string query = @"SELECT TOP 1 score, status FROM quizAttempt WITH (NOLOCK) 
+                        WHERE quiz_id = @qid AND enrollment_id = @eid AND status = 'GRADED' 
                         ORDER BY finished_at DESC";
 
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@qid", qid);
-                cmd.Parameters.AddWithValue("@eid", enrollmentId);
-                conn.Open();
-                SqlDataReader dr = cmd.ExecuteReader();
-
-                if (dr.Read())
+                using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
-                    pnlQuizResult.Visible = true;
-                    pnlQuizPrompt.Visible = false;
-                    btnReviewQuiz.Visible = true;
+                    cmd.Parameters.AddWithValue("@qid", qid);
+                    cmd.Parameters.AddWithValue("@eid", enrollmentId);
+                    conn.Open();
 
-                    int score = Convert.ToInt32(dr["score"]);
-                    string status = dr["status"].ToString();
-
-                    litScoreText.Text = score + "%";
-
-                    if (score >= 50 && status == "GRADED")
+                    using (SqlDataReader dr = cmd.ExecuteReader())
                     {
-                        spanStatus.InnerText = "Passed";
-                        spanStatus.Attributes["class"] = "status-badge status-pass";
-                        litResultMessage.Text = "Great job! You've mastered this lesson.";
-                        btnProceedToQuiz.Visible = false; // Already passed
-                        btnRetakeQuiz.Visible = false;
+                        if (dr.Read())
+                        {
+                            // A GRADED attempt was found!
+                            pnlQuizResult.Visible = true;
+                            pnlQuizPrompt.Visible = false;
+                            btnReviewQuiz.Visible = true;
+
+                            int score = Convert.ToInt32(dr["score"]);
+                            litScoreText.Text = score + "%";
+
+                            if (score >= 50)
+                            {
+                                spanStatus.InnerText = "Passed";
+                                spanStatus.Attributes["class"] = "ec-status-pill ec-status-active mb-2";
+                                litResultMessage.Text = "Great job! You've mastered this lesson.";
+                                btnProceedToQuiz.Visible = false;
+                                btnRetakeQuiz.Visible = false;
+                            }
+                            else
+                            {
+                                spanStatus.InnerText = "Failed";
+                                spanStatus.Attributes["class"] = "ec-status-pill ec-status-danger mb-2";
+                                litResultMessage.Text = "You didn't reach the 50% pass mark.";
+                                btnProceedToQuiz.Visible = false;
+                                btnRetakeQuiz.Visible = true;
+                            }
+                        }
+                        else
+                        {
+                            // No graded attempts found. Show the start prompt.
+                            pnlQuizResult.Visible = false;
+                            pnlQuizPrompt.Visible = true;
+                            btnProceedToQuiz.Visible = true;
+                            btnRetakeQuiz.Visible = false;
+                            btnReviewQuiz.Visible = false; // Explicitly hide the review button just in case!
+                        }
                     }
-                    else if (status == "GRADED") // Failed
-                    {
-                        spanStatus.InnerText = "Failed";
-                        spanStatus.Attributes["class"] = "status-badge status-fail";
-                        litResultMessage.Text = "You didn't reach the 50% pass mark.";
-                        btnProceedToQuiz.Visible = false;
-                        btnRetakeQuiz.Visible = true; // Show retake option
-                    }
-                }
-                else
-                {
-                    // No attempts yet
-                    pnlQuizResult.Visible = false;
-                    pnlQuizPrompt.Visible = true;
-                    btnProceedToQuiz.Visible = true;
-                    btnRetakeQuiz.Visible = false;
                 }
             }
         }
+
 
         protected void btnProceedToQuiz_Click(object sender, EventArgs e)
         {
@@ -256,7 +343,7 @@ namespace WAPP.Pages.Student
             Response.Redirect("LessonView.aspx?resourceId=" + newResourceId);
         }
 
-        private void UpdateProgress(int enrollmentId, int resourceId)
+        private void TrackLessonVisit(int enrollmentId, int resourceId)
         {
             bool hasQuiz = LessonHasQuiz(resourceId);
 
@@ -299,7 +386,7 @@ namespace WAPP.Pages.Student
             }
         }
 
-        private void UpdateOverallProgress()
+        private void UpdateProgressBar()
         {
             int totalLessons = 0;
             int completedLessons = 0;
@@ -314,8 +401,8 @@ namespace WAPP.Pages.Student
 
                 // 2. ONLY count rows where the student has actually finished (completed_at is not null)
                 SqlCommand cmdCompleted = new SqlCommand(@"
-            SELECT COUNT(*) FROM resourceProgress 
-            WHERE enrollment_id=@eid AND completed_at IS NOT NULL", conn);
+                SELECT COUNT(*) FROM resourceProgress 
+                WHERE enrollment_id=@eid AND completed_at IS NOT NULL", conn);
                 cmdCompleted.Parameters.AddWithValue("@eid", enrollmentId);
                 completedLessons = (int)cmdCompleted.ExecuteScalar();
             }
@@ -329,6 +416,7 @@ namespace WAPP.Pages.Student
             {
                 lblCompletionMessage.Text = "Congratulations! You have completed this course.";
                 lblCompletionMessage.Visible = true;
+                btnRateCourse.Visible = true;
             }
         }
 
@@ -350,40 +438,50 @@ namespace WAPP.Pages.Student
         {
             using (SqlConnection conn = new SqlConnection(connStr))
             {
-                string query = "SELECT course_id FROM learningResource WHERE Id=@rid";
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@rid", resourceId);
-                conn.Open();
-                return cmd.ExecuteScalar()?.ToString();
+                // FIX 1: Added WITH (NOLOCK) to prevent database timeouts
+                string query = "SELECT course_id FROM learningResource WITH (NOLOCK) WHERE Id=@rid";
+
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue("@rid", resourceId);
+                    conn.Open();
+
+                    // FIX 2: Replaced the '?.ToString()' with a safe, traditional check
+                    // This works on ALL versions of C# and prevents object reference errors
+                    object result = cmd.ExecuteScalar();
+
+                    if (result != null && result != DBNull.Value)
+                    {
+                        return result.ToString();
+                    }
+
+                    return null; // Return null safely if nothing was found
+                }
             }
         }
 
-        private void CheckExistingFeedback()
+        private void CheckExistingCourseFeedback()
         {
-            int resId = Convert.ToInt32(Request.QueryString["resourceId"]);
-
             using (SqlConnection conn = new SqlConnection(connStr))
             {
-                string query = "SELECT rating, comment FROM feedback WHERE student_id=@sid AND resource_id=@rid";
+                string query = "SELECT rating, comment FROM feedback WHERE student_id=@sid AND course_id=@cid AND resource_id IS NULL";
                 SqlCommand cmd = new SqlCommand(query, conn);
                 cmd.Parameters.AddWithValue("@sid", studentId);
-                cmd.Parameters.AddWithValue("@rid", resId);
+                cmd.Parameters.AddWithValue("@cid", courseId);
 
                 conn.Open();
                 SqlDataReader dr = cmd.ExecuteReader();
                 if (dr.Read())
                 {
-                    ddlRating.SelectedValue = dr["rating"].ToString();
-                    txtComment.Text = dr["comment"].ToString();
-                    litModalTitle.Text = "Edit Your Feedback";
-                    btnSubmitFeedback.Text = "Update Feedback";
-                    pnlRemoveFeedback.Visible = true;
+                    ddlCourseRating.SelectedValue = dr["rating"].ToString();
+                    txtCourseComment.Text = dr["comment"].ToString();
+                    btnSubmitCourseFeedback.Text = "Update Course Review";
+                    pnlRemoveCourseFeedback.Visible = true;
                 }
                 else
                 {
-                    litModalTitle.Text = "Submit New Feedback";
-                    btnSubmitFeedback.Text = "Submit Feedback";
-                    pnlRemoveFeedback.Visible = false;
+                    btnSubmitCourseFeedback.Text = "Submit Course Review";
+                    pnlRemoveCourseFeedback.Visible = false;
                 }
             }
         }
@@ -395,17 +493,20 @@ namespace WAPP.Pages.Student
             using (SqlConnection conn = new SqlConnection(connStr))
             {
                 string query = @"
-            IF EXISTS (SELECT 1 FROM feedback WHERE student_id=@sid AND resource_id=@rid)
-            BEGIN
-                UPDATE feedback SET rating=@rating, comment=@comment, created_at=GETDATE() 
-                WHERE student_id=@sid AND resource_id=@rid
-            END
-            ELSE
-            BEGIN
-                DECLARE @tid INT = (SELECT tutor_id FROM learningResource WHERE Id=@rid)
-                INSERT INTO feedback (student_id, tutor_id, resource_id, rating, comment, status)
-                VALUES (@sid, @tid, @rid, @rating, @comment, 'APPROVED')
-            END";
+                    IF EXISTS (SELECT 1 FROM feedback WHERE student_id=@sid AND resource_id=@rid)
+                    BEGIN
+                        UPDATE feedback SET rating=@rating, comment=@comment, created_at=GETDATE() 
+                        WHERE student_id=@sid AND resource_id=@rid
+                    END
+                    ELSE
+                    BEGIN
+                        -- Dynamically fetch both tutor and course ID to save alongside the resource!
+                        DECLARE @tid INT = (SELECT tutor_id FROM learningResource WHERE Id=@rid)
+                        DECLARE @cid INT = (SELECT course_id FROM learningResource WHERE Id=@rid)
+        
+                        INSERT INTO feedback (student_id, tutor_id, course_id, resource_id, rating, comment, status)
+                        VALUES (@sid, @tid, @cid, @rid, @rating, @comment, 'APPROVED')
+                    END";
 
                 SqlCommand cmd = new SqlCommand(query, conn);
                 cmd.Parameters.AddWithValue("@sid", studentId);
@@ -432,6 +533,93 @@ namespace WAPP.Pages.Student
                 cmd.ExecuteNonQuery();
             }
             Response.Redirect(Request.RawUrl);
+        }
+
+        protected void btnSubmitCourseFeedback_Click(object sender, EventArgs e)
+        {
+            using (SqlConnection conn = new SqlConnection(connStr))
+            {
+                conn.Open();
+
+                // 1. Get the Tutor ID for this course
+                string getTutorQuery = "SELECT tutor_id FROM course WHERE Id=@cid";
+                SqlCommand tutorCmd = new SqlCommand(getTutorQuery, conn);
+                tutorCmd.Parameters.AddWithValue("@cid", courseId);
+                int tutorId = Convert.ToInt32(tutorCmd.ExecuteScalar());
+
+                // 2. Save the feedback (resource_id is set to NULL)
+                string query = @"
+                    IF EXISTS (SELECT 1 FROM feedback WHERE student_id=@sid AND course_id=@cid AND resource_id IS NULL)
+                    BEGIN
+                        UPDATE feedback SET rating=@rating, comment=@comment, created_at=GETDATE() 
+                        WHERE student_id=@sid AND course_id=@cid AND resource_id IS NULL
+                    END
+                    ELSE
+                    BEGIN
+                        INSERT INTO feedback (student_id, tutor_id, course_id, resource_id, rating, comment, status)
+                        VALUES (@sid, @tid, @cid, NULL, @rating, @comment, 'APPROVED')
+                    END";
+
+                SqlCommand cmd = new SqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@sid", studentId);
+                cmd.Parameters.AddWithValue("@tid", tutorId);
+                cmd.Parameters.AddWithValue("@cid", courseId);
+                cmd.Parameters.AddWithValue("@rating", ddlCourseRating.SelectedValue);
+                cmd.Parameters.AddWithValue("@comment", txtCourseComment.Text);
+
+                cmd.ExecuteNonQuery();
+            }
+
+            // 3. Recalculate Average Rating for the Course!
+            RecalculateCourseAverageRating(courseId);
+
+            Response.Redirect(Request.RawUrl);
+        }
+
+        protected void btnDeleteCourseFeedback_Click(object sender, EventArgs e)
+        {
+            using (SqlConnection conn = new SqlConnection(connStr))
+            {
+                // Delete ONLY the course-level feedback (resource_id IS NULL)
+                string query = "DELETE FROM feedback WHERE student_id=@sid AND course_id=@cid AND resource_id IS NULL";
+                SqlCommand cmd = new SqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@sid", studentId);
+                cmd.Parameters.AddWithValue("@cid", courseId);
+                conn.Open();
+                cmd.ExecuteNonQuery();
+            }
+
+            // Recalculate Average Rating since a review was deleted!
+            RecalculateCourseAverageRating(courseId);
+
+            Response.Redirect(Request.RawUrl);
+        }
+
+        private void RecalculateCourseAverageRating(string courseId)
+        {
+            using (SqlConnection conn = new SqlConnection(connStr))
+            {
+                // Calculate the average ONLY from course-level feedback (resource_id IS NULL)
+                string query = @"
+                    DECLARE @AvgRating DECIMAL(3,2);
+            
+                    SELECT @AvgRating = AVG(CAST(rating AS DECIMAL(3,2))) 
+                    FROM feedback 
+                    WHERE course_id = @cid AND resource_id IS NULL AND status = 'APPROVED';
+
+                    -- Update the course table if there is an average
+                    IF @AvgRating IS NOT NULL
+                    BEGIN
+                        UPDATE course SET average_rating = @AvgRating WHERE Id = @cid;
+                    END
+                ";
+
+                SqlCommand cmd = new SqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@cid", courseId);
+
+                conn.Open();
+                cmd.ExecuteNonQuery();
+            }
         }
 
         private void LoadCommunityFeedback(int resId)
@@ -469,7 +657,9 @@ namespace WAPP.Pages.Student
             if (ViewState["CurrentQuizId"] != null)
             {
                 string qid = ViewState["CurrentQuizId"].ToString();
-                Response.Redirect($"QuizReview.aspx?quizId={qid}");
+
+                // Added the enrollmentId to the QueryString so QuizReview.aspx can catch it!
+                Response.Redirect($"QuizReview.aspx?quizId={qid}&enrollmentId={enrollmentId}");
             }
         }
     }

@@ -21,17 +21,14 @@ namespace WAPP.Pages.Staff
 
             if (!IsPostBack)
             {
-                // THIS IS THE MAGIC: Catch the ?status=PENDING from the dashboard URL
                 string passedStatus = Request.QueryString["status"];
 
                 if (!string.IsNullOrEmpty(passedStatus) && passedStatus.ToUpper() == "PENDING")
                 {
-                    // Automatically switch the maroon dropdown to "Pending"
                     ddlFilterStatus.SelectedValue = "PENDING";
                 }
                 else
                 {
-                    // Default fallback if accessed normally from the side menu
                     ddlFilterStatus.SelectedValue = "All";
                 }
 
@@ -43,17 +40,22 @@ namespace WAPP.Pages.Staff
         {
             using (SqlConnection conn = new SqlConnection(connString))
             {
+                // LEFT JOIN to get reviewer details formatted as "ID - fname lname"
                 string sql = @"SELECT t.Id, t.tutor_id, (u.fname + ' ' + u.lname) AS FullName, 
                                       t.submitted_at, t.status, t.verification_document,
-                                      t.verified_at, t.reviewed_by
+                                      t.verified_at, t.reviewed_by,
+                                      (CAST(r.Id AS VARCHAR) + ' - ' + r.fname + ' ' + r.lname) AS ReviewerName
                                FROM [tutorApplication] t
                                INNER JOIN [user] u ON t.tutor_id = u.Id
+                               LEFT JOIN [user] r ON t.reviewed_by = r.Id
                                WHERE 1=1";
 
                 string filter = ddlFilterStatus.SelectedValue;
                 if (filter != "All") sql += " AND t.status = @FilterStatus";
 
-                sql += " ORDER BY t.submitted_at DESC";
+                // Retrieve the sort direction directly from the dropdown list
+                string sortDirection = ddlSortBy.SelectedValue;
+                sql += $" ORDER BY t.submitted_at {sortDirection}";
 
                 using (SqlCommand cmd = new SqlCommand(sql, conn))
                 {
@@ -115,6 +117,7 @@ namespace WAPP.Pages.Staff
         }
         // ---------------------------------
 
+        // Handles both Filter and Sort dropdown changes
         protected void FilterGrid_Changed(object sender, EventArgs e)
         {
             lblMessage.Visible = false;

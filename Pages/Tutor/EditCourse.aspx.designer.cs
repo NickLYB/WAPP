@@ -60,42 +60,6 @@ namespace WAPP.Pages.Tutor
         protected global::System.Web.UI.WebControls.Repeater rptCourseContent;
 
         /// <summary>
-        /// btnTabAbout control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.LinkButton btnTabAbout;
-
-        /// <summary>
-        /// btnTabReviews control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.LinkButton btnTabReviews;
-
-        /// <summary>
-        /// mvAbout control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.MultiView mvAbout;
-
-        /// <summary>
-        /// viewAbout control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.View viewAbout;
-
-        /// <summary>
         /// lblCourseDesc control.
         /// </summary>
         /// <remarks>
@@ -103,15 +67,6 @@ namespace WAPP.Pages.Tutor
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.Label lblCourseDesc;
-
-        /// <summary>
-        /// viewReviews control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.View viewReviews;
 
         /// <summary>
         /// lblReviewSummary control.

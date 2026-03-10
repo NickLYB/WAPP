@@ -7,13 +7,16 @@
 <asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
 
     <div class="ec-content-wrapper">
-        
+        <div class="ec-section-gap mb-3">
+            <asp:SiteMapPath ID="SiteMapPath1" runat="server" SiteMapProvider="StudentMap" 
+                PathSeparator=" > " CssClass="small text-muted text-decoration-none" RenderCurrentNodeAsLink="false" />
+        </div>
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 class="ec-page-title m-0">
                 <i class="bi bi-book-half me-2 text-primary"></i> 
                 <asp:Literal ID="litCourseTitle" runat="server"></asp:Literal>
             </h2>
-            <a href="Study.aspx" class="btn btn-secondary rounded-pill px-4 fw-bold shadow-sm text-white">Exit Class</a>
+            <a href="MyCourses.aspx" class="btn btn-secondary rounded-pill px-4 fw-bold shadow-sm text-white">Exit Class</a>
         </div>
 
         <div class="page-layout-split">
@@ -23,7 +26,12 @@
                 <div class="ec-glass-card p-4">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <span class="text-muted small fw-bold text-uppercase" style="letter-spacing:1px;">Your Progress</span>
-                        <span class="ec-status-pill ec-status-active"><asp:Label ID="lblProgressPercent" runat="server" Text="0%"></asp:Label></span>
+                        <div>
+                            <button type="button" id="btnRateCourse" runat="server" visible="false" class="btn btn-warning btn-sm rounded-pill fw-bold me-2 shadow-sm text-dark" data-bs-toggle="modal" data-bs-target="#courseFeedbackModal">
+                                <i class="bi bi-star-fill me-1"></i> Rate Course
+                            </button>
+                            <span class="ec-status-pill ec-status-active"><asp:Label ID="lblProgressPercent" runat="server" Text="0%"></asp:Label></span>
+                        </div>
                     </div>
                     <div class="ec-progress-container">
                         <div class="ec-progress-fill" id="progressBar" runat="server"></div>
@@ -177,6 +185,49 @@
                             CssClass="btn btn-link text-danger small text-decoration-none fw-bold shadow-none p-0" 
                             Text="Delete My Feedback" OnClick="btnDeleteFeedback_Click" 
                             OnClientClick="return confirm('Are you sure you want to remove your review?');" />
+                    </asp:Panel>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="courseFeedbackModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content ec-modal-content" style="border: 2px solid var(--ec-warning, #ffc107);">
+                <div class="modal-header ec-modal-header border-0 pb-0 text-center d-block">
+                    <h4 class="modal-title fw-bold mb-0 text-warning"><i class="bi bi-trophy-fill me-2"></i>Course Completed!</h4>
+                    <p class="text-muted small mt-1 mb-0">How was your overall experience?</p>
+                    <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 mt-3 me-3" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body ec-modal-body p-4 text-start">
+                    
+                    <div class="mb-3 text-center">
+                        <label class="form-label fw-bold small text-muted text-uppercase">Overall Rating</label>
+                        <asp:DropDownList ID="ddlCourseRating" runat="server" CssClass="form-select ec-form-control rounded-pill text-center mx-auto" style="max-width: 250px;">
+                            <asp:ListItem Text="★ ★ ★ ★ ★ (Excellent)" Value="5"></asp:ListItem>
+                            <asp:ListItem Text="★ ★ ★ ★ ☆ (Very Good)" Value="4"></asp:ListItem>
+                            <asp:ListItem Text="★ ★ ★ ☆ ☆ (Average)" Value="3"></asp:ListItem>
+                            <asp:ListItem Text="★ ★ ☆ ☆ ☆ (Poor)" Value="2"></asp:ListItem>
+                            <asp:ListItem Text="★ ☆ ☆ ☆ ☆ (Terrible)" Value="1"></asp:ListItem>
+                        </asp:DropDownList>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small text-muted">Write a Public Review</label>
+                        <asp:TextBox ID="txtCourseComment" runat="server" TextMode="MultiLine" Rows="4" 
+                            CssClass="form-control ec-form-control rounded-4" placeholder="What did you think of the whole course?"></asp:TextBox>
+                    </div>
+                    
+                    <asp:Button ID="btnSubmitCourseFeedback" runat="server" Text="Submit Course Review" 
+                        CssClass="btn btn-warning w-100 py-2 rounded-pill fw-bold text-dark shadow-sm" OnClick="btnSubmitCourseFeedback_Click" />
+
+                    <asp:Panel ID="pnlRemoveCourseFeedback" runat="server" Visible="false" CssClass="mt-4 pt-3 border-top text-center" style="border-color: var(--ec-border-light) !important;">
+                        <p class="text-muted small mb-2">Want to remove your course rating?</p>
+                        <asp:Button ID="btnDeleteCourseFeedback" runat="server" 
+                            CssClass="btn btn-link text-danger small text-decoration-none fw-bold shadow-none p-0" 
+                            Text="Delete My Course Review" OnClick="btnDeleteCourseFeedback_Click" 
+                            OnClientClick="return confirm('Are you sure you want to remove your course review? Your overall progress will remain.');" />
                     </asp:Panel>
 
                 </div>

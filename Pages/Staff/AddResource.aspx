@@ -1,7 +1,7 @@
 ﻿<%@ Page Title="Add New Learning Resource" Language="C#" MasterPageFile="~/Masters/Staff.Master" AutoEventWireup="true" CodeBehind="AddResource.aspx.cs" Inherits="WAPP.Pages.Staff.AddResource" %>
 
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
-    </asp:Content>
+</asp:Content>
 
 <asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
     
@@ -37,14 +37,13 @@
             <div class="row mb-5 align-items-start">
                 <label class="col-md-3 col-form-label fw-bold text-muted text-md-end pt-2">Resource Link (URL):</label>
                 <div class="col-md-9">
-                    <asp:TextBox ID="txtAddLink" runat="server" CssClass="form-control ec-form-control" Placeholder="e.g. https://youtube.com/watch..."></asp:TextBox>
-                    <asp:RequiredFieldValidator ID="rfvLink" runat="server" ControlToValidate="txtAddLink" ErrorMessage="Resource Link is required" ForeColor="#ef4444" Display="Dynamic" ValidationGroup="AddResource" CssClass="fw-bold mt-2 d-block" />
+                    <asp:TextBox ID="txtAddLink" runat="server" CssClass="form-control ec-form-control" Placeholder="e.g. https://youtube.com/watch..." required="required" type="url"></asp:TextBox>
                 </div>
             </div>
 
             <div class="row">
                 <div class="col-md-9 offset-md-3 d-flex gap-3">
-                    <asp:Button ID="btnSaveResource" runat="server" Text="Upload Resource" CssClass="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" OnClick="btnSaveResource_Click" ValidationGroup="AddResource" />
+                    <asp:Button ID="btnSaveResource" runat="server" Text="Upload Resource" CssClass="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" OnClick="btnSaveResource_Click" />
                     <asp:HyperLink ID="hlCancel" runat="server" NavigateUrl="~/Pages/Staff/LearningResourceManagement.aspx" CssClass="btn btn-secondary rounded-pill px-4 fw-bold shadow-sm text-white">Cancel</asp:HyperLink>
                 </div>
             </div>
