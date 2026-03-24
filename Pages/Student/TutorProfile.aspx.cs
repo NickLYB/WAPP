@@ -31,7 +31,9 @@ namespace WAPP.Pages.Student
 
             if (!IsPostBack)
             {
-                SetTutorBackground(tutorId);
+
+                txtApptDate.Attributes["min"] = DateTime.Now.ToString("yyyy-MM-dd");
+
                 LoadTutorDetails();
                 LoadTutorCourses();
                 LoadTutorReviews();
@@ -43,11 +45,12 @@ namespace WAPP.Pages.Student
         {
             using (SqlConnection conn = new SqlConnection(connStr))
             {
+                // Added u.profile_pic to the SELECT query
                 string query = @"
-                    SELECT u.fname, u.lname, u.email, u.contact, u.created_at, ta.status AS AppStatus
-                    FROM [user] u WITH (NOLOCK)
-                    LEFT JOIN tutorApplication ta WITH (NOLOCK) ON u.Id = ta.tutor_id
-                    WHERE u.Id = @tid AND u.role_id = 3";
+            SELECT u.fname, u.lname, u.email, u.contact, u.created_at, u.profile_pic, ta.status AS AppStatus
+            FROM [user] u WITH (NOLOCK)
+            LEFT JOIN tutorApplication ta WITH (NOLOCK) ON u.Id = ta.tutor_id
+            WHERE u.Id = @tid AND u.role_id = 3";
 
                 SqlCommand cmd = new SqlCommand(query, conn);
                 cmd.Parameters.AddWithValue("@tid", tutorId);
@@ -59,12 +62,29 @@ namespace WAPP.Pages.Student
                     {
                         string fname = dr["fname"].ToString();
                         string lname = dr["lname"].ToString();
+                        string profilePic = dr["profile_pic"]?.ToString();
 
                         litTutorName.Text = fname + " " + lname;
                         litEmail.Text = dr["email"].ToString();
                         litJoinedDate.Text = Convert.ToDateTime(dr["created_at"]).ToString("MMMM yyyy");
 
-                        litInitials.Text = (fname.Substring(0, 1) + lname.Substring(0, 1)).ToUpper();
+                        // Profile Picture Logic
+                        if (!string.IsNullOrWhiteSpace(profilePic))
+                        {
+                            imgProfilePic.ImageUrl = profilePic;
+                            imgProfilePic.Visible = true;
+                            litInitials.Visible = false;
+
+                            // Optional: remove padding/background so the image fits edge-to-edge seamlessly
+                            divAvatarCircle.Style["background"] = "white";
+                            divAvatarCircle.Style["padding"] = "0";
+                        }
+                        else
+                        {
+                            litInitials.Text = (fname.Substring(0, 1) + lname.Substring(0, 1)).ToUpper();
+                            imgProfilePic.Visible = false;
+                            litInitials.Visible = true;
+                        }
 
                         if (dr["AppStatus"] != DBNull.Value && dr["AppStatus"].ToString() == "APPROVED")
                         {
@@ -79,9 +99,9 @@ namespace WAPP.Pages.Student
 
                 // Calculate Average Rating
                 string avgQuery = @"
-                    SELECT AVG(CAST(rating AS DECIMAL(3,1))) 
-                    FROM feedback WITH (NOLOCK) 
-                    WHERE tutor_id = @tid AND course_id IS NULL AND resource_id IS NULL AND status = 'APPROVED'";
+            SELECT AVG(CAST(rating AS DECIMAL(3,1))) 
+            FROM feedback WITH (NOLOCK) 
+            WHERE tutor_id = @tid AND course_id IS NULL AND resource_id IS NULL AND status = 'APPROVED'";
 
                 using (SqlCommand cmdAvg = new SqlCommand(avgQuery, conn))
                 {
@@ -92,17 +112,16 @@ namespace WAPP.Pages.Student
                     {
                         decimal avg = Convert.ToDecimal(avgRes);
                         litAvgRating.Text = avg.ToString("0.0");
-                        litStarRating.Text = GenerateStars(avg); // Generates actual dynamic stars!
+                        litStarRating.Text = GenerateStars(avg);
                     }
                     else
                     {
                         litAvgRating.Text = "0.0";
-                        litStarRating.Text = GenerateStars(0); // Renders 5 empty stars
+                        litStarRating.Text = GenerateStars(0);
                     }
                 }
             }
         }
-
         private void LoadTutorCourses()
         {
             using (SqlConnection conn = new SqlConnection(connStr))
@@ -112,7 +131,7 @@ namespace WAPP.Pages.Student
                     SELECT c.Id, c.title, ct.name AS category, c.image_path 
                     FROM course c WITH (NOLOCK) 
                     JOIN courseType ct WITH (NOLOCK) ON c.course_type_id = ct.Id 
-                    WHERE c.tutor_id = @tid AND c.status = 'PUBLISHED'"; 
+                    WHERE c.tutor_id = @tid AND c.status = 'PUBLISHED'";
 
                 SqlCommand cmd = new SqlCommand(query, conn);
                 cmd.Parameters.AddWithValue("@tid", tutorId);
@@ -185,7 +204,7 @@ namespace WAPP.Pages.Student
                     SELECT f.rating, f.comment, f.created_at, u.fname, u.lname 
                     FROM feedback f WITH (NOLOCK)
                     JOIN [user] u WITH (NOLOCK) ON f.student_id = u.Id 
-                    WHERE f.tutor_id = @tid AND f.course_id IS NULL AND f.resource_id IS NULL AND f.status = 'APPROVED'
+                    WHERE f.tutor_id = @tid AND f.course_id IS NULL AND f.resource_id IS NULL AND f.status IN ('APPROVED','PENDING')
                     ORDER BY f.created_at DESC";
 
                 SqlCommand cmd = new SqlCommand(query, conn);
@@ -271,6 +290,15 @@ namespace WAPP.Pages.Student
             }
 
             DateTime selectedDate = DateTime.Parse(txtApptDate.Text);
+            if (selectedDate.Date < DateTime.Today)
+            {
+                lblApptMessage.Text = "You cannot book an appointment for a past date.";
+                lblApptMessage.ForeColor = System.Drawing.Color.Red;
+                ddlTimeSlots.Items.Add(new ListItem("-- Invalid Date --", ""));
+                btnConfirmBooking.Enabled = false;
+                return;
+            }
+
             int durationMins = int.Parse(ddlDuration.SelectedValue);
 
             // Set Tutor working hours (9:00 AM to 5:00 PM)
@@ -456,26 +484,5 @@ namespace WAPP.Pages.Student
             ScriptManager.RegisterStartupScript(this, this.GetType(), "CloseModalScript", script, true);
         }
 
-        private void SetTutorBackground(int tutorId)
-        {
-            // A collection of beautiful, modern CSS gradients
-            string[,] gradients = new string[,] {
-                { "#4facfe", "#00f2fe" }, // Cool Blue
-                { "#43e97b", "#38f9d7" }, // Mint Green
-                { "#fa709a", "#fee140" }, // Sunset Pink/Yellow
-                { "#a18cd1", "#fbc2eb" }, // Soft Purple
-                { "#ff9a9e", "#fecfef" }, // Rose Water
-                { "#84fab0", "#8fd3f4" }, // Ocean
-                { "#fccb90", "#d57eeb" }  // Peach/Purple
-            };
-
-            // Use the Tutor's ID to always pick the exact same color for them
-            int index = tutorId % gradients.GetLength(0);
-            string color1 = gradients[index, 0];
-            string color2 = gradients[index, 1];
-
-            // Apply the gradient directly to the div
-            divCoverPhoto.Style["background"] = $"linear-gradient(135deg, {color1} 0%, {color2} 100%)";
-        }
     }
 }

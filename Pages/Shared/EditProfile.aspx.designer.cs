@@ -51,6 +51,15 @@ namespace WAPP.Pages.Shared
         protected global::System.Web.UI.WebControls.Literal litRole;
 
         /// <summary>
+        /// fuProfilePic control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.FileUpload fuProfilePic;
+
+        /// <summary>
         /// txtFname control.
         /// </summary>
         /// <remarks>

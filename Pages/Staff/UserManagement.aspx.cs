@@ -15,7 +15,7 @@ namespace WAPP.Pages.Staff
         {
             if (Session["role_id"] == null || (int)Session["role_id"] != 2)
             {
-                Response.Redirect("~/Pages/Guest/Login.aspx");
+                Response.Redirect("~/Pages/Guest/Home.aspx");
             }
 
             if (!IsPostBack)
@@ -28,6 +28,20 @@ namespace WAPP.Pages.Staff
                 ddlFilterStatus.SelectedValue = "All";
                 BindGrid();
             }
+        }
+
+        protected void btnClearFilters_Click(object sender, EventArgs e)
+        {
+            txtSearch.Text = "";
+            ddlSortBy.SelectedValue = "ID_ASC";
+            ddlFilterRole.SelectedValue = "All";
+            ddlFilterStatus.SelectedValue = "All";
+            lblMessage.Visible = false;
+
+            ScriptManager.RegisterStartupScript(this, this.GetType(), "ClearSearch", "document.getElementById('" + txtSearch.ClientID + "').value = ''; SearchTable();", true);
+
+            gvUsers.PageIndex = 0;
+            BindGrid();
         }
 
         protected string GetRoleName(object roleIdObj)
@@ -53,6 +67,10 @@ namespace WAPP.Pages.Staff
                 string statusFilter = ddlFilterStatus.SelectedValue;
                 if (statusFilter != "All") sql += " AND is_locked = @StatusFilter";
 
+                if (ddlSortBy.SelectedValue == "ID_ASC") sql += " ORDER BY Id ASC";
+                else if (ddlSortBy.SelectedValue == "ID_DESC") sql += " ORDER BY Id DESC";
+                else sql += " ORDER BY Id DESC";
+
                 using (SqlCommand cmd = new SqlCommand(sql, conn))
                 {
                     if (roleFilter != "All") cmd.Parameters.AddWithValue("@RoleFilter", roleFilter);
@@ -76,18 +94,48 @@ namespace WAPP.Pages.Staff
         private void UpdatePager()
         {
             int totalRecords = ViewState["TotalRecords"] != null ? Convert.ToInt32(ViewState["TotalRecords"]) : 0;
+
+            int totalPages = (int)Math.Ceiling((double)totalRecords / gvUsers.PageSize);
+            if (totalPages == 0) totalPages = 1;
+
             int startRecord = (gvUsers.PageIndex * gvUsers.PageSize) + 1;
             int endRecord = startRecord + gvUsers.Rows.Count - 1;
+
             if (endRecord > totalRecords) endRecord = totalRecords;
             if (totalRecords == 0) { startRecord = 0; endRecord = 0; }
 
-            litPagerInfo.Text = $"Showing {startRecord}-{endRecord} of {totalRecords} users";
+            litPagerInfo.Text = $"Showing {startRecord} to {endRecord} of {totalRecords} users";
+            txtPageJump.Text = (gvUsers.PageIndex + 1).ToString();
 
             btnPrev.Enabled = gvUsers.PageIndex > 0;
-            btnPrev.CssClass = btnPrev.Enabled ? "pager-link" : "pager-link disabled";
+            btnNext.Enabled = gvUsers.PageIndex < (totalPages - 1);
 
-            btnNext.Enabled = gvUsers.PageIndex < (gvUsers.PageCount - 1);
-            btnNext.CssClass = btnNext.Enabled ? "pager-link" : "pager-link disabled";
+            btnPrev.CssClass = btnPrev.Enabled ? "btn btn-outline-primary btn-sm fw-bold px-3" : "btn btn-outline-secondary btn-sm fw-bold px-3 disabled";
+            btnNext.CssClass = btnNext.Enabled ? "btn btn-outline-primary btn-sm fw-bold px-3" : "btn btn-outline-secondary btn-sm fw-bold px-3 disabled";
+        }
+
+        protected void txtPageJump_TextChanged(object sender, EventArgs e)
+        {
+            int totalRecords = ViewState["TotalRecords"] != null ? Convert.ToInt32(ViewState["TotalRecords"]) : 0;
+            int totalPages = (int)Math.Ceiling((double)totalRecords / gvUsers.PageSize);
+            if (totalPages == 0) totalPages = 1;
+
+            if (int.TryParse(txtPageJump.Text, out int pageNum))
+            {
+                if (pageNum >= 1 && pageNum <= totalPages)
+                {
+                    gvUsers.PageIndex = pageNum - 1;
+                }
+                else if (pageNum < 1)
+                {
+                    gvUsers.PageIndex = 0;
+                }
+                else
+                {
+                    gvUsers.PageIndex = totalPages - 1;
+                }
+            }
+            BindGrid();
         }
 
         protected void btnPrev_Click(object sender, EventArgs e)
@@ -101,7 +149,8 @@ namespace WAPP.Pages.Staff
 
         protected void btnNext_Click(object sender, EventArgs e)
         {
-            if (gvUsers.PageIndex < gvUsers.PageCount - 1)
+            int totalRecords = ViewState["TotalRecords"] != null ? Convert.ToInt32(ViewState["TotalRecords"]) : 0;
+            if (gvUsers.PageIndex < ((int)Math.Ceiling((double)totalRecords / gvUsers.PageSize) - 1))
             {
                 gvUsers.PageIndex++;
                 BindGrid();
@@ -115,40 +164,107 @@ namespace WAPP.Pages.Staff
             BindGrid();
         }
 
+        protected void gvUsers_RowDataBound(object sender, GridViewRowEventArgs e)
+        {
+            if (e.Row.RowType == DataControlRowType.DataRow)
+            {
+                e.Row.CssClass = "clickable-row";
+                e.Row.Attributes["onclick"] = ClientScript.GetPostBackClientHyperlink(gvUsers, "EditRow$" + e.Row.RowIndex);
+            }
+        }
+
         protected void gvUsers_RowCommand(object sender, GridViewCommandEventArgs e)
         {
-            if (e.CommandName == "EditUser")
+            if (e.CommandName == "EditUser" || e.CommandName == "EditRow")
             {
-                int userId = Convert.ToInt32(e.CommandArgument);
+                int userId = -1;
+
+                if (e.CommandName == "EditRow")
+                {
+                    int rowIndex = Convert.ToInt32(e.CommandArgument);
+                    userId = Convert.ToInt32(gvUsers.DataKeys[rowIndex].Value);
+                }
+                else
+                {
+                    userId = Convert.ToInt32(e.CommandArgument);
+                }
+
                 LoadUserDataForEdit(userId);
                 ScriptManager.RegisterStartupScript(this, this.GetType(), "OpenModal", "openEditModal();", true);
             }
-            else if (e.CommandName == "ToggleStatus")
+            else if (e.CommandName == "ConfirmToggleStatus")
             {
-                try
+                int userId = Convert.ToInt32(e.CommandArgument);
+                hfToggleUserId.Value = userId.ToString();
+
+                using (SqlConnection conn = new SqlConnection(connString))
                 {
-                    int userId = Convert.ToInt32(e.CommandArgument);
-                    using (SqlConnection conn = new SqlConnection(connString))
+                    string sql = "SELECT fname, lname, is_locked FROM [user] WHERE Id = @Id";
+                    using (SqlCommand cmd = new SqlCommand(sql, conn))
                     {
-                        string sql = "UPDATE [user] SET is_locked = CASE WHEN is_locked = 1 THEN 0 ELSE 1 END WHERE Id = @Id";
-                        using (SqlCommand cmd = new SqlCommand(sql, conn))
+                        cmd.Parameters.AddWithValue("@Id", userId);
+                        conn.Open();
+                        using (SqlDataReader rdr = cmd.ExecuteReader())
                         {
-                            cmd.Parameters.AddWithValue("@Id", userId);
-                            conn.Open();
-                            cmd.ExecuteNonQuery();
+                            if (rdr.Read())
+                            {
+                                string fullName = rdr["fname"].ToString() + " " + rdr["lname"].ToString();
+                                bool isLocked = Convert.ToBoolean(rdr["is_locked"]);
+
+                                string formattedId = "U" + userId.ToString().PadLeft(3, '0');
+
+                                if (isLocked)
+                                {
+                                    litLockModalTitle.Text = "Are you sure you want to <b>unlock</b> this user?";
+                                    litLockUserDetails.Text = $"<b>{formattedId} - {fullName}</b>";
+                                    btnConfirmToggleStatus.Text = "Unlock User";
+                                    btnConfirmToggleStatus.CssClass = "btn btn-success px-4 fw-bold rounded-pill";
+                                }
+                                else
+                                {
+                                    litLockModalTitle.Text = "Are you sure you want to <b>lock</b> this user?";
+                                    litLockUserDetails.Text = $"<b>{formattedId} - {fullName}</b>";
+                                    btnConfirmToggleStatus.Text = "Lock User";
+                                    btnConfirmToggleStatus.CssClass = "btn btn-danger px-4 fw-bold rounded-pill";
+                                }
+
+                                ScriptManager.RegisterStartupScript(this, this.GetType(), "OpenLockModal", "openLockModal();", true);
+                            }
                         }
                     }
-                    BindGrid();
-                    lblMessage.Visible = true;
-                    lblMessage.Text = "User status updated.";
-                    lblMessage.CssClass = "alert alert-success d-block";
                 }
-                catch (Exception ex)
+            }
+        }
+
+        // NEW: Method to handle the actual database update after confirmation
+        protected void btnConfirmToggleStatus_Click(object sender, EventArgs e)
+        {
+            if (string.IsNullOrEmpty(hfToggleUserId.Value)) return;
+
+            try
+            {
+                int userId = Convert.ToInt32(hfToggleUserId.Value);
+                using (SqlConnection conn = new SqlConnection(connString))
                 {
-                    lblMessage.Visible = true;
-                    lblMessage.Text = "Error: " + ex.Message;
-                    lblMessage.CssClass = "alert alert-danger d-block";
+                    string sql = "UPDATE [user] SET is_locked = CASE WHEN is_locked = 1 THEN 0 ELSE 1 END WHERE Id = @Id";
+                    using (SqlCommand cmd = new SqlCommand(sql, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@Id", userId);
+                        conn.Open();
+                        cmd.ExecuteNonQuery();
+                    }
                 }
+                BindGrid();
+                lblMessage.Visible = true;
+                lblMessage.Text = "User status updated successfully.";
+                lblMessage.CssClass = "alert alert-success d-block";
+                ScriptManager.RegisterStartupScript(this, this.GetType(), "CloseLockModal", "closeLockModal();", true);
+            }
+            catch (Exception ex)
+            {
+                lblMessage.Visible = true;
+                lblMessage.Text = "Error: " + ex.Message;
+                lblMessage.CssClass = "alert alert-danger d-block";
             }
         }
 
@@ -172,7 +288,6 @@ namespace WAPP.Pages.Staff
                             txtEditEmail.Text = rdr["email"].ToString();
                             txtEditPhone.Text = rdr["contact"].ToString();
                             if (rdr["dob"] != DBNull.Value) txtEditDOB.Text = Convert.ToDateTime(rdr["dob"]).ToString("yyyy-MM-dd");
-                            txtEditPass.Text = rdr["password_hash"].ToString();
                             ddlEditRole.SelectedValue = rdr["role_id"].ToString();
                             bool isLocked = Convert.ToBoolean(rdr["is_locked"]);
                             ddlEditStatus.SelectedValue = isLocked ? "Locked" : "Active";
@@ -184,13 +299,11 @@ namespace WAPP.Pages.Staff
 
         protected void btnUpdateUser_Click(object sender, EventArgs e)
         {
-            // 1. Manual Validation Check
             if (string.IsNullOrWhiteSpace(txtEditFirstName.Text) ||
                 string.IsNullOrWhiteSpace(txtEditLastName.Text) ||
                 string.IsNullOrWhiteSpace(txtEditDOB.Text) ||
                 string.IsNullOrWhiteSpace(txtEditPhone.Text) ||
-                string.IsNullOrWhiteSpace(txtEditEmail.Text) ||
-                string.IsNullOrWhiteSpace(txtEditPass.Text))
+                string.IsNullOrWhiteSpace(txtEditEmail.Text))
             {
                 lblMessage.Visible = true;
                 lblMessage.Text = "Please fill out all required fields.";
@@ -205,25 +318,26 @@ namespace WAPP.Pages.Staff
             {
                 using (SqlConnection conn = new SqlConnection(connString))
                 {
-                    string sql = @"UPDATE [user] SET fname=@fname, lname=@lname, dob=@dob, contact=@contact, email=@email, is_locked=@is_locked, password_hash=@pass WHERE Id=@Id";
+                    string sql = @"UPDATE [user] SET fname=@fname, lname=@lname, dob=@dob, contact=@contact, email=@email, is_locked=@is_locked WHERE Id=@Id";
                     using (SqlCommand cmd = new SqlCommand(sql, conn))
                     {
                         cmd.Parameters.AddWithValue("@Id", hfEditUserId.Value);
                         cmd.Parameters.AddWithValue("@fname", txtEditFirstName.Text.Trim());
                         cmd.Parameters.AddWithValue("@lname", txtEditLastName.Text.Trim());
                         cmd.Parameters.AddWithValue("@dob", txtEditDOB.Text);
-                        cmd.Parameters.AddWithValue("@contact", txtEditPhone.Text.Trim());
+                        cmd.Parameters.AddWithValue("@contact", txtEditPhone.Text.Trim()); // NO DASH logic formatting required here anymore.
                         cmd.Parameters.AddWithValue("@email", txtEditEmail.Text.Trim());
-                        cmd.Parameters.AddWithValue("@pass", txtEditPass.Text.Trim());
                         cmd.Parameters.AddWithValue("@is_locked", (ddlEditStatus.SelectedValue == "Locked") ? 1 : 0);
                         conn.Open();
                         cmd.ExecuteNonQuery();
                     }
                 }
+
                 BindGrid();
                 lblMessage.Visible = true;
                 lblMessage.Text = "User updated successfully!";
-                lblMessage.CssClass = "alert alert-success d-block";
+                lblMessage.CssClass = "alert alert-success d-block mb-3";
+
                 ScriptManager.RegisterStartupScript(this, this.GetType(), "CloseModal", "closeEditModal();", true);
             }
             catch (SqlException sqlEx)
@@ -237,19 +351,20 @@ namespace WAPP.Pages.Staff
                 {
                     lblMessage.Text = "Database Error: " + sqlEx.Message;
                 }
-                lblMessage.CssClass = "alert alert-danger d-block";
+                lblMessage.CssClass = "alert alert-danger d-block mb-3";
+                ScriptManager.RegisterStartupScript(this, this.GetType(), "OpenModal", "openEditModal();", true);
             }
             catch (Exception ex)
             {
                 lblMessage.Visible = true;
                 lblMessage.Text = "Error updating user: " + ex.Message;
-                lblMessage.CssClass = "alert alert-danger d-block";
+                lblMessage.CssClass = "alert alert-danger d-block mb-3";
+                ScriptManager.RegisterStartupScript(this, this.GetType(), "OpenModal", "openEditModal();", true);
             }
         }
 
         protected void btnSaveUser_Click(object sender, EventArgs e)
         {
-            // 1. Manual Validation Check
             if (string.IsNullOrWhiteSpace(txtFirstName.Text) ||
                 string.IsNullOrWhiteSpace(txtLastName.Text) ||
                 string.IsNullOrWhiteSpace(txtDOB.Text) ||
@@ -259,7 +374,8 @@ namespace WAPP.Pages.Staff
             {
                 lblMessage.Visible = true;
                 lblMessage.Text = "Please fill out all required fields.";
-                lblMessage.CssClass = "alert alert-danger d-block";
+                lblMessage.CssClass = "alert alert-danger d-block mb-3";
+                ScriptManager.RegisterStartupScript(this, this.GetType(), "OpenModal", "openAddModal();", true);
                 return;
             }
 
@@ -276,7 +392,7 @@ namespace WAPP.Pages.Staff
                         cmd.Parameters.AddWithValue("@fname", txtFirstName.Text.Trim());
                         cmd.Parameters.AddWithValue("@lname", txtLastName.Text.Trim());
                         cmd.Parameters.AddWithValue("@dob", txtDOB.Text);
-                        cmd.Parameters.AddWithValue("@contact", txtPhone.Text.Trim());
+                        cmd.Parameters.AddWithValue("@contact", txtPhone.Text.Trim()); // Raw straight from textbox
                         cmd.Parameters.AddWithValue("@email", txtEmail.Text.Trim());
                         cmd.Parameters.AddWithValue("@pass", txtPass.Text.Trim());
                         cmd.Parameters.AddWithValue("@role", selectedRole);
@@ -285,16 +401,17 @@ namespace WAPP.Pages.Staff
                         cmd.ExecuteNonQuery();
                     }
                 }
-                lblMessage.Visible = true;
-                lblMessage.Text = "User added successfully!";
-                lblMessage.CssClass = "alert alert-success d-block";
 
                 txtFirstName.Text = ""; txtLastName.Text = ""; txtDOB.Text = "";
                 txtPhone.Text = ""; txtEmail.Text = ""; txtPass.Text = "";
 
                 BindGrid();
 
-                ScriptManager.RegisterStartupScript(this, this.GetType(), "CloseAddModal", "bootstrap.Modal.getOrCreateInstance(document.getElementById('addUserModal')).hide(); $('.modal-backdrop').remove(); $('body').removeClass('modal-open').css('overflow', '').css('padding-right', '');", true);
+                lblMessage.Visible = true;
+                lblMessage.Text = "User added successfully!";
+                lblMessage.CssClass = "alert alert-success d-block mb-3";
+
+                ScriptManager.RegisterStartupScript(this, this.GetType(), "CloseAddModal", "closeAddModal();", true);
             }
             catch (SqlException sqlEx)
             {
@@ -307,13 +424,15 @@ namespace WAPP.Pages.Staff
                 {
                     lblMessage.Text = "Database Error: " + sqlEx.Message;
                 }
-                lblMessage.CssClass = "alert alert-danger d-block";
+                lblMessage.CssClass = "alert alert-danger d-block mb-3";
+                ScriptManager.RegisterStartupScript(this, this.GetType(), "OpenModal", "openAddModal();", true);
             }
             catch (Exception ex)
             {
                 lblMessage.Visible = true;
                 lblMessage.Text = "Error: " + ex.Message;
-                lblMessage.CssClass = "alert alert-danger d-block";
+                lblMessage.CssClass = "alert alert-danger d-block mb-3";
+                ScriptManager.RegisterStartupScript(this, this.GetType(), "OpenModal", "openAddModal();", true);
             }
         }
     }

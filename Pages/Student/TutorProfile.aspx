@@ -2,11 +2,18 @@
 
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
     <style>
-        .tutor-cover-photo {
-            height: 200px;
-            background: linear-gradient(135deg, var(--ec-bg-nav) 0%, #e2e8f0 100%);
-            border-bottom: 1px solid var(--ec-border-light);
+
+        .tutor-header-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--ec-border-light);
+            border-radius: var(--ec-radius-lg);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            padding: 40px;
+            margin-bottom: 24px;
         }
+
         .tutor-avatar-circle {
             width: 130px;
             height: 130px;
@@ -18,25 +25,18 @@
             justify-content: center;
             font-size: 3.5rem;
             font-weight: 700;
-            margin: 0 auto;
             box-shadow: var(--ec-shadow-md);
-            border: 6px solid var(--ec-bg-surface);
-            position: relative;
-            z-index: 10;
-            margin-top: -65px;
+            border: 4px solid white;
+            flex-shrink: 0;
         }
-        .tutor-profile-header {
-            margin-top: -40px;
-            text-align: center;
+
+        /* Dark Mode overrides for the new card */
+        html.dark-mode .tutor-header-card {
+            background: rgba(30, 30, 30, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        @media (min-width: 768px) {
-            .tutor-avatar-circle {
-                margin: -65px 0 0 40px;
-            }
-            .tutor-profile-header {
-                text-align: left;
-                padding-left: 200px;
-            }
+        html.dark-mode .tutor-avatar-circle {
+            border-color: #2a2a2a;
         }
     </style>
 </asp:Content>
@@ -48,46 +48,53 @@
             <asp:SiteMapPath ID="SiteMapPath1" runat="server" SiteMapProvider="StudentMap" 
                 PathSeparator=" > " CssClass="small text-muted text-decoration-none" RenderCurrentNodeAsLink="false" />
         </div>
-        <div class="ec-glass-card p-0 mb-4 border-0 shadow-sm" style="overflow: visible;">
-            <div class="tutor-cover-photo" id="divCoverPhoto" runat="server" style="border-top-left-radius: var(--ec-radius-lg); border-top-right-radius: var(--ec-radius-lg);"></div>
+
+        <div class="tutor-header-card d-flex flex-column flex-md-row align-items-center align-items-md-start gap-4 text-center text-md-start">
             
-            <div class="tutor-avatar-circle">
+            <div class="tutor-avatar-circle" id="divAvatarCircle" runat="server" style="overflow: hidden;">
+                <asp:Image ID="imgProfilePic" runat="server" Visible="false" style="width: 100%; height: 100%; object-fit: cover;" />
                 <asp:Literal ID="litInitials" runat="server"></asp:Literal>
             </div>
 
-            <div class="p-4 pt-0 tutor-profile-header d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3">
-                <div class="pb-1">
-                    <div class="d-flex align-items-center justify-content-center justify-content-md-start gap-2 mb-2">
-                        <h2 class="ec-page-title mb-0">
-                            <asp:Literal ID="litTutorName" runat="server"></asp:Literal>
-                        </h2>
-                        <asp:PlaceHolder ID="phVerified" runat="server" Visible="false">
-                            <i class="bi bi-patch-check-fill text-success fs-4" title="Verified Educator" data-bs-toggle="tooltip"></i>
-                        </asp:PlaceHolder>
+            <div class="d-flex flex-column justify-content-between flex-grow-1 w-100">
+                
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-center align-items-md-start w-100 gap-3">
+                    <div>
+                        <div class="d-flex align-items-center justify-content-center justify-content-md-start gap-2 mb-2">
+                            <h2 class="ec-page-title mb-0">
+                                <asp:Literal ID="litTutorName" runat="server"></asp:Literal>
+                            </h2>
+                            <asp:PlaceHolder ID="phVerified" runat="server" Visible="false">
+                                <i class="bi bi-patch-check-fill text-success fs-4" title="Verified Educator" data-bs-toggle="tooltip"></i>
+                            </asp:PlaceHolder>
+                        </div>
+                        <p class="text-muted mb-0 fw-medium">
+                            <i class="bi bi-envelope-fill text-primary opacity-50 me-2"></i><asp:Literal ID="litEmail" runat="server"></asp:Literal>
+                            <span class="mx-3 opacity-25 d-none d-md-inline">|</span>
+                            <span class="d-block d-md-inline mt-2 mt-md-0">
+                                <i class="bi bi-calendar-check-fill text-primary opacity-50 me-2"></i>Joined <asp:Literal ID="litJoinedDate" runat="server"></asp:Literal>
+                            </span>
+                        </p>
                     </div>
-                    <p class="text-muted mb-0 fw-medium">
-                        <i class="bi bi-envelope-fill text-primary opacity-50 me-2"></i><asp:Literal ID="litEmail" runat="server"></asp:Literal>
-                        <span class="mx-3 opacity-25">|</span>
-                        <i class="bi bi-calendar-check-fill text-primary opacity-50 me-2"></i>Joined <asp:Literal ID="litJoinedDate" runat="server"></asp:Literal>
-                    </p>
-                </div>
 
-                <div class="d-flex flex-column align-items-center align-items-md-end gap-3 pb-2">
-                    <div class="text-center text-md-end">
-                        <div class="d-flex align-items-baseline justify-content-center justify-content-md-end mb-1">
+                    <div class="text-center text-md-end bg-light rounded-4 p-3 border shadow-sm" style="min-width: 160px;">
+                        <div class="d-flex align-items-baseline justify-content-center mb-1">
                             <h3 class="fw-bold text-main mb-0 me-1"><asp:Literal ID="litAvgRating" runat="server">0.0</asp:Literal></h3>
                             <span class="text-muted small">/ 5.0</span>
                         </div>
                         <div class="text-warning mb-1" style="font-size: 1.1rem;">
                             <asp:Literal ID="litStarRating" runat="server"></asp:Literal>
                         </div>
-                        <span class="ec-stat-desc">Average Rating</span>
+                        <span class="text-muted small fw-bold text-uppercase" style="letter-spacing: 1px;">Rating</span>
                     </div>
+                </div>
 
+                <div class="mt-4 pt-4 border-top w-100 d-flex justify-content-center justify-content-md-start">
                     <button type="button" class="btn-main rounded-pill px-4 shadow-sm d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#bookAppointmentModal">
                         <i class="bi bi-calendar-plus me-2"></i> Book Appointment
                     </button>
                 </div>
+
             </div>
         </div>
 
@@ -126,7 +133,7 @@
                                         
                                         <div class="ec-course-footer mt-auto pt-3 border-top">
                                             <asp:HyperLink ID="hlViewCourse" runat="server" 
-                                                NavigateUrl='<%# "~/Pages/Student/CourseDetail.aspx?id=" + Eval("Id") %>' 
+                                                NavigateUrl='<%# "~/Pages/Student/CourseDetail.aspx?id=" + Eval("Id") + "&source=tutor" %>' 
                                                 CssClass="ec-link-primary m-0 d-flex align-items-center justify-content-between w-100 text-decoration-none">
                                                 <span>View Course</span> <i class="bi bi-arrow-right"></i>
                                             </asp:HyperLink>
@@ -258,7 +265,11 @@
 
                         <div class="ec-modal-footer d-flex justify-content-end gap-2">
                             <button type="button" class="btn-sub" data-bs-dismiss="modal">Cancel</button>
-                            <asp:Button ID="btnConfirmBooking" runat="server" Text="Request Appointment" CssClass="ec-btn-primary" OnClick="btnConfirmBooking_Click" />
+                            <asp:Button ID="btnConfirmBooking" runat="server" 
+                                Text="Request Appointment" 
+                                CssClass="ec-btn-primary" 
+                                OnClick="btnConfirmBooking_Click"
+                                OnClientClick="if(confirm('Are you sure you want to book this session?')) { this.value='Sending Request...'; this.style.pointerEvents='none'; this.style.opacity='0.7'; return true; } else { return false; }" />
                         </div>
                     </ContentTemplate>
                 </asp:UpdatePanel>

@@ -4,6 +4,7 @@ using System.Data.SqlClient;
 using System.IO;
 using System.Web;
 using System.Text.RegularExpressions;
+using WAPP.Utils;
 
 namespace WAPP.Pages.Tutor
 {
@@ -22,27 +23,11 @@ namespace WAPP.Pages.Tutor
             base.OnInit(e);
             SiteMap.SiteMapResolve += SiteMap_Resolve;
         }
-
         protected override void OnUnload(EventArgs e)
         {
             SiteMap.SiteMapResolve -= SiteMap_Resolve;
             base.OnUnload(e);
         }
-
-        private string GetCourseName(int courseId)
-        {
-            string cs = ConfigurationManager.ConnectionStrings["MyDbConn"].ConnectionString;
-
-            using (SqlConnection con = new SqlConnection(cs))
-            using (SqlCommand cmd = new SqlCommand(
-                "SELECT TOP 1 title FROM course WHERE Id = @Id", con))
-            {
-                cmd.Parameters.AddWithValue("@Id", courseId);
-                con.Open();
-                return cmd.ExecuteScalar()?.ToString();
-            }
-        }
-
         private SiteMapNode SiteMap_Resolve(object sender, SiteMapResolveEventArgs e)
         {
             var ctx = e.Context;
@@ -74,6 +59,20 @@ namespace WAPP.Pages.Tutor
             }
 
             return clone;
+        }
+
+        private string GetCourseName(int courseId)
+        {
+            string cs = ConfigurationManager.ConnectionStrings["MyDbConn"].ConnectionString;
+
+            using (SqlConnection con = new SqlConnection(cs))
+            using (SqlCommand cmd = new SqlCommand(
+                "SELECT TOP 1 title FROM course WHERE Id = @Id", con))
+            {
+                cmd.Parameters.AddWithValue("@Id", courseId);
+                con.Open();
+                return cmd.ExecuteScalar()?.ToString();
+            }
         }
 
         protected void Button1_Click(object sender, EventArgs e)
@@ -156,6 +155,10 @@ namespace WAPP.Pages.Tutor
                     string fileExtension = Path.GetExtension(FileUpload1.FileName).ToLower();
                     if (fileExtension != expectedExtension)
                     {
+                        SystemLogService.Write("UPLOAD_INVALID_FORMAT",
+                            $"Tutor attempted to upload invalid file type '{fileExtension}' for resource '{resource_type.SelectedValue}'.",
+                            LogLevel.WARNING, tutorId);
+
                         lblMsg.Text = $"Invalid file format! You selected {resource_type.SelectedValue}, so you must upload a {expectedExtension} file.";
                         return;
                     }
@@ -201,6 +204,11 @@ namespace WAPP.Pages.Tutor
 
                     con.Open();
                     cmd.ExecuteNonQuery();
+
+                    // ---> LOGGING ADDED: INFO (Successful upload metric)
+                    SystemLogService.Write("COURSE_MATERIAL_UPLOADED",
+                        $"Tutor added '{resource_type.SelectedValue}' material: '{title.Text.Trim()}' to Course ID {courseId}.",
+                        LogLevel.INFO, tutorId);
                 }
 
                 // 5. Success Feedback
@@ -216,10 +224,17 @@ namespace WAPP.Pages.Tutor
             }
             catch (Exception ex)
             {
+                // ---> LOGGING ADDED: ERROR (Catches both Disk Write IO issues and DB failures)
+                SystemLogService.Write("COURSE_MATERIAL_ERROR",
+                    $"Error uploading material '{title.Text}' to Course ID {Request.QueryString["id"]}: {ex.Message}",
+                    LogLevel.ERROR, Session["UserId"] != null ? Convert.ToInt32(Session["UserId"]) : (int?)null);
+
+                // Replaced raw ex.Message with a safe user-facing message
                 lblMsg.ForeColor = System.Drawing.Color.Red;
-                lblMsg.Text = "An error occurred: " + ex.Message;
+                lblMsg.Text = "An unexpected error occurred while saving the material. Please try again later.";
             }
         }
+
         private string ConvertToYouTubeEmbed(string rawUrl)
         {
             try
@@ -253,7 +268,7 @@ namespace WAPP.Pages.Tutor
                 videoId = videoId.Trim();
 
                 // 3. YouTube IDs are always exactly 11 characters long. 
-                // If we found it, return the perfect embed link.
+                // If found it, return the perfect embed link.
                 if (videoId.Length == 11)
                 {
                     return $"https://www.youtube.com/embed/{videoId}";
@@ -261,7 +276,7 @@ namespace WAPP.Pages.Tutor
             }
             catch
             {
-                // Fail silently and return original if something goes completely wrong
+
             }
 
             return rawUrl;

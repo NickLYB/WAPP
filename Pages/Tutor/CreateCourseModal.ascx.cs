@@ -24,8 +24,6 @@ namespace WAPP.Pages.Tutor
             lblMsg.Text = msg;
             lblMsg.ForeColor = isError ? System.Drawing.Color.Red : System.Drawing.Color.Green;
 
-            // Use vanilla JavaScript for Bootstrap 5 (no jQuery needed).
-            // The setTimeout ensures the DOM is fully loaded before trying to open the modal.
             string script = @"
         setTimeout(function() { 
             var myModal = new bootstrap.Modal(document.getElementById('createCourseModal')); 
@@ -42,7 +40,7 @@ namespace WAPP.Pages.Tutor
                 string.IsNullOrWhiteSpace(description.Text) ||
                 string.IsNullOrWhiteSpace(duration.Text) ||
                 type.SelectedValue == "" ||
-                skill.SelectedIndex == 0) // Changed to index check to catch "-- Select Skill --"
+                skill.SelectedIndex == 0)
             {
                 ShowModalWithMessage("Please fill in all fields.");
                 return;
@@ -57,7 +55,7 @@ namespace WAPP.Pages.Tutor
             // 2) Get tutor id from session
             if (Session["UserId"] == null)
             {
-                Response.Redirect("~/Pages/Login.aspx");
+                Response.Redirect("~/Pages/Guest/Home.aspx");
                 return;
             }
             int tutorId = Convert.ToInt32(Session["UserId"]);
@@ -76,7 +74,8 @@ namespace WAPP.Pages.Tutor
                 }
 
                 string fileName = Guid.NewGuid().ToString("N") + ext;
-                string folder = Server.MapPath("~/Images/Courses/");
+
+                string folder = Server.MapPath("~/Uploads/CourseImages/");
 
                 if (!System.IO.Directory.Exists(folder))
                     System.IO.Directory.CreateDirectory(folder);
@@ -84,7 +83,7 @@ namespace WAPP.Pages.Tutor
                 string fullPath = System.IO.Path.Combine(folder, fileName);
                 FileUpload1.SaveAs(fullPath);
 
-                imagePath = "~/Images/Courses/" + fileName;
+                imagePath = "~/Uploads/CourseImages/" + fileName;
             }
 
             // 4) Insert to DB
@@ -93,8 +92,8 @@ namespace WAPP.Pages.Tutor
             using (SqlConnection conn = new SqlConnection(connString))
             {
                 string sql = @"INSERT INTO course (title, description, course_type_id, duration_minutes, skill_level, tutor_id, status, image_path) 
-                               VALUES (@title, @description, @course_type_id, @duration_minutes, @skill_level, @tutor_id, @status, @image_path); 
-                               SELECT CAST(SCOPE_IDENTITY() AS INT);";
+                       VALUES (@title, @description, @course_type_id, @duration_minutes, @skill_level, @tutor_id, @status, @image_path); 
+                       SELECT CAST(SCOPE_IDENTITY() AS INT);";
 
                 using (SqlCommand cmd = new SqlCommand(sql, conn))
                 {
@@ -104,7 +103,7 @@ namespace WAPP.Pages.Tutor
                     cmd.Parameters.AddWithValue("@duration_minutes", durationMinutes);
                     cmd.Parameters.AddWithValue("@skill_level", skill.SelectedValue.ToUpper());
                     cmd.Parameters.AddWithValue("@tutor_id", tutorId);
-                    cmd.Parameters.AddWithValue("@status", "PENDING");
+                    cmd.Parameters.AddWithValue("@status", "PENDING"); // Sends course to staff for approval
                     cmd.Parameters.AddWithValue("@image_path", (object)imagePath ?? DBNull.Value);
 
                     try
@@ -113,7 +112,6 @@ namespace WAPP.Pages.Tutor
                         int newCourseId = (int)cmd.ExecuteScalar();
                         Session["NewCourseId"] = newCourseId;
 
-                        // Because this is a user control on the Teaching page, you can just refresh the parent page
                         Response.Redirect(Request.RawUrl);
                     }
                     catch (Exception ex)
@@ -123,7 +121,6 @@ namespace WAPP.Pages.Tutor
                 }
             }
         }
-
         private void LoadCourseTypes()
         {
             string connString = ConfigurationManager.ConnectionStrings["MyDbConn"].ConnectionString;

@@ -61,6 +61,27 @@ namespace WAPP.Pages.Tutor
             }
         }
 
+        private int GetFirstLessonId(string cid)
+        {
+            using (SqlConnection conn = new SqlConnection(connStr))
+            {
+                string query = @"
+                    SELECT TOP 1 Id 
+                    FROM learningResource 
+                    WHERE course_id=@cid 
+                    ORDER BY 
+                        CASE WHEN sequence_order IS NULL THEN 1 ELSE 0 END ASC, 
+                        sequence_order ASC, 
+                        created_at ASC";
+
+                SqlCommand cmd = new SqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@cid", cid);
+                conn.Open();
+                object result = cmd.ExecuteScalar();
+                return result != null ? Convert.ToInt32(result) : 0;
+            }
+        }
+
         private void LoadCourseTitle(string cid)
         {
             using (SqlConnection conn = new SqlConnection(connStr))
@@ -71,21 +92,6 @@ namespace WAPP.Pages.Tutor
                 litCourseTitle.Text = cmd.ExecuteScalar()?.ToString() ?? "Course Preview";
             }
         }
-
-        private int GetFirstLessonId(string cid)
-        {
-            using (SqlConnection conn = new SqlConnection(connStr))
-            {
-                // Grabs the first lesson based on how you sorted it in the edit page
-                string query = "SELECT TOP 1 Id FROM learningResource WHERE course_id=@cid ORDER BY sequence_order ASC, created_at ASC";
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@cid", cid);
-                conn.Open();
-                object result = cmd.ExecuteScalar();
-                return result != null ? Convert.ToInt32(result) : 0;
-            }
-        }
-
         private void LoadLessonsSidebar(string cid)
         {
             using (SqlConnection conn = new SqlConnection(connStr))
@@ -94,7 +100,10 @@ namespace WAPP.Pages.Tutor
                     SELECT Id, title, resource_type
                     FROM learningResource
                     WHERE course_id = @cid
-                    ORDER BY sequence_order ASC, created_at ASC";
+                    ORDER BY 
+                        CASE WHEN sequence_order IS NULL THEN 1 ELSE 0 END ASC, 
+                        sequence_order ASC, 
+                        created_at ASC";
 
                 SqlDataAdapter da = new SqlDataAdapter(query, conn);
                 da.SelectCommand.Parameters.AddWithValue("@cid", cid);
@@ -106,7 +115,6 @@ namespace WAPP.Pages.Tutor
                 rptLessons.DataBind();
             }
         }
-
         private void LoadLesson(int resourceId)
         {
             using (SqlConnection conn = new SqlConnection(connStr))
@@ -146,7 +154,7 @@ namespace WAPP.Pages.Tutor
                                 Your browser does not support the video tag.
                             </video>";
                     }
-                    else // PDF, PPT, etc.
+                    else // PDF
                     {
                         litVideoPlayer.Text = $@"
                             <iframe src='{fileUrl}' width='100%' height='600px' style='border: none;'>
@@ -163,7 +171,6 @@ namespace WAPP.Pages.Tutor
             Response.Redirect($"ViewCourse.aspx?id={CourseId}&resourceId={newResourceId}");
         }
 
-        // Helper Method for Sidebar Icons
         protected string GetIcon(object typeIdObj)
         {
             int typeId = Convert.ToInt32(typeIdObj);
@@ -177,8 +184,6 @@ namespace WAPP.Pages.Tutor
                 default: return "bi bi-file-earmark-text-fill text-primary";
             }
         }
-
-        // Helper Method for active CSS class
         protected string GetLessonCSS(object lessonIdObj)
         {
             int lessonId = Convert.ToInt32(lessonIdObj);

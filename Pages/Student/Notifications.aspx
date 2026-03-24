@@ -23,7 +23,7 @@
             </div>
         </div>
 
-        <asp:UpdatePanel ID="upNotifications" runat="server">
+        <asp:UpdatePanel ID="upNotifications" runat="server" UpdateMode="Conditional">
             <ContentTemplate>
                 <div class="ec-glass-card p-0 overflow-hidden">
                     <asp:Repeater ID="rptAllNotifications" runat="server" OnItemCommand="rptAllNotifications_ItemCommand">

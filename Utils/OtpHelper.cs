@@ -32,7 +32,6 @@ namespace WAPP.Utils
 
             using (SqlConnection conn = new SqlConnection(connStr))
             {
-                // We use DELETE first to remove any old OTPs for this email address
                 string deleteOld = "DELETE FROM Emailotp WHERE Email = @email";
                 string insertNew = "INSERT INTO Emailotp (Email, OtpHash, ExpiryDate) VALUES (@email, @hash, @expiry)";
 

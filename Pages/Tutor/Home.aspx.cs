@@ -13,19 +13,38 @@ namespace WAPP.Pages.Tutor
 {
     public partial class Home : System.Web.UI.Page
     {
-         string cs = ConfigurationManager.ConnectionStrings["MyDbConn"].ConnectionString;
+        string cs = ConfigurationManager.ConnectionStrings["MyDbConn"].ConnectionString;
+
         protected void Page_Load(object sender, EventArgs e)
         {
             if (Session["UserName"] == null || Session["role_id"] == null || (int)Session["role_id"] != 3)
             {
                 Response.Redirect("~/Pages/Guest/Home.aspx");
+                return;
             }
-            else
+
+            int tutorId = Convert.ToInt32(Session["UserId"]);
+
+
+            Button btnMasterUpdate = Master.FindControl("btnTutorSignalRUpdate") as Button;
+            if (btnMasterUpdate != null)
+            {
+                btnMasterUpdate.Click += new EventHandler(btnSignalRUpdate_Click);
+            }
+            if (!IsPostBack)
             {
                 lblTutorName.Text = Session["UserName"].ToString();
-                int tutorId = Convert.ToInt32(Session["UserId"]);
-
                 hfMyId.Value = tutorId.ToString();
+
+                // Set the Tutor Hero Profile Picture
+                if (Session["ProfilePic"] != null && !string.IsNullOrWhiteSpace(Session["ProfilePic"].ToString()))
+                {
+                    imgTutor.ImageUrl = Session["ProfilePic"].ToString();
+                }
+                else
+                {
+                    imgTutor.ImageUrl = "~/Images/profile_f.png";
+                }
 
                 CheckTutorStatus(tutorId);
                 LoadNotifications(tutorId);
@@ -33,14 +52,29 @@ namespace WAPP.Pages.Tutor
                 LoadRecentAnnouncements();
                 LoadRecentUnreadMessages(tutorId);
 
-                // NEW: Check if they were redirected here from the Teaching dashboard
-                if (!IsPostBack && Request.QueryString["err"] == "unverified")
+                // Check if they were redirected here from the Teaching dashboard
+                if (Request.QueryString["err"] == "unverified")
                 {
                     string script = "alert('Access Denied: You must be a fully verified tutor to access the teaching dashboard. Please wait for your application to be approved.');";
                     ClientScript.RegisterStartupScript(this.GetType(), "AccessDeniedAlert", script, true);
                 }
             }
+            else
+            {
+                // Catch the async postback fired by Tutor.Master when an announcement notification is received
+                string eventTarget = Request.Params["__EVENTTARGET"];
+                if (!string.IsNullOrEmpty(eventTarget) && eventTarget.Contains("btnTutorSignalRUpdate"))
+                {
+                    // Master page got a notification! Piggyback and refresh our dashboard panels!
+                    LoadNotifications(tutorId);
+                    LoadRecentAnnouncements();
+
+                    upNotifications.Update();
+                    upDashboardAnnouncements.Update();
+                }
+            }
         }
+
         private void CheckTutorStatus(int tutorId)
         {
             string status = "UNKNOWN";
@@ -72,7 +106,6 @@ namespace WAPP.Pages.Tutor
                     pnlApplicationStatus.Attributes["style"] = baseStyle + "background-color: #d1e7dd; color: #0f5132; border: 1px solid #badbcc;";
                     iconStatus.Attributes["class"] = "bi bi-check-circle-fill";
                     lblStatusText.Text = "Verified";
-                    // Leave the button alone, it works normally
                     break;
 
                 case "PENDING":
@@ -97,11 +130,11 @@ namespace WAPP.Pages.Tutor
                     break;
             }
         }
+
         private void LoadNotifications(int userId)
         {
             using (SqlConnection conn = new SqlConnection(cs))
             {
-                // Updated query to use a CASE statement for the title
                 string query = @"
                 SELECT 
                     CASE 
@@ -127,7 +160,7 @@ namespace WAPP.Pages.Tutor
                     da.Fill(dt);
                     conn.Close();
 
-                    // 1. Update Notification Bubble Count
+                    // Update Notification Bubble Count
                     int unreadCount = dt.Rows.Count;
                     if (unreadCount > 0)
                     {
@@ -136,13 +169,12 @@ namespace WAPP.Pages.Tutor
                     }
                     else
                     {
-                        lblNotificationCount.Visible = false; // Hide bubble if 0
+                        lblNotificationCount.Visible = false;
                     }
 
-                    // 2. Bind the Repeater
+                    // Bind the Repeater
                     if (dt.Rows.Count > 0)
                     {
-                        // Bind only top 5 if you don't want the card to get too long
                         DataTable top5 = dt.Clone();
                         for (int i = 0; i < Math.Min(5, dt.Rows.Count); i++)
                         {
@@ -162,26 +194,11 @@ namespace WAPP.Pages.Tutor
                 }
             }
         }
-        private void DisableCourseButton()
-        {
-            lnkCreateCourse.Enabled = false;
-            lnkCreateCourse.CssClass = "btn-main w-100 rounded-pill disabled";
-
-            // Force it to look gray and stop pointer clicks via CSS
-            lnkCreateCourse.Attributes.Add("style", "background-color: #6c757d !important; border-color: #6c757d !important; color: white !important; opacity: 0.6; pointer-events: none;");
-
-            lnkViewAllAnnouncements.Enabled = false;
-            lnkViewAllAnnouncements.CssClass = "btn-main w-100 rounded-pill disabled";
-
-            // Force it to look gray and stop pointer clicks via CSS
-            lnkViewAllAnnouncements.Attributes.Add("style", "background-color: #6c757d !important; border-color: #6c757d !important; color: white !important; opacity: 0.6; pointer-events: none;");
-        }
         private void LoadTeachingOverview()
         {
             if (Session["UserId"] == null) return;
             int tutorId = Convert.ToInt32(Session["UserId"]);
 
-            // 1. Get Course Counts (Published & Pending)
             using (SqlConnection con = new SqlConnection(cs))
             {
                 string courseQuery = @"
@@ -204,9 +221,8 @@ namespace WAPP.Pages.Tutor
                         }
                     }
                 }
-            } // Connection for query 1 is closed and returned to the pool here
+            }
 
-            // 2. Get Total Learning Resources Count
             using (SqlConnection con = new SqlConnection(cs))
             {
                 string resourceQuery = "SELECT COUNT(Id) FROM learningResource WHERE tutor_id = @TutorId";
@@ -217,9 +233,8 @@ namespace WAPP.Pages.Tutor
                     object result = cmd.ExecuteScalar();
                     lblTotalResources.Text = result != DBNull.Value ? result.ToString() : "0";
                 }
-            } // Connection for query 2 is closed and returned to the pool here
+            }
 
-            // 3. Get Pending Appointments Count
             using (SqlConnection con = new SqlConnection(cs))
             {
                 string apptQuery = "SELECT COUNT(Id) FROM appointment WHERE tutor_id = @TutorId AND status = 'PENDING'";
@@ -230,9 +245,8 @@ namespace WAPP.Pages.Tutor
                     object result = cmd.ExecuteScalar();
                     lblPendingAppts.Text = result != DBNull.Value ? result.ToString() : "0";
                 }
-            } // Connection for query 3 is closed and returned to the pool here
+            }
         }
-
         private void LoadRecentAnnouncements()
         {
             if (Session["UserId"] == null) return;
@@ -258,6 +272,7 @@ namespace WAPP.Pages.Tutor
                         {
                             rptRecentAnnouncements.DataSource = dt;
                             rptRecentAnnouncements.DataBind();
+                            rptRecentAnnouncements.Visible = true;
                             lblNoAnnouncements.Visible = false;
                         }
                         else
@@ -269,37 +284,10 @@ namespace WAPP.Pages.Tutor
                 }
             }
         }
-
-        // Helper Method: Formats the date to look like "Feb 14, 2026"
-        protected string FormatDate(object dateObj)
-        {
-            if (dateObj == null || dateObj == DBNull.Value) return "";
-            if (DateTime.TryParse(dateObj.ToString(), out DateTime dt))
-            {
-                return dt.ToString("MMM dd, yyyy");
-            }
-            return dateObj.ToString();
-        }
-
-        // Helper Method: Truncates long messages so they don't break the UI card layout
-        protected string TruncateMessage(object messageObj, int maxLength)
-        {
-            if (messageObj == null || messageObj == DBNull.Value) return "";
-            string msg = messageObj.ToString();
-
-            if (msg.Length > maxLength)
-            {
-                return msg.Substring(0, maxLength) + "...";
-            }
-            return msg;
-        }
-
         private void LoadRecentUnreadMessages(int userId)
         {
             using (SqlConnection conn = new SqlConnection(cs))
             {
-                // This query gets the top 4 students who have sent unread messages.
-                // It counts how many unread messages they sent and grabs the text of their latest one.
                 string query = @"
             SELECT TOP 4
                 u.Id AS SenderId,
@@ -343,16 +331,45 @@ namespace WAPP.Pages.Tutor
                 }
             }
         }
+
+        private void DisableCourseButton()
+        {
+            lnkCreateCourse.Enabled = false;
+            lnkCreateCourse.CssClass = "btn-main w-100 rounded-pill disabled";
+            lnkCreateCourse.Attributes.Add("style", "background-color: #6c757d !important; border-color: #6c757d !important; color: white !important; opacity: 0.6; pointer-events: none;");
+
+            lnkViewAllAnnouncements.Enabled = false;
+            lnkViewAllAnnouncements.CssClass = "btn-main w-100 rounded-pill disabled";
+            lnkViewAllAnnouncements.Attributes.Add("style", "background-color: #6c757d !important; border-color: #6c757d !important; color: white !important; opacity: 0.6; pointer-events: none;");
+        }
+
+        protected string FormatDate(object dateObj)
+        {
+            if (dateObj == null || dateObj == DBNull.Value) return "";
+            if (DateTime.TryParse(dateObj.ToString(), out DateTime dt))
+            {
+                return dt.ToString("MMM dd, yyyy");
+            }
+            return dateObj.ToString();
+        }
+        protected string TruncateMessage(object messageObj, int maxLength)
+        {
+            if (messageObj == null || messageObj == DBNull.Value) return "";
+            string msg = messageObj.ToString();
+
+            if (msg.Length > maxLength)
+            {
+                return msg.Substring(0, maxLength) + "...";
+            }
+            return msg;
+        }
+
         protected void btnSignalRUpdate_Click(object sender, EventArgs e)
         {
             int tutorId = Convert.ToInt32(Session["UserId"]);
 
-            // Refresh the data
-            LoadNotifications(tutorId);
+            // This only fires for Chat Messages now
             LoadRecentUnreadMessages(tutorId);
-
-            // Tell the UpdatePanels to push the new HTML to the browser
-            upNotifications.Update();
             upRecentMessages.Update();
         }
     }

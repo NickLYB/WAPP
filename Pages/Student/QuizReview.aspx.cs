@@ -15,7 +15,8 @@ namespace WAPP.Pages.Student
         string connStr = ConfigurationManager.ConnectionStrings["MyDbConn"].ConnectionString;
         int enrollmentId;
         int latestAttemptId = 0;
-
+        string sourcePage = "lesson";
+        bool isFromResults = false;
         protected void Page_Load(object sender, EventArgs e)
         {
             if (Request.QueryString["quizId"] == null)
@@ -26,18 +27,42 @@ namespace WAPP.Pages.Student
             enrollmentId = Convert.ToInt32(Request.QueryString["enrollmentId"]);
             int quizId = Convert.ToInt32(Request.QueryString["quizId"]);
 
+            if (Request.QueryString["source"] != null)
+            {
+                sourcePage = Request.QueryString["source"].ToLower();
+            }
+
             // 1. Find the latest attempt ID for this user/quiz before loading questions
             latestAttemptId = GetLatestAttemptId(quizId);
 
             if (!IsPostBack)
             {
                 LoadReviewData(quizId);
+                UpdateBackButtonUI();
+            }
+        }
+
+        private void UpdateBackButtonUI()
+        {
+            if (sourcePage == "results")
+            {
+                btnBack.Text = "<i class='bi bi-arrow-left me-2'></i>Back to My Results";
+            }
+            else
+            {
+                btnBack.Text = "<i class='bi bi-arrow-left me-2'></i>Back to Lesson";
             }
         }
 
         protected override void OnInit(EventArgs e)
         {
             base.OnInit(e);
+
+            if (Request.QueryString["source"] != null && Request.QueryString["source"].ToLower() == "results")
+            {
+                isFromResults = true;
+            }
+
             var provider = SiteMap.Providers["StudentMap"];
             if (provider != null)
             {
@@ -52,6 +77,7 @@ namespace WAPP.Pages.Student
             {
                 provider.SiteMapResolve -= SiteMap_Resolve;
             }
+
             base.OnUnload(e);
         }
 
@@ -69,41 +95,56 @@ namespace WAPP.Pages.Student
 
             SiteMapProvider provider = (SiteMapProvider)sender;
 
-            // Force find the node if the query strings hide it
-            SiteMapNode current = provider.CurrentNode ?? provider.FindSiteMapNode("~/Pages/Student/QuizReview");
-            if (current == null) return null;
-
-            // Clone the node AND its ancestors
-            SiteMapNode clone = current.Clone(true);
-
             string quizIdStr = ctx.Request.QueryString["quizId"];
             string enrollmentIdStr = ctx.Request.QueryString["enrollmentId"];
 
-            if (int.TryParse(quizIdStr, out int qId))
+            if (!int.TryParse(quizIdStr, out int qId)) return null;
+
+            // 1. Fetch Course Details
+            GetCourseDetailsByQuizId(qId, out string courseTitle, out int resourceId);
+
+            // 2. Create the ultimate destination node (The Quiz Review page itself)
+            SiteMapNode targetNode = new SiteMapNode(provider, "QuizReview",
+                $"~/Pages/Student/QuizReview.aspx?quizId={quizIdStr}&enrollmentId={enrollmentIdStr}", "Review Answers");
+
+            // 3. Create the Home node (Root of all paths)
+            SiteMapNode rootNode = new SiteMapNode(provider, "Home", "~/Pages/Student/Home.aspx", "Home");
+
+            // --- BUILD DYNAMIC PATHS BASED ON SOURCE ---
+
+            if (isFromResults)
             {
-                // 1. Update the Current Node (Review Answers) to keep its query strings
-                clone.Url = $"~/Pages/Student/QuizReview.aspx?quizId={quizIdStr}&enrollmentId={enrollmentIdStr}";
+                // Path 3: Home -> My Results -> Quiz Review
+                SiteMapNode resultsNode = new SiteMapNode(provider, "Results", "~/Pages/Student/Results.aspx", "My Grades");
 
-                // 2. Fetch the Course Title and Resource ID for the Parent Node (LessonView)
-                GetCourseDetailsByQuizId(qId, out string courseTitle, out int resourceId);
+                resultsNode.ParentNode = rootNode;
+                targetNode.ParentNode = resultsNode;
+            }
+            else if (sourcePage == "course") // Let's assume you pass "?source=course" from CourseDetail
+            {
+                // Path 1: Home -> Explore -> Course Overview -> Quiz Review
+                SiteMapNode exploreNode = new SiteMapNode(provider, "Explore", "~/Pages/Student/Study.aspx", "Explore");
 
-                if (clone.ParentNode != null)
-                {
-                    // Rename "Classroom" to the actual Course Name
-                    if (!string.IsNullOrWhiteSpace(courseTitle))
-                    {
-                        clone.ParentNode.Title = courseTitle;
-                    }
+                // Get the Course ID to link back to Course Detail
+                string cId = GetCourseIdByResource(resourceId);
+                SiteMapNode courseNode = new SiteMapNode(provider, "CourseDetail", $"~/Pages/Student/CourseDetail.aspx?id={cId}", courseTitle);
 
-                    // Ensure clicking the parent breadcrumb takes them back to the exact lesson
-                    if (resourceId > 0)
-                    {
-                        clone.ParentNode.Url = $"~/Pages/Student/LessonView.aspx?resourceId={resourceId}";
-                    }
-                }
+                exploreNode.ParentNode = rootNode;
+                courseNode.ParentNode = exploreNode;
+                targetNode.ParentNode = courseNode;
+            }
+            else
+            {
+                // Path 2 (Default): Home -> My Learning -> Classroom -> Quiz Review
+                SiteMapNode myLearningNode = new SiteMapNode(provider, "MyLearning", "~/Pages/Student/MyCourses.aspx", "My Learning");
+                SiteMapNode lessonNode = new SiteMapNode(provider, "LessonView", $"~/Pages/Student/LessonView.aspx?resourceId={resourceId}", courseTitle);
+
+                myLearningNode.ParentNode = rootNode;
+                lessonNode.ParentNode = myLearningNode;
+                targetNode.ParentNode = lessonNode;
             }
 
-            return clone;
+            return targetNode;
         }
 
         // Helper method to fetch the Course Title and Resource ID together
@@ -133,6 +174,21 @@ namespace WAPP.Pages.Student
                             resourceId = Convert.ToInt32(dr["resourceId"]);
                         }
                     }
+                }
+            }
+        }
+
+        private string GetCourseIdByResource(int resourceId)
+        {
+            using (SqlConnection conn = new SqlConnection(connStr))
+            {
+                string query = "SELECT course_id FROM learningResource WITH (NOLOCK) WHERE Id=@rid";
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue("@rid", resourceId);
+                    conn.Open();
+                    object result = cmd.ExecuteScalar();
+                    return result != null && result != DBNull.Value ? result.ToString() : "";
                 }
             }
         }
@@ -198,14 +254,31 @@ namespace WAPP.Pages.Student
 
         protected void btnBack_Click(object sender, EventArgs e)
         {
-            using (SqlConnection conn = new SqlConnection(connStr))
+            if (sourcePage == "results")
             {
-                string query = "SELECT Id FROM learningResource WITH (NOLOCK) WHERE quiz_id = @qid";
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@qid", Request.QueryString["quizId"]);
-                conn.Open();
-                object rid = cmd.ExecuteScalar();
-                Response.Redirect("LessonView.aspx?resourceId=" + rid);
+                // Go back to the Results page
+                Response.Redirect("Results.aspx");
+            }
+            else
+            {
+                // Go back to the specific Lesson View
+                using (SqlConnection conn = new SqlConnection(connStr))
+                {
+                    string query = "SELECT Id FROM learningResource WITH (NOLOCK) WHERE quiz_id = @qid";
+                    SqlCommand cmd = new SqlCommand(query, conn);
+                    cmd.Parameters.AddWithValue("@qid", Request.QueryString["quizId"]);
+                    conn.Open();
+                    object rid = cmd.ExecuteScalar();
+
+                    // Maintain the source trail back to the lesson!
+                    string redirectUrl = $"LessonView.aspx?resourceId={rid}";
+                    if (!string.IsNullOrEmpty(sourcePage) && sourcePage != "lesson")
+                    {
+                        redirectUrl += $"&source={sourcePage}";
+                    }
+
+                    Response.Redirect(redirectUrl);
+                }
             }
         }
         protected string GetOptionClass(object isCorrect, object isSelected)

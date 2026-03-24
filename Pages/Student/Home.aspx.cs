@@ -18,23 +18,38 @@ namespace WAPP.Pages.Student
 
         protected void Page_Load(object sender, EventArgs e)
         {
+            Button btnMasterUpdate = Master.FindControl("btnStudentSignalRUpdate") as Button;
+            if (btnMasterUpdate != null)
+            {
+                btnMasterUpdate.Click += new EventHandler(btnSignalRUpdate_Click);
+            }
+
             if (Session["UserName"] == null || Session["role_id"] == null || (int)Session["role_id"] != 4)
             {
                 Response.Redirect("~/Pages/Guest/Home.aspx");
+                return;
             }
-            else
+
+            currentStudentId = Convert.ToInt32(Session["UserId"]);
+
+            if (!IsPostBack)
             {
-                currentStudentId = Convert.ToInt32(Session["UserId"]);
                 lblStudentName.Text = Session["UserName"].ToString();
                 hfMyId.Value = currentStudentId.ToString();
 
-                if (!IsPostBack)
+                if (Session["ProfilePic"] != null && !string.IsNullOrWhiteSpace(Session["ProfilePic"].ToString()))
                 {
-                    LoadRecentActivity();
-                    LoadRecentCourses();
-                    LoadNotifications();
-                    LoadRecentUnreadMessages(currentStudentId);
+                    imgStudent.ImageUrl = Session["ProfilePic"].ToString();
                 }
+                else
+                {
+                    imgStudent.ImageUrl = "~/Images/profile_m.png";
+                }
+
+                LoadRecentActivity();
+                LoadRecentCourses();
+                LoadNotifications();
+                LoadRecentUnreadMessages(currentStudentId);
             }
         }
 
@@ -84,17 +99,27 @@ namespace WAPP.Pages.Student
         {
             using (SqlConnection conn = new SqlConnection(connStr))
             {
-                // Groups by Course to find the LAST lesson they clicked on
                 string query = @"
-                    SELECT TOP 2 
+                    SELECT TOP 1 
                         c.Id as CourseId, 
                         c.title as CourseTitle, 
                         MAX(rp.last_accessed) as LastAccess,
+                        
+                        (SELECT COUNT(*) FROM learningResource lr WHERE lr.course_id = c.Id) as TotalLessons,
+                        (SELECT COUNT(*) FROM resourceProgress rp_check 
+                         JOIN learningResource lr_check ON rp_check.resource_id = lr_check.Id 
+                         WHERE rp_check.enrollment_id = e.Id AND rp_check.completed_at IS NOT NULL AND lr_check.course_id = c.Id) as CompletedLessons,
+                        
                         (SELECT TOP 1 rp2.resource_id 
                          FROM resourceProgress rp2 
                          JOIN learningResource lr2 ON rp2.resource_id = lr2.Id 
                          WHERE lr2.course_id = c.Id AND rp2.enrollment_id = e.Id 
-                         ORDER BY rp2.last_accessed DESC) as LastResourceId
+                         ORDER BY rp2.last_accessed DESC) as LastResourceId,
+                         
+                        (SELECT TOP 1 Id FROM learningResource 
+                         WHERE course_id = c.Id 
+                         ORDER BY sequence_order ASC, created_at ASC) as FirstResourceId
+                         
                     FROM resourceProgress rp
                     JOIN learningResource lr ON rp.resource_id = lr.Id
                     JOIN course c ON lr.course_id = c.Id
@@ -111,6 +136,20 @@ namespace WAPP.Pages.Student
 
                 if (dt.Rows.Count > 0)
                 {
+                    dt.Columns.Add("IsCompleted", typeof(bool));
+                    dt.Columns.Add("TargetResource", typeof(int));
+
+                    foreach (DataRow row in dt.Rows)
+                    {
+                        int total = Convert.ToInt32(row["TotalLessons"]);
+                        int completed = Convert.ToInt32(row["CompletedLessons"]);
+
+                        bool isFinished = (total > 0 && total == completed);
+                        row["IsCompleted"] = isFinished;
+
+                        row["TargetResource"] = isFinished ? row["FirstResourceId"] : row["LastResourceId"];
+                    }
+
                     rptRecentCourses.DataSource = dt;
                     rptRecentCourses.DataBind();
                 }
@@ -152,7 +191,6 @@ namespace WAPP.Pages.Student
                     rptNotifications.DataSource = dt;
                     rptNotifications.DataBind();
 
-                    // Fixed ID to match new ASPX
                     lblNoNotifications.Visible = false;
                 }
                 else
@@ -160,7 +198,6 @@ namespace WAPP.Pages.Student
                     rptNotifications.DataSource = null;
                     rptNotifications.DataBind();
 
-                    // Fixed ID to match new ASPX
                     lblNoNotifications.Visible = true;
                 }
 
@@ -173,13 +210,11 @@ namespace WAPP.Pages.Student
 
                 if (unreadCount > 0)
                 {
-                    // Fixed IDs to match new ASPX
                     lblNotificationCount.Text = unreadCount > 99 ? "99+" : unreadCount.ToString();
                     lblNotificationCount.Visible = true;
                 }
                 else
                 {
-                    // Fixed ID to match new ASPX
                     lblNotificationCount.Visible = false;
                 }
             }
@@ -253,6 +288,7 @@ namespace WAPP.Pages.Student
             }
             return msg;
         }
+
         private void LoadRecentUnreadMessages(int userId)
         {
             string cs = ConfigurationManager.ConnectionStrings["MyDbConn"].ConnectionString;
@@ -301,16 +337,18 @@ namespace WAPP.Pages.Student
                 }
             }
         }
+
         protected void btnSignalRUpdate_Click(object sender, EventArgs e)
         {
             int studentId = Convert.ToInt32(Session["UserId"]);
 
-            // Refresh the chat widget
+            // 1. Update Chat
             LoadRecentUnreadMessages(studentId);
             upRecentMessages.Update();
 
-            // If you also want notifications to update in real-time when a message arrives, 
-            // you can call your existing LoadNotifications(studentId) and upNotifications.Update() here!
+            // 2. Update Dashboard Notifications
+            LoadNotifications();
+            upNotifications.Update();
         }
     }
 }

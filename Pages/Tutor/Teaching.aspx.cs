@@ -32,12 +32,10 @@ namespace WAPP.Pages.Tutor
 
         private void LoadCourses()
         {
-            // adjust based on how you store tutor id in Session
-            string tutorId = Session["UserId"]?.ToString(); // e.g., "T001"
+            // Adjust based on how you store tutor id in Session
+            string tutorId = Session["UserId"]?.ToString();
             if (string.IsNullOrEmpty(tutorId))
             {
-                //lblEmpty.Text = "Tutor not logged in.";
-                //lblEmpty.Visible = true;
                 return;
             }
 
@@ -57,15 +55,24 @@ namespace WAPP.Pages.Tutor
                     DataTable dt = new DataTable();
                     da.Fill(dt);
 
+                    // Update the count literal on the page
+                    litCount.Text = dt.Rows.Count.ToString();
+
                     if (dt.Rows.Count == 0)
                     {
-                        //lblEmpty.Visible = true;
+                        // Show the empty state placeholder and hide the repeater
                         rptCourses.Visible = false;
-                        return;
+                        phEmpty.Visible = true;
                     }
+                    else
+                    {
+                        // Show the repeater and hide the empty state
+                        rptCourses.Visible = true;
+                        phEmpty.Visible = false;
 
-                    rptCourses.DataSource = dt;
-                    rptCourses.DataBind();
+                        rptCourses.DataSource = dt;
+                        rptCourses.DataBind();
+                    }
                 }
             }
         }

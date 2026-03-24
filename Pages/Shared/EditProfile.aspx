@@ -20,6 +20,15 @@
                 <asp:Image ID="imgAvatar" runat="server" ImageUrl="~/Images/profile_m.png" CssClass="avatar-preview" />
                 <h4 class="fw-bold"><asp:Literal ID="litFullName" runat="server"></asp:Literal></h4>
                 <p class="text-muted"><asp:Literal ID="litRole" runat="server"></asp:Literal></p>
+                
+                <div class="d-flex flex-column align-items-center mt-3 mb-2">
+                    <asp:FileUpload ID="fuProfilePic" runat="server" CssClass="d-none" accept=".jpg,.jpeg,.png,.gif" onchange="previewProfileImage(this);" />
+                    
+                    <label for='<%= fuProfilePic.ClientID %>' class="btn btn-outline-primary btn-sm rounded-pill px-4 fw-bold shadow-sm" style="cursor: pointer;">
+                        <i class="bi bi-camera-fill me-2"></i>Choose Picture...
+                    </label>
+                    <small class="text-muted mt-2" style="font-size: 0.75rem;">JPG, PNG, or GIF. Max 2MB.</small>
+                </div>
             </div>
 
             <hr class="my-4" />
@@ -54,7 +63,21 @@
             
             <div class="text-end mt-5">
                 <asp:Button ID="btnSave" runat="server" Text="Save Changes" CssClass="btn btn-primary px-5 py-2 fw-bold rounded-pill shadow-sm" ValidationGroup="UpdateProfile" OnClick="btnSave_Click" />
-            &nbsp;</div>
+            </div>
         </div>
     </div>
+
+    <script>
+        // Instantly preview the image when selected!
+        function previewProfileImage(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    // Find the avatar image and change its source to the new file
+                    document.getElementById('<%= imgAvatar.ClientID %>').src = e.target.result;
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+    </script>
 </asp:Content>

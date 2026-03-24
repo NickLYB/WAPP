@@ -42,6 +42,15 @@ namespace WAPP.Masters
         protected global::System.Web.UI.ScriptManager ScriptManager1;
 
         /// <summary>
+        /// hfMyUserId control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.HiddenField hfMyUserId;
+
+        /// <summary>
         /// Panel1 control.
         /// </summary>
         /// <remarks>
@@ -85,15 +94,6 @@ namespace WAPP.Masters
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.HyperLink hlTutorApp;
-
-        /// <summary>
-        /// hlCoursePub control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.HyperLink hlCoursePub;
 
         /// <summary>
         /// hlCourseMgmt control.
@@ -141,13 +141,67 @@ namespace WAPP.Masters
         protected global::System.Web.UI.WebControls.HyperLink hlAbout;
 
         /// <summary>
-        /// hlSettings control.
+        /// upChatIcon control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.HyperLink hlSettings;
+        protected global::System.Web.UI.UpdatePanel upChatIcon;
+
+        /// <summary>
+        /// hlChat control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.HyperLink hlChat;
+
+        /// <summary>
+        /// lblUnreadChatCount control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblUnreadChatCount;
+
+        /// <summary>
+        /// upBell control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.UpdatePanel upBell;
+
+        /// <summary>
+        /// btnStaffSignalRUpdate control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Button btnStaffSignalRUpdate;
+
+        /// <summary>
+        /// hlNotifications control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.HyperLink hlNotifications;
+
+        /// <summary>
+        /// lblUnreadCount control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblUnreadCount;
 
         /// <summary>
         /// ucProfileDropdown control.

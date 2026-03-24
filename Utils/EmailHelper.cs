@@ -46,7 +46,7 @@ namespace WAPP.Utils
                 using (SmtpClient smtp = new SmtpClient("smtp.gmail.com", 587))
                 {
                     smtp.Credentials = new NetworkCredential(senderEmail, senderPassword);
-                    smtp.EnableSsl = true; // Required for Gmail
+                    smtp.EnableSsl = true; 
                     smtp.Send(mail);
                 }
             }

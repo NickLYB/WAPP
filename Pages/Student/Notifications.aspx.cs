@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNet.SignalR.Hosting;
-using System;
+﻿using System;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
@@ -25,6 +24,17 @@ namespace WAPP.Pages.Student
             if (!IsPostBack)
             {
                 LoadNotifications();
+            }
+            else
+            {
+                // Catch the async postback fired by Student.Master when an announcement notification is received
+                string eventTarget = Request.Params["__EVENTTARGET"];
+                if (!string.IsNullOrEmpty(eventTarget) && eventTarget.Contains("btnStudentSignalRUpdate"))
+                {
+                    // Master page got an announcement! Piggyback and refresh our notifications panel!
+                    LoadNotifications();
+                    upNotifications.Update();
+                }
             }
         }
 
@@ -90,6 +100,7 @@ namespace WAPP.Pages.Student
                 int notificationId = Convert.ToInt32(e.CommandArgument);
                 UpdateNotificationStatus(notificationId, userId, "ARCHIVED");
                 LoadNotifications();
+                UpdateMasterBell(); // Update Bell Count since deleting an unread item reduces the count
             }
             else if (e.CommandName == "View")
             {
@@ -107,14 +118,14 @@ namespace WAPP.Pages.Student
 
                     // 2. Reload the list so the "New" badge disappears
                     LoadNotifications();
+                    UpdateMasterBell(); // Immediately reduce the red bell count on the master page!
 
                     // 3. Populate Modal
                     lblModalTitle.Text = title;
                     litModalMessage.Text = message;
                     lblModalDate.Text = FormatDate(createdAt);
 
-
-                    // 5. Trigger Modal via JavaScript
+                    // 4. Trigger Modal via JavaScript
                     ScriptManager.RegisterStartupScript(this, this.GetType(), "ShowNotificationModal",
                         "var modal = new bootstrap.Modal(document.getElementById('notificationModal')); modal.show();", true);
                 }
@@ -141,6 +152,7 @@ namespace WAPP.Pages.Student
             }
 
             LoadNotifications();
+            UpdateMasterBell(); // Clear the bell!
         }
 
         private void UpdateNotificationStatus(int notificationId, int userId, string newStatus)
@@ -161,6 +173,21 @@ namespace WAPP.Pages.Student
 
                     conn.Open();
                     cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        // REACH UP to the Master Page and forcefully update the Notification Bell UI
+        private void UpdateMasterBell()
+        {
+            var master = this.Master as WAPP.Masters.Student;
+            if (master != null)
+            {
+                master.UpdateUnreadCount();
+                var upBell = master.FindControl("upBell") as UpdatePanel;
+                if (upBell != null)
+                {
+                    upBell.Update();
                 }
             }
         }

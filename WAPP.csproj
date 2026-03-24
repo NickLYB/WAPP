@@ -160,10 +160,14 @@
     <Content Include="Content\bootstrap.rtl.css" />
     <Content Include="Content\bootstrap.rtl.min.css" />
     <Content Include="Content\Site.css" />
+    <Content Include="Controls\ForgotPasswordModal.ascx" />
     <Content Include="Controls\LoginModal.ascx" />
+    <Content Include="Images\bg10.png" />
+    <Content Include="Images\bg9.jpg" />
+    <Content Include="Pages\Logout.aspx" />
     <Content Include="MigratePasswords.aspx" />
+    <Content Include="Pages\Admin\ComposeAnnouncement.aspx" />
     <Content Include="Pages\Guest\ProcessSignUp.aspx" />
-    <Content Include="Controls\ProfileDropdown.ascx" />
     <Content Include="Controls\SignUpModal.ascx" />
     <Content Include="CSS\site.css" />
     <Content Include="Default.aspx" />
@@ -175,26 +179,24 @@
     <Content Include="Pages\Admin\ManageAnnouncements.aspx" />
     <Content Include="Pages\Admin\ManageSystemLogs.aspx" />
     <Content Include="Pages\Admin\ManageUsers.aspx" />
-    <Content Include="Pages\Guest\About.aspx" />
     <Content Include="Pages\Guest\Help.aspx" />
     <Content Include="Pages\Guest\Home.aspx" />
-    <Content Include="Pages\Guest\Login.aspx" />
     <Content Include="Pages\Guest\Privacy.aspx" />
+    <Content Include="Pages\Guest\ResetPassword.aspx" />
     <Content Include="Pages\Guest\Terms.aspx" />
     <Content Include="Pages\Guest\VerifyOtp.aspx" />
+    <Content Include="Pages\Guest\About.aspx" />
     <Content Include="Pages\Shared\EditProfile.aspx" />
     <Content Include="Pages\Shared\ProfileDropdown.ascx" />
     <Content Include="Pages\Shared\Setting.aspx" />
-    <Content Include="Pages\Staff\About.aspx" />
     <Content Include="Pages\Staff\AddCourse.aspx" />
     <Content Include="Pages\Staff\AddResource.aspx" />
     <Content Include="Pages\Staff\AnnouncementManagement.aspx" />
     <Content Include="Pages\Staff\ComposeAnnouncement.aspx" />
-    <Content Include="Pages\Staff\CourseApplication.aspx" />
     <Content Include="Pages\Staff\CourseManagement.aspx" />
     <Content Include="Pages\Staff\FeedbackManagement.aspx" />
     <Content Include="Pages\Staff\LearningResourceManagement.aspx" />
-    <Content Include="Pages\Staff\PendingTutorsWidget.ascx" />
+    <Content Include="Pages\Staff\Notifications.aspx" />
     <Content Include="Pages\Staff\StaffDashboard.aspx" />
     <Content Include="Pages\Staff\TutorApplication.aspx" />
     <Content Include="Pages\Staff\UserManagement.aspx" />
@@ -212,7 +214,6 @@
     <Content Include="Pages\Student\StudentCalendar.ascx" />
     <Content Include="Pages\Student\Study.aspx" />
     <Content Include="Pages\Student\TutorProfile.aspx" />
-    <Content Include="Pages\Tutor\About.aspx" />
     <Content Include="Pages\Tutor\Announcement.aspx" />
     <Content Include="Pages\Tutor\AnnouncementRecord.aspx" />
     <Content Include="Pages\Tutor\Calendar.ascx" />
@@ -225,9 +226,6 @@
     <Content Include="Pages\Tutor\EditLessonModal.ascx" />
     <Content Include="Pages\Tutor\Home.aspx" />
     <Content Include="Pages\Tutor\Notifications.aspx" />
-    <Content Include="Pages\Tutor\ProfileDropdown.ascx" />
-    <Content Include="Pages\Tutor\RecentAnnouncement.ascx" />
-    <Content Include="Pages\Tutor\Setting.aspx" />
     <Content Include="Pages\Tutor\StudentProgress.aspx" />
     <Content Include="Pages\Tutor\Teaching.aspx" />
     <Content Include="Pages\Tutor\TutorAppointments.aspx" />
@@ -243,6 +241,8 @@
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
     <Content Include="Masters\Admin.Master" />
+    <Content Include="Staff.sitemap" />
+    <Content Include="Admin.sitemap" />
     <None Include="Scripts\jquery-3.7.1.intellisense.js" />
     <Content Include="Scripts\jquery-3.7.1.js" />
     <Content Include="Scripts\jquery-3.7.1.min.js" />
@@ -299,12 +299,26 @@
     <Compile Include="Contact.aspx.designer.cs">
       <DependentUpon>Contact.aspx</DependentUpon>
     </Compile>
+    <Compile Include="Controls\ForgotPasswordModal.ascx.cs">
+      <DependentUpon>ForgotPasswordModal.ascx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Controls\ForgotPasswordModal.ascx.designer.cs">
+      <DependentUpon>ForgotPasswordModal.ascx</DependentUpon>
+    </Compile>
     <Compile Include="Controls\LoginModal.ascx.cs">
       <DependentUpon>LoginModal.ascx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="Controls\LoginModal.ascx.designer.cs">
       <DependentUpon>LoginModal.ascx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Logout.aspx.cs">
+      <DependentUpon>Logout.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Logout.aspx.designer.cs">
+      <DependentUpon>Logout.aspx</DependentUpon>
     </Compile>
     <Compile Include="MigratePasswords.aspx.cs">
       <DependentUpon>MigratePasswords.aspx</DependentUpon>
@@ -313,19 +327,20 @@
     <Compile Include="MigratePasswords.aspx.designer.cs">
       <DependentUpon>MigratePasswords.aspx</DependentUpon>
     </Compile>
+    <Compile Include="NotificationHub.cs" />
+    <Compile Include="Pages\Admin\ComposeAnnouncement.aspx.cs">
+      <DependentUpon>ComposeAnnouncement.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Admin\ComposeAnnouncement.aspx.designer.cs">
+      <DependentUpon>ComposeAnnouncement.aspx</DependentUpon>
+    </Compile>
     <Compile Include="Pages\Guest\ProcessSignUp.aspx.cs">
       <DependentUpon>ProcessSignUp.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="Pages\Guest\ProcessSignUp.aspx.designer.cs">
       <DependentUpon>ProcessSignUp.aspx</DependentUpon>
-    </Compile>
-    <Compile Include="Controls\ProfileDropdown.ascx.cs">
-      <DependentUpon>ProfileDropdown.ascx</DependentUpon>
-      <SubType>ASPXCodeBehind</SubType>
-    </Compile>
-    <Compile Include="Controls\ProfileDropdown.ascx.designer.cs">
-      <DependentUpon>ProfileDropdown.ascx</DependentUpon>
     </Compile>
     <Compile Include="Controls\SignUpModal.ascx.cs">
       <DependentUpon>SignUpModal.ascx</DependentUpon>
@@ -414,13 +429,6 @@
     <Compile Include="Pages\Admin\ManageUsers.aspx.designer.cs">
       <DependentUpon>ManageUsers.aspx</DependentUpon>
     </Compile>
-    <Compile Include="Pages\Guest\About.aspx.cs">
-      <DependentUpon>About.aspx</DependentUpon>
-      <SubType>ASPXCodeBehind</SubType>
-    </Compile>
-    <Compile Include="Pages\Guest\About.aspx.designer.cs">
-      <DependentUpon>About.aspx</DependentUpon>
-    </Compile>
     <Compile Include="Pages\Guest\Help.aspx.cs">
       <DependentUpon>Help.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
@@ -435,19 +443,19 @@
     <Compile Include="Pages\Guest\Home.aspx.designer.cs">
       <DependentUpon>Home.aspx</DependentUpon>
     </Compile>
-    <Compile Include="Pages\Guest\Login.aspx.cs">
-      <DependentUpon>Login.aspx</DependentUpon>
-      <SubType>ASPXCodeBehind</SubType>
-    </Compile>
-    <Compile Include="Pages\Guest\Login.aspx.designer.cs">
-      <DependentUpon>Login.aspx</DependentUpon>
-    </Compile>
     <Compile Include="Pages\Guest\Privacy.aspx.cs">
       <DependentUpon>Privacy.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="Pages\Guest\Privacy.aspx.designer.cs">
       <DependentUpon>Privacy.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Guest\ResetPassword.aspx.cs">
+      <DependentUpon>ResetPassword.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Guest\ResetPassword.aspx.designer.cs">
+      <DependentUpon>ResetPassword.aspx</DependentUpon>
     </Compile>
     <Compile Include="Pages\Guest\Terms.aspx.cs">
       <DependentUpon>Terms.aspx</DependentUpon>
@@ -462,6 +470,13 @@
     </Compile>
     <Compile Include="Pages\Guest\VerifyOtp.aspx.designer.cs">
       <DependentUpon>VerifyOtp.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Guest\About.aspx.cs">
+      <DependentUpon>About.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pages\Guest\About.aspx.designer.cs">
+      <DependentUpon>About.aspx</DependentUpon>
     </Compile>
     <Compile Include="Pages\Shared\EditProfile.aspx.cs">
       <DependentUpon>EditProfile.aspx</DependentUpon>
@@ -483,13 +498,6 @@
     </Compile>
     <Compile Include="Pages\Shared\Setting.aspx.designer.cs">
       <DependentUpon>Setting.aspx</DependentUpon>
-    </Compile>
-    <Compile Include="Pages\Staff\About.aspx.cs">
-      <DependentUpon>About.aspx</DependentUpon>
-      <SubType>ASPXCodeBehind</SubType>
-    </Compile>
-    <Compile Include="Pages\Staff\About.aspx.designer.cs">
-      <DependentUpon>About.aspx</DependentUpon>
     </Compile>
     <Compile Include="Pages\Staff\AddCourse.aspx.cs">
       <DependentUpon>AddCourse.aspx</DependentUpon>
@@ -519,13 +527,6 @@
     <Compile Include="Pages\Staff\ComposeAnnouncement.aspx.designer.cs">
       <DependentUpon>ComposeAnnouncement.aspx</DependentUpon>
     </Compile>
-    <Compile Include="Pages\Staff\CourseApplication.aspx.cs">
-      <DependentUpon>CourseApplication.aspx</DependentUpon>
-      <SubType>ASPXCodeBehind</SubType>
-    </Compile>
-    <Compile Include="Pages\Staff\CourseApplication.aspx.designer.cs">
-      <DependentUpon>CourseApplication.aspx</DependentUpon>
-    </Compile>
     <Compile Include="Pages\Staff\CourseManagement.aspx.cs">
       <DependentUpon>CourseManagement.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
@@ -547,12 +548,12 @@
     <Compile Include="Pages\Staff\LearningResourceManagement.aspx.designer.cs">
       <DependentUpon>LearningResourceManagement.aspx</DependentUpon>
     </Compile>
-    <Compile Include="Pages\Staff\PendingTutorsWidget.ascx.cs">
-      <DependentUpon>PendingTutorsWidget.ascx</DependentUpon>
+    <Compile Include="Pages\Staff\Notifications.aspx.cs">
+      <DependentUpon>Notifications.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
-    <Compile Include="Pages\Staff\PendingTutorsWidget.ascx.designer.cs">
-      <DependentUpon>PendingTutorsWidget.ascx</DependentUpon>
+    <Compile Include="Pages\Staff\Notifications.aspx.designer.cs">
+      <DependentUpon>Notifications.aspx</DependentUpon>
     </Compile>
     <Compile Include="Pages\Staff\StaffDashboard.aspx.cs">
       <DependentUpon>StaffDashboard.aspx</DependentUpon>
@@ -673,13 +674,6 @@
     <Compile Include="Pages\Student\TutorProfile.aspx.designer.cs">
       <DependentUpon>TutorProfile.aspx</DependentUpon>
     </Compile>
-    <Compile Include="Pages\Tutor\About.aspx.cs">
-      <DependentUpon>About.aspx</DependentUpon>
-      <SubType>ASPXCodeBehind</SubType>
-    </Compile>
-    <Compile Include="Pages\Tutor\About.aspx.designer.cs">
-      <DependentUpon>About.aspx</DependentUpon>
-    </Compile>
     <Compile Include="Pages\Tutor\Announcement.aspx.cs">
       <DependentUpon>Announcement.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
@@ -763,27 +757,6 @@
     <Compile Include="Pages\Tutor\Notifications.aspx.designer.cs">
       <DependentUpon>Notifications.aspx</DependentUpon>
     </Compile>
-    <Compile Include="Pages\Tutor\ProfileDropdown.ascx.cs">
-      <DependentUpon>ProfileDropdown.ascx</DependentUpon>
-      <SubType>ASPXCodeBehind</SubType>
-    </Compile>
-    <Compile Include="Pages\Tutor\ProfileDropdown.ascx.designer.cs">
-      <DependentUpon>ProfileDropdown.ascx</DependentUpon>
-    </Compile>
-    <Compile Include="Pages\Tutor\RecentAnnouncement.ascx.cs">
-      <DependentUpon>RecentAnnouncement.ascx</DependentUpon>
-      <SubType>ASPXCodeBehind</SubType>
-    </Compile>
-    <Compile Include="Pages\Tutor\RecentAnnouncement.ascx.designer.cs">
-      <DependentUpon>RecentAnnouncement.ascx</DependentUpon>
-    </Compile>
-    <Compile Include="Pages\Tutor\Setting.aspx.cs">
-      <DependentUpon>Setting.aspx</DependentUpon>
-      <SubType>ASPXCodeBehind</SubType>
-    </Compile>
-    <Compile Include="Pages\Tutor\Setting.aspx.designer.cs">
-      <DependentUpon>Setting.aspx</DependentUpon>
-    </Compile>
     <Compile Include="Pages\Tutor\StudentProgress.aspx.cs">
       <DependentUpon>StudentProgress.aspx</DependentUpon>
     </Compile>
@@ -844,6 +817,7 @@
     <Compile Include="Utils\EmailHelper.cs" />
     <Compile Include="Utils\OtpHelper.cs" />
     <Compile Include="Utils\PasswordManager.cs" />
+    <Compile Include="Utils\SystemLogService.cs" />
     <Compile Include="ViewSwitcher.ascx.cs">
       <DependentUpon>ViewSwitcher.ascx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
@@ -855,6 +829,7 @@
   <ItemGroup>
     <Folder Include="Images\Courses\" />
     <Folder Include="Uploads\CourseMaterials\" />
+    <Folder Include="Uploads\ProfilePic\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\bootstrap.rtl.min.css.map" />

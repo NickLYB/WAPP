@@ -105,6 +105,15 @@ namespace WAPP.Pages.Tutor
         protected global::System.Web.UI.WebControls.HyperLink lnkCreateCourse;
 
         /// <summary>
+        /// upDashboardAnnouncements control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.UpdatePanel upDashboardAnnouncements;
+
+        /// <summary>
         /// rptRecentAnnouncements control.
         /// </summary>
         /// <remarks>
@@ -166,15 +175,6 @@ namespace WAPP.Pages.Tutor
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.UpdatePanel upRecentMessages;
-
-        /// <summary>
-        /// btnSignalRUpdate control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.Button btnSignalRUpdate;
 
         /// <summary>
         /// rptUnreadMessages control.

@@ -2,7 +2,8 @@
 using System.Configuration;
 using System.Data.SqlClient;
 using System.Web.UI;
-using WAPP.Utils;
+using System.Text.RegularExpressions;
+using WAPP.Utils; 
 
 namespace WAPP.Pages.Shared
 {
@@ -29,7 +30,13 @@ namespace WAPP.Pages.Shared
             }
         }
 
-        protected void Page_Load(object sender, EventArgs e) { }
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (Session["role_id"] != null && Convert.ToInt32(Session["role_id"]) == 1)
+            {
+                divDangerZone.Visible = false;
+            }
+        }
 
         // --- BULLETPROOF PASSWORD UPDATE ---
         protected void btnChangePassword_Click(object sender, EventArgs e)
@@ -41,6 +48,15 @@ namespace WAPP.Pages.Shared
             int userId = Convert.ToInt32(Session["UserId"]);
             string currentPassTyped = txtCurrentPass.Text.Trim();
             string newPassTyped = txtNewPass.Text.Trim();
+
+            // --- STRONG PASSWORD VALIDATION ---
+            if (!IsPasswordStrong(newPassTyped))
+            {
+                lblMessage.Visible = true;
+                lblMessage.Text = "New password does not meet the minimum strength requirements.";
+                lblMessage.CssClass = "alert alert-danger d-block";
+                return;
+            }
 
             // Instantiate your PasswordManager
             PasswordManager pwdManager = new PasswordManager();
@@ -78,13 +94,24 @@ namespace WAPP.Pages.Shared
                             cmdUpdate.Parameters.AddWithValue("@Id", userId);
                             cmdUpdate.ExecuteNonQuery();
 
+                            // ---> LOGGING ADDED: INFO (Successful password change)
+                            SystemLogService.Write("USER_PASSWORD_CHANGED", "User successfully changed their password.", LogLevel.INFO, userId);
+
                             lblMessage.Visible = true;
                             lblMessage.Text = "Password updated successfully!";
                             lblMessage.CssClass = "alert alert-success d-block";
+
+                            // Clear inputs
+                            txtCurrentPass.Text = "";
+                            txtNewPass.Text = "";
+                            txtConfirmPass.Text = "";
                         }
                     }
                     else
                     {
+                        // ---> LOGGING ADDED: WARNING (Possible account takeover attempt)
+                        SystemLogService.Write("USER_PASSWORD_CHANGE_FAILED", "Failed password change attempt (Incorrect current password).", LogLevel.WARNING, userId);
+
                         // It failed. Tell the user EXACTLY why.
                         lblMessage.Visible = true;
                         lblMessage.Text = "The current password you entered is incorrect.";
@@ -94,10 +121,21 @@ namespace WAPP.Pages.Shared
             }
             catch (Exception ex)
             {
+                // ---> LOGGING ADDED: ERROR (Database failure during password change)
+                SystemLogService.Write("USER_PASSWORD_DB_ERROR", $"Database error during password update: {ex.Message}", LogLevel.ERROR, userId);
+
                 lblMessage.Visible = true;
                 lblMessage.Text = "Database Error: " + ex.Message;
                 lblMessage.CssClass = "alert alert-danger d-block";
             }
+        }
+
+        // --- NEW HELPER METHOD ---
+        private bool IsPasswordStrong(string password)
+        {
+            // Requires at least 8 chars, 1 lowercase, 1 uppercase, 1 number, and 1 special char
+            string pattern = @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\da-zA-Z]).{8,}$";
+            return Regex.IsMatch(password, pattern);
         }
 
         // --- BULLETPROOF ACCOUNT LOCK ---
@@ -121,13 +159,19 @@ namespace WAPP.Pages.Shared
 
                         if (rowsAffected > 0)
                         {
+                            // ---> LOGGING ADDED: NOTICE (User deactivated their own account)
+                            SystemLogService.Write("USER_ACCOUNT_SELF_LOCKED", "User locked/deactivated their own account.", LogLevel.NOTICE, userId);
+
                             // It worked! Clear the session and kick them to login
                             Session.Clear();
                             Session.Abandon();
-                            Response.Redirect("~/Pages/Guest/Login.aspx");
+                            Response.Redirect("~/Pages/Guest/Home.aspx");
                         }
                         else
                         {
+                            // ---> LOGGING ADDED: WARNING (Failed to find user to lock)
+                            SystemLogService.Write("USER_ACCOUNT_LOCK_FAILED", "User attempted to self-lock account but DB update affected 0 rows.", LogLevel.WARNING, userId);
+
                             lblMessage.Visible = true;
                             lblMessage.Text = "Failed to lock account. User not found.";
                             lblMessage.CssClass = "alert alert-warning d-block";
@@ -135,8 +179,15 @@ namespace WAPP.Pages.Shared
                     }
                 }
             }
+            catch (System.Threading.ThreadAbortException)
+            {
+                // Prevent Response.Redirect from triggering a false ERROR log
+            }
             catch (Exception ex)
             {
+                // ---> LOGGING ADDED: ERROR (Database failure during account lock)
+                SystemLogService.Write("USER_ACCOUNT_LOCK_ERROR", $"Error self-locking account: {ex.Message}", LogLevel.ERROR, userId);
+
                 lblMessage.Visible = true;
                 lblMessage.Text = "Error locking account: " + ex.Message;
                 lblMessage.CssClass = "alert alert-danger d-block";

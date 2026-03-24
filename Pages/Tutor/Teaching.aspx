@@ -1,4 +1,4 @@
-﻿<%@ Page Title="My Courses" Language="C#" MasterPageFile="~/Masters/Tutor.Master" AutoEventWireup="true" CodeBehind="Teaching.aspx.cs" Inherits="WAPP.Pages.Tutor.Study" %>
+﻿<%@ Page Title="My Courses" Language="C#" MasterPageFile="~/Masters/Tutor.Master" AutoEventWireup="true" CodeBehind="Teaching.aspx.cs" Inherits="WAPP.Pages.Tutor.Study" ValidateRequest="false" %>
 <%@ Register Src="~/Pages/Tutor/CreateCourseModal.ascx" TagPrefix="uc1" TagName="CreateCourseModal" %>
 
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
@@ -23,7 +23,18 @@
             </div>
             <p class="ec-page-subtitle">Manage your published content and course drafts.</p>
         </div>
-
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0">
+                        <i class="bi bi-search text-muted"></i>
+                    </span>
+                    <!-- Standard HTML input that triggers JS on keystroke -->
+                    <input type="text" id="liveSearchInput" class="form-control border-start-0" 
+                        placeholder="Search by course title..." onkeyup="filterCourses()" />
+                </div>
+            </div>
+        </div>
         <div class="ec-glass-card">
             <div class="ec-glass-card-header">
                 <h5 class="ec-section-title">Course Inventory</h5>
@@ -33,8 +44,8 @@
             <div class="ec-glass-card-body p-0">
                 <asp:Repeater ID="rptCourses" runat="server">
                     <ItemTemplate>
-                        <div class="ec-item-row px-3">
-                            
+                        <div class="ec-item-row px-3 course-item">
+        
                             <div style="display: flex; align-items: center; gap: 20px;">
                                 <div style="width: 80px; height: 50px; border-radius: 8px; overflow: hidden; background: #f1f5f9;">
                                     <asp:Image runat="server" style="width:100%; height:100%; object-fit:cover;"
@@ -42,7 +53,9 @@
                                 </div>
 
                                 <div>
-                                    <div class="fw-bold text-dark" style="font-size: 1.05rem;"><%# Eval("title") %></div>
+                                    <div class="fw-bold text-dark course-title" style="font-size: 1.05rem;">
+                                        <%# Eval("title") %>
+                                    </div>
                                     <span class='ec-status-pill <%# GetStatusClass(Eval("status")) %>'>
                                         <%# Eval("status") %>
                                     </span>
@@ -50,12 +63,10 @@
                             </div>
 
                             <div style="display: flex; gap: 10px;">
-                                <asp:HyperLink runat="server" CssClass="btn-sub" 
-                                    NavigateUrl='<%# "ViewCourse.aspx?id=" + Eval("Id") %>'>
+                                <asp:HyperLink runat="server" CssClass="btn-sub" NavigateUrl='<%# "ViewCourse.aspx?id=" + Eval("Id") %>'>
                                     <i class="bi bi-eye me-1"></i> View
                                 </asp:HyperLink>
-                                <asp:HyperLink runat="server" CssClass="btn-sub" 
-                                    NavigateUrl='<%# "EditCourse.aspx?id=" + Eval("Id") %>'>
+                                <asp:HyperLink runat="server" CssClass="btn-sub" NavigateUrl='<%# "EditCourse.aspx?id=" + Eval("Id") %>'>
                                     <i class="bi bi-pencil me-1"></i> Edit
                                 </asp:HyperLink>
                             </div>
@@ -75,5 +86,30 @@
     </div>
 
     <uc1:CreateCourseModal ID="CreateCourseModal1" runat="server" />
+    <script type="text/javascript">
+    function filterCourses() {
+        // 1. Get the value typed in the search box and make it lowercase
+        let searchInput = document.getElementById('liveSearchInput').value.toLowerCase();
+        
+        // 2. Get all the course rows on the page
+        let courseRows = document.querySelectorAll('.course-item');
 
+        // 3. Loop through each row
+        courseRows.forEach(function(row) {
+            // Find the title inside the current row
+            let titleElement = row.querySelector('.course-title');
+            
+            if (titleElement) {
+                let titleText = titleElement.textContent || titleElement.innerText;
+                
+                // If the title contains the search text, show the row. Otherwise, hide it.
+                if (titleText.toLowerCase().indexOf(searchInput) > -1) {
+                    row.style.display = ""; // Shows the element
+                } else {
+                    row.style.display = "none"; // Hides the element
+                }
+            }
+        });
+    }
+    </script>
 </asp:Content>

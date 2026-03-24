@@ -16,7 +16,7 @@
                 <i class="bi bi-book-half me-2 text-primary"></i> 
                 <asp:Literal ID="litCourseTitle" runat="server"></asp:Literal>
             </h2>
-            <a href="MyCourses.aspx" class="btn btn-secondary rounded-pill px-4 fw-bold shadow-sm text-white">Exit Class</a>
+            <a href="Home.aspx" class="btn btn-secondary rounded-pill px-4 fw-bold shadow-sm text-white">Exit Class</a>
         </div>
 
         <div class="page-layout-split">
@@ -115,32 +115,49 @@
             </div>
 
             <div class="layout-sidebar-30">
-                <div class="ec-glass-card p-0 overflow-hidden sticky-top" style="top: 20px;">
-                    <div class="ec-glass-card-header border-bottom p-3 mb-0" style="background: var(--ec-bg-alt);">
-                        <span class="fw-bold small text-muted text-uppercase">COURSE CURRICULUM</span>
-                    </div>
-                    <div style="max-height: 70vh; overflow-y: auto;">
-                        <asp:Repeater ID="rptLessons" runat="server">
-                            <ItemTemplate>
-                                <asp:LinkButton ID="lnkLesson" runat="server"
-                                    CssClass='<%# Convert.ToBoolean(Eval("IsAccessible")) ? "lesson-btn" : "lesson-btn lesson-locked" %>'
-                                    OnClick="lnkLesson_Click" CommandArgument='<%# Eval("Id") %>'
-                                    Enabled='<%# Convert.ToBoolean(Eval("IsAccessible")) %>'>
-                                    <div class="d-flex align-items-center justify-content-between">
-                                        <div class="d-flex align-items-center">
-                                            <i class='<%# GetIcon(Eval("IsAccessible"), Eval("IsCompleted")) %> me-3 fs-5'></i>
-                                            <div>
-                                                <p class="mb-0 fw-bold small text-main">Lesson <%# Container.ItemIndex + 1 %></p>
-                                                <small class="text-muted"><%# Eval("TypeName") %></small>
+                <div class="sticky-top" style="top: 20px; z-index: 10;">
+                    
+                    <div class="ec-glass-card p-0 overflow-hidden mb-4">
+                        <div class="ec-glass-card-header border-bottom p-3 mb-0" style="background: var(--ec-bg-alt);">
+                            <span class="fw-bold small text-muted text-uppercase">COURSE CURRICULUM</span>
+                        </div>
+                        <div style="max-height: 60vh; overflow-y: auto;">
+                            <asp:Repeater ID="rptLessons" runat="server">
+                                <ItemTemplate>
+                                    <asp:LinkButton ID="lnkLesson" runat="server"
+                                        CssClass='<%# Convert.ToBoolean(Eval("IsAccessible")) ? "lesson-btn" : "lesson-btn lesson-locked" %>'
+                                        OnClick="lnkLesson_Click" CommandArgument='<%# Eval("Id") %>'
+                                        Enabled='<%# Convert.ToBoolean(Eval("IsAccessible")) %>'>
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <div class="d-flex align-items-center">
+                                                <i class='<%# GetIcon(Eval("IsAccessible"), Eval("IsCompleted")) %> me-3 fs-5'></i>
+                                                <div>
+                                                    <p class="mb-0 fw-bold small text-main">Lesson <%# Container.ItemIndex + 1 %></p>
+                                                    <small class="text-muted"><%# Eval("TypeName") %></small>
+                                                </div>
                                             </div>
+                                            <%# Convert.ToBoolean(Eval("IsCompleted")) ? "<i class='bi bi-check-circle-fill text-success fs-5'></i>" : "" %>
                                         </div>
-                                        <%# Convert.ToBoolean(Eval("IsCompleted")) ? "<i class='bi bi-check-circle-fill text-success fs-5'></i>" : "" %>
-                                    </div>
-                                </asp:LinkButton>
-                            </ItemTemplate>
-                        </asp:Repeater>
+                                    </asp:LinkButton>
+                                </ItemTemplate>
+                            </asp:Repeater>
+                        </div>
                     </div>
-                </div>
+
+                    <div class="ec-glass-card text-center pb-4">
+                        <div class="mb-3 mt-2">
+                            <i class="bi bi-person-circle text-primary opacity-50" style="font-size: 3.5rem;"></i>
+                        </div>
+                        <h6 class="fw-bold text-main mb-1"><asp:Literal ID="litSidebarTutorName" runat="server"></asp:Literal></h6>
+                        <span class="text-muted small d-block mb-3">EduConnect Educator</span>
+                        
+                        <asp:HyperLink ID="hlTutorProfileBtn" runat="server" CssClass="btn btn-sub rounded-pill w-100 fw-bold shadow-sm">
+                            View Full Profile
+                        </asp:HyperLink>
+                    </div>
+
+                </div> 
+
             </div>
 
         </div>

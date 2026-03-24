@@ -7,8 +7,18 @@
             // Remove old instance to prevent duplicate editors when UpdatePanel reloads
             tinymce.remove('#<%= txtDesc.ClientID %>');
             
+            // Check if dark mode is active on the page
+            var isDark = document.documentElement.classList.contains('dark-mode');
+            
             tinymce.init({
                 selector: '#<%= txtDesc.ClientID %>',
+                width: '100%',
+
+                // Enable TinyMCE native dark mode and match your background color
+                skin: isDark ? 'oxide-dark' : 'oxide',
+                content_css: isDark ? 'dark' : 'default',
+                content_style: isDark ? "body { background-color: #2d2d2d; color: #ffffff; }" : "",
+
                 plugins: 'lists link charmap preview code textcolor',
                 toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline | forecolor backcolor | alignleft aligncenter alignright | bullist numlist | link code',
                 menubar: false,
@@ -30,8 +40,6 @@
         window.addEventListener('DOMContentLoaded', initEditModalEditor);
     }
 
-    // Note: We don't need to add the Bootstrap focus trap event listener twice 
-    // if both modals are on the same page, but adding it here ensures it works if used alone.
     document.addEventListener('focusin', function (e) {
         if (e.target.closest(".tox-tinymce, .tox-tinymce-aux, .moxman-window, .tam-assetmanager-root") !== null) {
             e.stopImmediatePropagation();
@@ -52,43 +60,63 @@
                 <ContentTemplate>
 
                     <asp:HiddenField ID="hfCourseId" runat="server" />
-
+                    
                     <div class="modal-body p-4">
 
-                        <div class="text-center mb-3">
+                        <div class="text-center mb-4">
                             <asp:Label ID="lblMsg" runat="server"></asp:Label>
                         </div>
 
-                        <div class="form-row mb-3 d-flex align-items-center">
-                            <asp:Label runat="server" Text="Title:" CssClass="form-label" />
-                            <asp:TextBox ID="txtTitle" runat="server" CssClass="form-control flex-grow-1"></asp:TextBox>
+                        <!-- Replaced d-flex with Bootstrap Grid (row/col) -->
+                        <div class="row mb-3 align-items-center">
+                            <asp:Label runat="server" Text="Title:" CssClass="col-sm-3 col-form-label fw-bold" />
+                            <div class="col-sm-9">
+                                <asp:TextBox ID="txtTitle" runat="server" CssClass="form-control"></asp:TextBox>
+                            </div>
                         </div>
 
-                        <div class="form-row mb-3 d-flex align-items-start">
-                            <asp:Label runat="server" Text="Description:" CssClass="form-label mt-1" />
-                            <asp:TextBox ID="txtDesc" runat="server" CssClass="form-control flex-grow-1" TextMode="MultiLine" Rows="3"></asp:TextBox>
+                        <!-- Removed align-items-center so the label stays at the top of the TinyMCE editor -->
+                        <div class="row mb-3">
+                            <asp:Label runat="server" Text="Description:" CssClass="col-sm-3 col-form-label fw-bold" />
+                            <div class="col-sm-9">
+                                <asp:TextBox ID="txtDesc" runat="server" CssClass="form-control" TextMode="MultiLine" Rows="3"></asp:TextBox>
+                            </div>
                         </div>
 
-                        <div class="form-row mb-3 d-flex align-items-center">
-                            <asp:Label runat="server" Text="Course Type:" CssClass="form-label" />
-                            <asp:DropDownList ID="ddlType" runat="server" CssClass="form-select flex-grow-1"></asp:DropDownList>
+                        <div class="row mb-3 align-items-center">
+                            <asp:Label runat="server" Text="Course Type:" CssClass="col-sm-3 col-form-label fw-bold" />
+                            <div class="col-sm-9">
+                                <asp:DropDownList ID="ddlType" runat="server" CssClass="form-select"></asp:DropDownList>
+                            </div>
                         </div>
 
-                        <div class="form-row mb-3 d-flex align-items-center">
-                            <asp:Label runat="server" Text="Duration (Mins):" CssClass="form-label" />
-                            <asp:TextBox ID="txtDuration" runat="server" CssClass="form-control flex-grow-1" TextMode="Number"></asp:TextBox>
+                        <div class="row mb-3 align-items-center">
+                            <asp:Label runat="server" Text="Duration (Mins):" CssClass="col-sm-3 col-form-label fw-bold" />
+                            <div class="col-sm-9">
+                                <asp:TextBox ID="txtDuration" runat="server" CssClass="form-control" TextMode="Number"></asp:TextBox>
+                            </div>
                         </div>
 
-                        <div class="form-row mb-3 d-flex align-items-center">
-                            <asp:Label runat="server" Text="Skill Level:" CssClass="form-label" />
-                            <asp:DropDownList ID="ddlSkill" runat="server" CssClass="form-select flex-grow-1">
-                                <asp:ListItem Text="-- Select Skill --" Value="" />
-                                <asp:ListItem Text="Beginner" Value="BEGINNER" />
-                                <asp:ListItem Text="Intermediate" Value="INTERMEDIATE" />
-                                <asp:ListItem Text="Advanced" Value="ADVANCED" />
-                            </asp:DropDownList>
+                        <div class="row mb-3 align-items-center">
+                            <asp:Label runat="server" Text="Skill Level:" CssClass="col-sm-3 col-form-label fw-bold" />
+                            <div class="col-sm-9">
+                                <asp:DropDownList ID="ddlSkill" runat="server" CssClass="form-select">
+                                    <asp:ListItem Text="-- Select Skill --" Value="" />
+                                    <asp:ListItem Text="Beginner" Value="BEGINNER" />
+                                    <asp:ListItem Text="Intermediate" Value="INTERMEDIATE" />
+                                    <asp:ListItem Text="Advanced" Value="ADVANCED" />
+                                </asp:DropDownList>
+                            </div>
                         </div>
-
+                        
+                        <!-- Brought the image upload into the exact same grid alignment -->
+                        <div class="row mb-3 align-items-center">
+                            <asp:Label runat="server" Text="Cover Image:" CssClass="col-sm-3 col-form-label fw-bold" />
+                            <div class="col-sm-9">
+                                <asp:FileUpload ID="fuCourseImage" runat="server" CssClass="form-control mb-1" accept=".png,.jpg,.jpeg" />
+                                <small class="text-muted">Leave blank to keep the current image.</small>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="modal-footer bg-light">
@@ -108,10 +136,16 @@
                             Text="Save"
                             CssClass="btn text-white"
                             style="background-color:#333;"
-                            OnClick="btnSave_Click" />
+                            OnClick="btnSave_Click" 
+                            OnClientClick="if(typeof tinymce !== 'undefined') { tinymce.triggerSave(); }" />
                     </div>
 
                 </ContentTemplate>
+                
+                <Triggers>
+                    <asp:PostBackTrigger ControlID="btnSave" />
+                </Triggers>
+
             </asp:UpdatePanel>
 
         </div>

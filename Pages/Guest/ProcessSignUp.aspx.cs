@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Configuration;
 using System.Data.SqlClient;
+using System.Web.UI;
+using WAPP.Utils; 
 
 namespace WAPP.Pages.Guest
 {
@@ -15,6 +17,7 @@ namespace WAPP.Pages.Guest
             // 1. Kick out anyone who doesn't have an active registration session
             if (string.IsNullOrEmpty(email))
             {
+                SystemLogService.Write("SIGNUP_NO_SESSION", "Attempted access to ProcessSignUp with empty session.", LogLevel.WARNING);
                 Response.Redirect("Home.aspx?err=SessionExpired");
                 return;
             }
@@ -22,11 +25,15 @@ namespace WAPP.Pages.Guest
             // 2. Security Check: Did VerifyOtp.aspx actually verify them?
             if (Session["OTP_Verified_" + email] != null && (bool)Session["OTP_Verified_" + email] == true)
             {
-                // 3. Insert the DB records
-                bool success = InsertUserIntoDatabase();
+                // 3. Insert the DB records (Now catching the new user ID)
+                int newUserId = 0;
+                bool success = InsertUserIntoDatabase(out newUserId);
 
                 if (success)
                 {
+                    // ---> LOGGING ADDED: INFO (Successful user registration)
+                    SystemLogService.Write("SIGNUP_SUCCESS", $"New user account created for email: {email}", LogLevel.INFO, newUserId);
+
                     // 4. Clean up all sessions so the data doesn't linger
                     Session.Remove("OTP_Verified_" + email);
                     Session.Remove("Reg_Fname");
@@ -38,7 +45,6 @@ namespace WAPP.Pages.Guest
                     Session.Remove("Reg_RoleId");
                     Session.Remove("Reg_FileName");
 
-                    // 5. Send them home!
                     Response.Redirect("Home.aspx?msg=AccountCreated");
                 }
                 else
@@ -48,13 +54,21 @@ namespace WAPP.Pages.Guest
             }
             else
             {
+                // ---> LOGGING ADDED: CRITICAL (OTP Bypass Attempt)
+                // Someone tried to force their way into the system without verifying their email
+                SystemLogService.Write("SIGNUP_BYPASS_CRITICAL", $"Unauthorized signup bypass attempt for email: {email}", LogLevel.CRITICAL);
+
                 // Tried to bypass OTP verification
                 Response.Redirect("Home.aspx?err=Unauthorized");
             }
         }
 
-        private bool InsertUserIntoDatabase()
+        // Slightly modified to return the newUserId via 'out' parameter for logging
+        private bool InsertUserIntoDatabase(out int createdUserId)
         {
+            createdUserId = 0;
+            string email = Session["Reg_Email"]?.ToString(); // Grabbed just for the error log if it fails
+
             using (SqlConnection conn = new SqlConnection(connStr))
             {
                 conn.Open();
@@ -67,8 +81,7 @@ namespace WAPP.Pages.Guest
                     string lname = Session["Reg_Lname"].ToString();
                     string dob = Session["Reg_Dob"].ToString();
                     string contact = Session["Reg_Contact"].ToString();
-                    string email = Session["Reg_Email"].ToString();
-                    string password = Session["Reg_Password"].ToString(); // Note: Apply your password hashing here!
+                    string password = Session["Reg_Password"].ToString();
                     int roleId = Convert.ToInt32(Session["Reg_RoleId"]);
                     string fileName = Session["Reg_FileName"]?.ToString();
 
@@ -87,6 +100,7 @@ namespace WAPP.Pages.Guest
                     cmdUser.Parameters.AddWithValue("@role", roleId);
 
                     int newUserId = Convert.ToInt32(cmdUser.ExecuteScalar());
+                    createdUserId = newUserId;
 
                     // Insert into [tutorApplication] if applicable
                     if (roleId == 3 && !string.IsNullOrEmpty(fileName))
@@ -105,9 +119,13 @@ namespace WAPP.Pages.Guest
                     transaction.Commit();
                     return true;
                 }
-                catch
+                catch (Exception ex) // Catch the actual exception to log the message
                 {
                     transaction.Rollback();
+
+                    // ---> LOGGING ADDED: ERROR (Transaction Rollback)
+                    SystemLogService.Write("SIGNUP_DB_ERROR", $"Database transaction failed/rolled back for {email}. Error: {ex.Message}", LogLevel.ERROR);
+
                     return false;
                 }
             }

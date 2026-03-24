@@ -21,8 +21,6 @@ namespace WAPP.Pages.Tutor
 
             if (!IsPostBack)
             {
-                // REMOVED: SiteMap.SiteMapResolve += SiteMapPath1_SiteMapResolve; 
-                // (It is already correctly handled in OnInit and OnUnload)
                 string idStr = Request.QueryString["id"];
                 if (int.TryParse(idStr, out int courseId))
                 {
@@ -30,6 +28,7 @@ namespace WAPP.Pages.Tutor
                     LoadCourseOverview(courseId);
                     LoadCourseContent(courseId);
                     LoadAboutCourse(courseId);
+                    LoadReviews(courseId);
 
                     Page.DataBind();
                 }
@@ -41,14 +40,11 @@ namespace WAPP.Pages.Tutor
             base.OnInit(e);
             SiteMap.SiteMapResolve += SiteMapPath1_SiteMapResolve;
         }
-
-        // IMPORTANT: Unsubscribe to avoid old handlers stacking up
         protected override void OnUnload(EventArgs e)
         {
             SiteMap.SiteMapResolve -= SiteMapPath1_SiteMapResolve;
             base.OnUnload(e);
         }
-
         private SiteMapNode SiteMapPath1_SiteMapResolve(object sender, SiteMapResolveEventArgs e)
         {
             var ctx = e.Context;
@@ -74,7 +70,6 @@ namespace WAPP.Pages.Tutor
             {
                 clone.Title = $"Edit - {courseName}";
 
-                // Ensure the current node URL has the ID attached
                 clone.Url += $"?id={courseId}";
             }
 
@@ -94,6 +89,7 @@ namespace WAPP.Pages.Tutor
                 return cmd.ExecuteScalar()?.ToString();
             }
         }
+
         private void LoadCourseOverview(int courseId)
         {
             string cs = ConfigurationManager.ConnectionStrings["MyDbConn"].ConnectionString;
@@ -104,6 +100,7 @@ namespace WAPP.Pages.Tutor
             ct.name AS course_type_name,
             c.duration_minutes,
             c.skill_level,
+            c.status, -- ADDED STATUS HERE
             (SELECT COUNT(Id) FROM learningResource WHERE course_id = c.Id) AS lecture_count
         FROM course c
         INNER JOIN courseType ct ON c.course_type_id = ct.Id
@@ -116,17 +113,14 @@ namespace WAPP.Pages.Tutor
                 {
                     if (reader.Read())
                     {
-                        // Course Type Name
                         lblCourseType.Text = reader["course_type_name"]?.ToString();
 
-                        // Convert minutes to weeks
                         if (int.TryParse(reader["duration_minutes"]?.ToString(), out int minutes))
                         {
                             double weeks = minutes / 10080.0;
                             lblDuration.Text = weeks.ToString("F2") + " weeks";
                         }
 
-                        // Skill level formatting
                         string level = reader["skill_level"]?.ToString();
                         if (!string.IsNullOrEmpty(level))
                         {
@@ -134,8 +128,37 @@ namespace WAPP.Pages.Tutor
                             lblSkillLevel.Text = char.ToUpper(level[0]) + level.Substring(1);
                         }
 
-                        // NEW: Number of Lectures (Learning Resources)
                         lblLectures.Text = reader["lecture_count"]?.ToString() ?? "0";
+                        string status = reader["status"]?.ToString().ToUpper();
+                        lblCourseStatus.Text = status;
+
+                        // Color the badge based on status
+                        switch (status)
+                        {
+                            case "PUBLISHED": lblCourseStatus.CssClass = "badge bg-success"; break;
+                            case "PENDING": lblCourseStatus.CssClass = "badge bg-warning text-dark"; break;
+                            case "APPROVED": lblCourseStatus.CssClass = "badge bg-info text-dark"; break;
+                            case "REJECT": lblCourseStatus.CssClass = "badge bg-danger"; break;
+                            default: lblCourseStatus.CssClass = "badge bg-secondary"; break; // PRIVATE
+                        }
+
+                        // Show/Hide Publish buttons
+                        if (status == "APPROVED" || status == "PRIVATE")
+                        {
+                            btnPublish.Visible = true;
+                            btnUnpublish.Visible = false;
+                        }
+                        else if (status == "PUBLISHED")
+                        {
+                            btnPublish.Visible = false;
+                            btnUnpublish.Visible = true;
+                        }
+                        else
+                        {
+                            // If it is PENDING or REJECT, they cannot publish or unpublish
+                            btnPublish.Visible = false;
+                            btnUnpublish.Visible = false;
+                        }
                     }
                 }
             }
@@ -145,7 +168,6 @@ namespace WAPP.Pages.Tutor
             string cs = ConfigurationManager.ConnectionStrings["MyDbConn"].ConnectionString;
             using (SqlConnection con = new SqlConnection(cs))
             {
-                // We select the Lesson details and any linked Quiz details
                 string query = @"
             SELECT 
                 L.Id AS LessonId, 
@@ -157,7 +179,10 @@ namespace WAPP.Pages.Tutor
             FROM learningResource L
             LEFT JOIN quiz Q ON L.quiz_id = Q.Id
             WHERE L.course_id = @CourseId
-            ORDER BY L.sequence_order ASC, L.created_at ASC";
+            ORDER BY 
+                CASE WHEN L.sequence_order IS NULL THEN 1 ELSE 0 END ASC,
+                L.sequence_order ASC, 
+                L.created_at ASC";
 
                 using (SqlCommand cmd = new SqlCommand(query, con))
                 {
@@ -171,6 +196,70 @@ namespace WAPP.Pages.Tutor
                 }
             }
         }
+        private void LoadAboutCourse(int courseId)
+        {
+            string cs = ConfigurationManager.ConnectionStrings["MyDbConn"].ConnectionString;
+
+            using (SqlConnection con = new SqlConnection(cs))
+            using (SqlCommand cmd = new SqlCommand(
+                "SELECT TOP 1 description FROM course WHERE Id = @Id", con))
+            {
+                cmd.Parameters.AddWithValue("@Id", courseId);
+                con.Open();
+
+                object desc = cmd.ExecuteScalar();
+                lblCourseDesc.Text = desc?.ToString() ?? "(No description yet)";
+            }
+        }
+        private void LoadReviews(int courseId)
+        {
+            string cs = ConfigurationManager.ConnectionStrings["MyDbConn"].ConnectionString;
+            using (SqlConnection con = new SqlConnection(cs))
+            {
+                string query = @"
+            SELECT 
+                (u.fname + ' ' + u.lname) AS reviewer_name, 
+                f.rating, 
+                f.created_at, 
+                f.comment 
+            FROM feedback f
+            JOIN [user] u ON f.student_id = u.Id
+            WHERE f.course_id = @CourseId 
+              AND f.resource_id IS NULL 
+              AND f.status IN ('APPROVED','PENDING')
+            ORDER BY f.created_at DESC";
+
+                using (SqlCommand cmd = new SqlCommand(query, con))
+                {
+                    cmd.Parameters.AddWithValue("@CourseId", courseId);
+                    using (SqlDataAdapter sda = new SqlDataAdapter(cmd))
+                    {
+                        DataTable dt = new DataTable();
+                        sda.Fill(dt);
+
+                        if (dt.Rows.Count > 0)
+                        {
+                            rptReviews.DataSource = dt;
+                            rptReviews.DataBind();
+
+                            // Automatically calculate the average rating based on the fetched rows
+                            double avgRating = Convert.ToDouble(dt.Compute("AVG(rating)", ""));
+                            lblReviewSummary.Text = $"Course Rating: {avgRating:F1} ★ ({dt.Rows.Count} Reviews)";
+
+                            lblNoReviews.Visible = false;
+                            rptReviews.Visible = true;
+                        }
+                        else
+                        {
+                            lblNoReviews.Visible = true;
+                            rptReviews.Visible = false;
+                            lblReviewSummary.Text = "";
+                        }
+                    }
+                }
+            }
+        }
+
         protected void rptCourseContent_ItemCommand(object source, RepeaterCommandEventArgs e)
         {
             // This grabs the ID of the specific Lesson or Quiz you clicked
@@ -261,42 +350,8 @@ namespace WAPP.Pages.Tutor
                     catch (Exception ex)
                     {
                         transaction.Rollback();
-                        // Optional: Output ex.Message to a label if something breaks
                     }
                 }
-            }
-        }
-
-        //protected void btnTabAbout_Click(object sender, EventArgs e)
-        //{
-        //    mvAbout.ActiveViewIndex = 0;
-        //    SetActiveTab(isAbout: true);
-        //}
-
-        //protected void btnTabReviews_Click(object sender, EventArgs e)
-        //{
-        //    mvAbout.ActiveViewIndex = 1;
-        //    SetActiveTab(isAbout: false);
-        //}
-
-        //private void SetActiveTab(bool isAbout)
-        //{
-        //    btnTabAbout.CssClass = isAbout ? "tab active" : "tab";
-        //    btnTabReviews.CssClass = isAbout ? "tab" : "tab active";
-        //}
-        private void LoadAboutCourse(int courseId)
-        {
-            string cs = ConfigurationManager.ConnectionStrings["MyDbConn"].ConnectionString;
-
-            using (SqlConnection con = new SqlConnection(cs))
-            using (SqlCommand cmd = new SqlCommand(
-                "SELECT TOP 1 description FROM course WHERE Id = @Id", con))
-            {
-                cmd.Parameters.AddWithValue("@Id", courseId);
-                con.Open();
-
-                object desc = cmd.ExecuteScalar();
-                lblCourseDesc.Text = desc?.ToString() ?? "(No description yet)";
             }
         }
         protected void btnEditOverview_Click(object sender, EventArgs e)
@@ -307,6 +362,36 @@ namespace WAPP.Pages.Tutor
             }
 
         }
+        protected void btnPublish_Click(object sender, EventArgs e)
+        {
+            UpdateCourseStatus("PUBLISHED");
+        }
+        protected void btnUnpublish_Click(object sender, EventArgs e)
+        {
+            UpdateCourseStatus("PRIVATE");
+        }
 
+        private void UpdateCourseStatus(string newStatus)
+        {
+            if (int.TryParse(Request.QueryString["id"], out int courseId))
+            {
+                string cs = ConfigurationManager.ConnectionStrings["MyDbConn"].ConnectionString;
+                using (SqlConnection con = new SqlConnection(cs))
+                {
+                    string query = "UPDATE course SET status = @Status WHERE Id = @Id";
+                    using (SqlCommand cmd = new SqlCommand(query, con))
+                    {
+                        cmd.Parameters.AddWithValue("@Status", newStatus);
+                        cmd.Parameters.AddWithValue("@Id", courseId);
+
+                        con.Open();
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+
+                // Refresh the overview panel to reflect the new status and swap the buttons!
+                LoadCourseOverview(courseId);
+            }
+        }
     }
 }

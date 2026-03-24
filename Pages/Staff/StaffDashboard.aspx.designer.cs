@@ -15,6 +15,15 @@ namespace WAPP.Pages.Staff
     {
 
         /// <summary>
+        /// hfMyId control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.HiddenField hfMyId;
+
+        /// <summary>
         /// imgStaff control.
         /// </summary>
         /// <remarks>
@@ -69,22 +78,94 @@ namespace WAPP.Pages.Staff
         protected global::System.Web.UI.WebControls.HyperLink hlViewResources;
 
         /// <summary>
-        /// hlViewAllFeedback control.
+        /// lblPendingCount control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.HyperLink hlViewAllFeedback;
+        protected global::System.Web.UI.WebControls.Label lblPendingCount;
 
         /// <summary>
-        /// gvFeedback control.
+        /// btnReviewTutors control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.GridView gvFeedback;
+        protected global::System.Web.UI.WebControls.Button btnReviewTutors;
+
+        /// <summary>
+        /// hlViewAllAnnouncements control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.HyperLink hlViewAllAnnouncements;
+
+        /// <summary>
+        /// upDashboardAnnouncements control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.UpdatePanel upDashboardAnnouncements;
+
+        /// <summary>
+        /// rptRecentAnnouncements control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Repeater rptRecentAnnouncements;
+
+        /// <summary>
+        /// lblNoAnnouncements control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblNoAnnouncements;
+
+        /// <summary>
+        /// HyperLink1 control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.HyperLink HyperLink1;
+
+        /// <summary>
+        /// upRecentMessages control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.UpdatePanel upRecentMessages;
+
+        /// <summary>
+        /// rptUnreadMessages control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Repeater rptUnreadMessages;
+
+        /// <summary>
+        /// lblNoUnreadMessages control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblNoUnreadMessages;
 
         /// <summary>
         /// ucCalendar control.
@@ -96,22 +177,40 @@ namespace WAPP.Pages.Staff
         protected global::WAPP.Pages.Tutor.Calendar ucCalendar;
 
         /// <summary>
-        /// lblPendingTutors control.
+        /// hlViewNotifications control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Label lblPendingTutors;
+        protected global::System.Web.UI.WebControls.HyperLink hlViewNotifications;
 
         /// <summary>
-        /// hlReviewNow control.
+        /// upRecentNotifications control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.HyperLink hlReviewNow;
+        protected global::System.Web.UI.UpdatePanel upRecentNotifications;
+
+        /// <summary>
+        /// rptRecentNotifications control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Repeater rptRecentNotifications;
+
+        /// <summary>
+        /// lblNoRecentNotifications control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblNoRecentNotifications;
 
         /// <summary>
         /// lblTotalStudents control.

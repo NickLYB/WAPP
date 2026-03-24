@@ -1,4 +1,4 @@
-﻿<%@ Page Title="Learning Resources Management" Language="C#" MasterPageFile="~/Masters/Staff.Master" AutoEventWireup="true" CodeBehind="LearningResource.aspx.cs" Inherits="WAPP.Pages.Staff.LearningResourcesManagement" EnableEventValidation="false" %>
+﻿<%@ Page Title="Learning Resources Management" Language="C#" MasterPageFile="~/Masters/Staff.Master" AutoEventWireup="true" CodeBehind="LearningResourceManagement.aspx.cs" Inherits="WAPP.Pages.Staff.LearningResourcesManagement" EnableEventValidation="false" %>
 
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -29,7 +29,7 @@
                 if (rowText.toUpperCase().indexOf(filter) > -1) {
                     row.style.display = ""; visibleRows++;
                 } else {
-                    row.style.display = "none"; 
+                    row.style.display = "none";
                 }
             }
 
@@ -40,19 +40,19 @@
                     noRecRow = document.createElement('tr');
                     noRecRow.id = 'clientNoRecordRow';
                     var cell = document.createElement('td');
-                    cell.colSpan = "100"; 
-                    cell.className = "ec-no-records"; /* Updated to Master CSS */
+                    cell.colSpan = "100";
+                    cell.className = "ec-no-records text-center py-4";
                     cell.innerText = "No learning resources found matching your filters.";
                     noRecRow.appendChild(cell);
                     tbody.appendChild(noRecRow);
                 }
-                noRecRow.style.display = ""; 
+                noRecRow.style.display = "";
             } else if (noRecRow) { noRecRow.style.display = "none"; }
         }
 
         function handleEnter(e) {
             if (e.keyCode === 13 || e.key === 'Enter') {
-                e.preventDefault(); 
+                e.preventDefault();
                 var input = document.getElementById('<%= txtSearch.ClientID %>');
                 input.value = ""; SearchTable();
                 return false;
@@ -64,27 +64,52 @@
             bootstrap.Modal.getOrCreateInstance(document.getElementById('removeModal')).hide();
             $('.modal-backdrop').remove(); $('body').removeClass('modal-open').css('overflow', '').css('padding-right', '');
         }
+
+        function openViewModal() { bootstrap.Modal.getOrCreateInstance(document.getElementById('viewModal')).show(); }
+        function closeViewModal() {
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('viewModal')).hide();
+            $('.modal-backdrop').remove(); $('body').removeClass('modal-open').css('overflow', '').css('padding-right', '');
+        }
     </script>
-    </asp:Content>
+    <style>
+        .clickable-row { cursor: pointer; transition: background-color 0.2s; }
+        .clickable-row:hover { background-color: rgba(13, 110, 253, 0.05) !important; }
+
+        .btn-outline-danger { border-color: #dc3545; color: #dc3545; }
+        .btn-outline-danger:hover { background-color: #dc3545; color: white; }
+        
+        .btn-outline-primary { border-color: var(--ec-primary); color: var(--ec-primary); }
+        .btn-outline-primary:hover { background-color: var(--ec-primary); color: white; }
+
+        .btn-outline-secondary { border-color: #6c757d; color: #6c757d; }
+        .btn-outline-secondary:hover { background-color: #6c757d; color: white; }
+    </style>
+</asp:Content>
 
 <asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
     <asp:UpdateProgress ID="UpdateProgress1" runat="server" AssociatedUpdatePanelID="upResourceMgmt">
         <ProgressTemplate><div class="ec-loading-overlay"><div class="spinner-border text-primary"></div></div></ProgressTemplate>
     </asp:UpdateProgress>
 
-    <div class="ec-staff-wrapper">
+    <div class="ec-staff-wrapper container-fluid mt-4">
+        <div class="ec-section-gap mb-3">
+            <asp:SiteMapPath ID="SiteMapPath1" runat="server" SiteMapProvider="StaffMap" 
+                PathSeparator=" > " CssClass="small text-muted text-decoration-none" RenderCurrentNodeAsLink="false" />
+        </div>
         <h2 class="ec-staff-title text-uppercase mb-4">Learning Resources Management</h2>
             
         <asp:UpdatePanel ID="upResourceMgmt" runat="server">
             <ContentTemplate>
                 <asp:Label ID="lblMessage" runat="server" CssClass="alert" Visible="false"></asp:Label>
 
-                <div class="ec-staff-card mb-4">
+                <div class="ec-staff-card mb-4 card shadow-sm">
                     <div class="card-body p-4">
                         
                         <div class="row mb-4 align-items-end">
                             <div class="col-lg-4">
-                                <label class="form-label fw-bold text-muted mb-2">Search / Filter:</label>
+                                <div class="d-flex justify-content-between align-items-end mb-2">
+                                    <label class="form-label fw-bold text-muted m-0">Search / Filter:</label>
+                                </div>
                                 <div class="input-group">
                                     <asp:TextBox ID="txtSearch" runat="server" CssClass="form-control ec-search-input" Placeholder="Search Title, Type..." onkeydown="return handleEnter(event)"></asp:TextBox>
                                     <span class="input-group-text ec-search-btn"><i class="bi bi-search"></i></span>
@@ -98,15 +123,22 @@
                                     <asp:ListItem Value="TutorID">Tutor ID</asp:ListItem>
                                 </asp:DropDownList>
                             </div>
-                            <div class="col-lg-5 text-end">
-                                <asp:Button ID="btnAddResourceRedirect" runat="server" Text="+ Add New Resource" CssClass="btn btn-primary rounded-pill fw-bold px-4 shadow-sm me-2" OnClick="btnAddResourceRedirect_Click" />
-                                <asp:LinkButton ID="btnTriggerRemove" runat="server" CssClass="btn btn-danger rounded-pill fw-bold px-4 shadow-sm" OnClick="btnTriggerRemove_Click">- Remove Resource</asp:LinkButton>
+                            <div class="col-lg-5 text-end d-flex justify-content-end align-items-center gap-2">
+                                <asp:LinkButton ID="LinkButton1" runat="server" CssClass="btn btn-outline-secondary rounded-pill fw-bold px-4 shadow-sm d-inline-flex align-items-center" OnClick="btnClearFilters_Click" ToolTip="Clear Filters">
+                                    <i class="bi bi-x-circle fs-5 me-2" style="line-height: 0;"></i> Clear Filters
+                                </asp:LinkButton>
+                                
+                                <asp:Button ID="btnAddResourceRedirect" runat="server" Text="+ Add New Resource" CssClass="btn btn-outline-primary rounded-pill fw-bold px-4 shadow-sm" OnClick="btnAddResourceRedirect_Click" />
+                                
+                                <asp:LinkButton ID="btnTriggerRemove" runat="server" CssClass="btn btn-outline-danger rounded-circle shadow-sm" style="width: 42px; height: 42px; display: inline-flex; align-items: center; justify-content: center;" OnClick="btnTriggerRemove_Click" ToolTip="Remove Selected">
+                                    <i class="bi bi-trash3 fs-5" style="line-height: 0;"></i>
+                                </asp:LinkButton>
                             </div>
                         </div>
                         
                         <div class="row g-2">
                             <div class="col-md-3">
-                                <label class="form-label small text-muted mb-1 fw-bold">Type (Category)</label>
+                                <label class="form-label small text-muted mb-1 fw-bold">Type</label>
                                 <asp:DropDownList ID="ddlFilterType" runat="server" CssClass="form-select ec-filter-ddl w-100" AutoPostBack="true" OnSelectedIndexChanged="FilterGrid_Changed"></asp:DropDownList>
                             </div>
                             <div class="col-md-3">
@@ -115,21 +147,7 @@
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label small text-muted mb-1 fw-bold">Month</label>
-                                <asp:DropDownList ID="ddlFilterMonth" runat="server" CssClass="form-select ec-filter-ddl w-100" AutoPostBack="true" OnSelectedIndexChanged="FilterGrid_Changed">
-                                    <asp:ListItem Value="All">All</asp:ListItem>
-                                    <asp:ListItem Value="1">January</asp:ListItem>
-                                    <asp:ListItem Value="2">February</asp:ListItem>
-                                    <asp:ListItem Value="3">March</asp:ListItem>
-                                    <asp:ListItem Value="4">April</asp:ListItem>
-                                    <asp:ListItem Value="5">May</asp:ListItem>
-                                    <asp:ListItem Value="6">June</asp:ListItem>
-                                    <asp:ListItem Value="7">July</asp:ListItem>
-                                    <asp:ListItem Value="8">August</asp:ListItem>
-                                    <asp:ListItem Value="9">September</asp:ListItem>
-                                    <asp:ListItem Value="10">October</asp:ListItem>
-                                    <asp:ListItem Value="11">November</asp:ListItem>
-                                    <asp:ListItem Value="12">December</asp:ListItem>
-                                </asp:DropDownList>
+                                <asp:DropDownList ID="ddlFilterMonth" runat="server" CssClass="form-select ec-filter-ddl w-100" AutoPostBack="true" OnSelectedIndexChanged="FilterGrid_Changed"></asp:DropDownList>
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label small text-muted mb-1 fw-bold">Year</label>
@@ -140,38 +158,57 @@
                     </div>
                 </div>
 
-                <div class="ec-staff-card">
+                <div class="ec-staff-card card shadow-sm">
                     <div class="card-body p-0"> 
                         
-                        <asp:GridView ID="gvResources" runat="server" CssClass="table table-hover ec-table-custom align-middle mb-0 border-top" 
-                            AutoGenerateColumns="False" GridLines="None" DataKeyNames="Id" ShowHeaderWhenEmpty="true"
-                            AllowPaging="True" PageSize="10" PagerSettings-Visible="false">
-                            
-                            <Columns>
-                                <asp:TemplateField><ItemTemplate><asp:CheckBox ID="chkSelect" runat="server" /></ItemTemplate></asp:TemplateField>
-                                <asp:BoundField DataField="CourseTitle" HeaderText="Title (Course)" />
-                                <asp:BoundField DataField="created_at" HeaderText="Date Uploaded" DataFormatString="{0:dd/MM/yyyy HH:mm}" />
-                                <asp:BoundField DataField="ResourceTypeName" HeaderText="Type" />
-                                <asp:BoundField DataField="TutorName" HeaderText="Tutor" />
-                                <asp:TemplateField HeaderText="Resource Link">
-                                    <ItemTemplate>
-                                        <a href='<%# ResolveUrl(Eval("resource_link").ToString()) %>' target="_blank" class="text-primary fw-bold ec-desc-truncate" title='<%# Eval("resource_link") %>'>
-                                            <i class="bi bi-box-arrow-up-right me-1"></i> View
-                                        </a>
-                                    </ItemTemplate>
-                                </asp:TemplateField>
-                            </Columns>
+                        <div class="table-responsive" style="overflow-x: auto;">
+                            <asp:GridView ID="gvResources" runat="server" CssClass="table table-hover ec-table-custom align-middle mb-0 border-top" 
+                                AutoGenerateColumns="False" GridLines="None" DataKeyNames="Id" ShowHeaderWhenEmpty="true"
+                                AllowPaging="True" PageSize="10" PagerSettings-Visible="false"
+                                OnRowDataBound="gvResources_RowDataBound" OnRowCommand="gvResources_RowCommand">
+                                
+                                <Columns>
+                                    <asp:TemplateField>
+                                        <ItemTemplate>
+                                            <asp:CheckBox ID="chkSelect" runat="server" onclick="event.stopPropagation();" />
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+    
+                                    <asp:TemplateField HeaderText="Resource ID">
+                                        <ItemTemplate>
+                                            <span class="fw-bold"><%# Eval("Id", "R{0:D3}") %></span>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
 
-                            <EmptyDataTemplate><tr><td colspan="100%" class="ec-no-records">No learning resources found matching your filters.</td></tr></EmptyDataTemplate>
-                        </asp:GridView>
+                                    <asp:BoundField DataField="CourseAndResource" HeaderText="Course & Resource Title" />
+                                    <asp:BoundField DataField="created_at" HeaderText="Date Uploaded" DataFormatString="{0:dd/MM/yyyy HH:mm}" />
+                                    <asp:BoundField DataField="ResourceTypeName" HeaderText="Type" />
+                                    <asp:BoundField DataField="TutorName" HeaderText="Tutor" />
+                                    <asp:TemplateField HeaderText="Resource Link">
+                                        <ItemTemplate>
+                                            <a href='<%# ResolveUrl(Eval("resource_link").ToString()) %>' target="_blank" class='<%# Eval("ResourceTypeName").ToString().ToLower() == "pdf" || Eval("ResourceTypeName").ToString().ToLower() == "document" ? "text-danger fw-bold fs-4" : "text-primary fw-bold" %>' title='<%# Eval("resource_link") %>' onclick="event.stopPropagation();">
+                                                <i class='<%# Eval("ResourceTypeName").ToString().ToLower() == "pdf" || Eval("ResourceTypeName").ToString().ToLower() == "document" ? "bi bi-file-earmark-pdf-fill" : "bi bi-box-arrow-up-right me-1" %>'></i> 
+                                                <%# Eval("ResourceTypeName").ToString().ToLower() == "pdf" || Eval("ResourceTypeName").ToString().ToLower() == "document" ? "" : "View" %>
+                                            </a>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                </Columns>
 
-                        <div class="ec-pager-wrapper">
-                            <div class="ec-pager-info">
+                                <EmptyDataTemplate><tr><td colspan="100%" class="text-center py-4 text-muted">No learning resources found matching your filters.</td></tr></EmptyDataTemplate>
+                            </asp:GridView>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center p-3 border-top bg-white">
+                            <div class="text-muted small fw-bold">
                                 <asp:Literal ID="litPagerInfo" runat="server"></asp:Literal>
                             </div>
-                            <div class="d-flex gap-4">
-                                <asp:LinkButton ID="btnPrev" runat="server" CssClass="ec-pager-link" OnClick="btnPrev_Click"><i class="bi bi-chevron-left me-1"></i>Previous</asp:LinkButton>
-                                <asp:LinkButton ID="btnNext" runat="server" CssClass="ec-pager-link" OnClick="btnNext_Click">Next<i class="bi bi-chevron-right ms-1"></i></asp:LinkButton>
+                            <div class="d-flex align-items-center gap-2">
+                                <asp:LinkButton ID="btnPrev" runat="server" CssClass="btn btn-outline-primary btn-sm fw-bold px-3" OnClick="btnPrev_Click"><i class="bi bi-chevron-left me-1"></i> Prev</asp:LinkButton>
+                                <div class="d-flex align-items-center bg-light border rounded px-2 py-1">
+                                    <span class="small text-muted fw-bold me-2">Page</span>
+                                    <asp:TextBox ID="txtPageJump" runat="server" CssClass="form-control form-control-sm text-center ec-pager-input" Width="50px" AutoPostBack="true" OnTextChanged="txtPageJump_TextChanged"></asp:TextBox>
+                                </div>
+                                <asp:LinkButton ID="btnNext" runat="server" CssClass="btn btn-outline-primary btn-sm fw-bold px-3" OnClick="btnNext_Click">Next <i class="bi bi-chevron-right ms-1"></i></asp:LinkButton>
                             </div>
                         </div>
 
@@ -180,17 +217,64 @@
 
                 <div class="modal fade" id="removeModal" tabindex="-1" aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content ec-modal-content border-danger" style="border-width: 4px !important;">
-                            <div class="ec-modal-header bg-danger text-white border-0">
-                                <h5 class="modal-title fw-bold text-uppercase">Remove Confirmation</h5>
-                                <button type="button" class="btn-close btn-close-white" onclick="closeRemoveModal()"></button>
+                        <div class="modal-content border-danger" style="border-width: 4px !important;">
+                            <div class="modal-header bg-danger text-white border-0 position-relative">
+                                <h5 class="modal-title fw-bold text-uppercase">Confirm Removal</h5>
+                                <button type="button" class="btn-close btn-close-white" onclick="closeRemoveModal()" style="position:absolute; top:20px; right:20px;"></button>
                             </div>
-                            <div class="ec-modal-body text-center p-4">
-                                <h4 class="mb-3 fw-normal">Are you sure to remove the selected resource(s)?</h4>
-                                <p class="text-danger fw-bold fs-5 mb-4"><asp:Literal ID="litSelectedTitles" runat="server"></asp:Literal></p>
+                            <div class="modal-body text-center p-4">
+                                <h4 class="mb-3 fw-normal">Are you sure you want to remove these resources?</h4>
+                                
+                                <div class="mb-4">
+                                    <asp:Literal ID="litSelectedTitles" runat="server"></asp:Literal>
+                                </div>
+                                
                                 <div class="d-flex justify-content-center gap-3">
                                     <asp:Button ID="btnConfirmRemove" runat="server" Text="Remove" CssClass="btn btn-danger px-4 fw-bold rounded-pill" OnClick="btnConfirmRemove_Click" />
                                     <button type="button" class="btn btn-secondary px-4 fw-bold rounded-pill" onclick="closeRemoveModal()">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="viewModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered modal-lg">
+                        <div class="modal-content ec-modal-content" style="border: 1px solid var(--ec-primary);">
+                            <div class="ec-modal-header bg-light border-0 pb-0 position-relative">
+                                <h5 class="modal-title fw-bold text-primary text-uppercase">Resource Details</h5>
+                                <button type="button" class="btn-close" onclick="closeViewModal()" style="position:absolute; top:20px; right:20px;"></button>
+                            </div>
+                            <div class="ec-modal-body p-4 pt-3">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="fw-bold text-muted small">Resource ID</label>
+                                        <div class="fw-bold fs-5 text-dark"><asp:Literal ID="litViewId" runat="server"></asp:Literal></div>
+                                    </div>
+                                    <div class="col-md-6 text-end">
+                                        <label class="fw-bold text-muted small">Date Uploaded</label>
+                                        <div class="fw-bold"><asp:Literal ID="litViewDate" runat="server"></asp:Literal></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3 border-top pt-3">
+                                    <label class="fw-bold text-muted small">Course & Resource Title</label>
+                                    <div class="fw-bold text-dark fs-5"><asp:Literal ID="litViewTitle" runat="server"></asp:Literal></div>
+                                </div>
+
+                                <div class="row mb-4">
+                                    <div class="col-md-6">
+                                        <label class="fw-bold text-muted small">Type</label>
+                                        <div class="text-dark"><asp:Literal ID="litViewType" runat="server"></asp:Literal></div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="fw-bold text-muted small">Tutor</label>
+                                        <div class="text-dark fw-bold"><asp:Literal ID="litViewTutor" runat="server"></asp:Literal></div>
+                                    </div>
+                                </div>
+
+                                <div class="text-end border-top pt-3">
+                                    <button type="button" class="btn btn-secondary px-4 fw-bold rounded-pill" onclick="closeViewModal()">Close</button>
                                 </div>
                             </div>
                         </div>

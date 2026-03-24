@@ -90,7 +90,7 @@
                         </div> </div>
                 </div>
 
-<div class="ec-glass-card">
+                <div class="ec-glass-card">
                     <div class="ec-glass-card-body">
                         
                         <ul class="nav nav-tabs border-bottom mb-4" id="courseTab" role="tablist">
@@ -154,6 +154,10 @@
                     </div>
                     <div class="ec-glass-card-body">
                         <div class="ec-item-row py-2 border-0">
+                            <span class="text-muted small fw-bold">Status</span>
+                            <asp:Label ID="lblCourseStatus" runat="server" CssClass="badge bg-secondary" />
+                        </div>
+                        <div class="ec-item-row py-2 border-0">
                             <span class="text-muted small fw-bold">Type</span>
                             <asp:Label ID="lblCourseType" runat="server" CssClass="text-dark fw-bold" />
                         </div>
@@ -181,6 +185,16 @@
                         <asp:HyperLink ID="lnkStudentProgress" runat="server" Text="Student Progress" CssClass="btn-sub w-100 text-center py-2" NavigateUrl='<%# "~/Pages/Tutor/StudentProgress.aspx?id=" + Request.QueryString["id"] %>' />
                         <asp:HyperLink ID="lnkUpload" runat="server" Text="Upload Materials" CssClass="btn-sub w-100 text-center py-2" NavigateUrl='<%# "~/Pages/Tutor/UploadCourseMaterial.aspx?id=" + Request.QueryString["id"] %>' />
                         <asp:HyperLink ID="lnkCreateQuiz" runat="server" Text="Add New Quiz" CssClass="btn-sub w-100 text-center py-2" NavigateUrl='<%# "~/Pages/Tutor/CreateQuiz.aspx?id=" + Request.QueryString["id"] %>' />
+                    
+                        <asp:Button ID="btnPublish" runat="server" Text="🚀 Publish Course" 
+                            CssClass="btn btn-success w-100 py-2 mt-2 fw-bold shadow-sm" 
+                            OnClick="btnPublish_Click" Visible="false" 
+                            OnClientClick="return confirm('Are you sure you want to publish this course to students?');" />
+        
+                        <asp:Button ID="btnUnpublish" runat="server" Text="Hide Course (Make Private)" 
+                            CssClass="btn btn-outline-secondary w-100 py-2 mt-2 fw-bold" 
+                            OnClick="btnUnpublish_Click" Visible="false" 
+                            OnClientClick="return confirm('Are you sure you want to make this course private? Students will not be able to see it.');" />
                     </div>
                 </div>
 

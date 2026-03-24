@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<siteMap xmlns="http://schemas.microsoft.com/AspNet/SiteMap-File-1.0" >
+  <siteMapNode url="~/Pages/Staff/StaffDashboard" title="Home"  description="">
+	<siteMapNode url="~/Pages/Staff/AnnouncementManagement" title="Announcement Management"  description="" >
+		<siteMapNode url="~/Pages/Staff/ComposeAnnouncement" title="Add New Announcement"  description="" />
+	</siteMapNode>
+	<siteMapNode url="~/Pages/Staff/CourseApplication" title="Course Publish Application"  description="" />
+	<siteMapNode url="~/Pages/Staff/CourseManagement" title="Course Management"  description="" >
+		<siteMapNode url="~/Pages/Staff/AddCourse" title="Add Course"  description="" />
+	</siteMapNode>
+	  <siteMapNode url="~/Pages/Staff/FeedbackManagement" title="Feedback Management"  description="" />
+	  <siteMapNode url="~/Pages/Staff/LearningResourceManagement" title="Learning Resource Management"  description="" >
+		  <siteMapNode url="~/Pages/Staff/AddResource" title="Add Resource"  description="" />
+	  </siteMapNode>
+	  <siteMapNode url="~/Pages/Staff/TutorApplication" title="Tutor Application"  description="" />
+	  <siteMapNode url="~/Pages/Staff/UserManagement" title="User Management"  description="" />
+	  <siteMapNode url="~/Pages/Staff/Notifications" title="Notifications"  description="" />
+	  <siteMapNode url="~/Pages/Shared/Chat" title="Messages"  description="" />
+  </siteMapNode>
+</siteMap>

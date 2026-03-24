@@ -5,9 +5,9 @@
 <html>
 <head runat="server">
         <script>
-        if (localStorage.getItem("theme") === "dark") {
-            document.documentElement.classList.add("dark-mode");
-        }
+            if (localStorage.getItem("theme") === "dark") {
+                document.documentElement.classList.add("dark-mode");
+            }
         </script>
     <title>EduConnect - Admin</title>
     <asp:ContentPlaceHolder ID="head" runat="server" />
@@ -18,6 +18,7 @@
 </head>
 <body>
 <form id="form1" runat="server" style="min-height: 100vh; display: flex; flex-direction: column;">
+    <div class="dashboard-overlay"></div>
     <asp:ScriptManager ID="ScriptManager1" runat="server" />
 
     <div class="ec-navbar">
@@ -40,9 +41,29 @@
                 </ul>
             </div>
 
-            <a href='<%= ResolveUrl("~/Pages/Admin/About.aspx") %>' class="nav-item">ABOUT US</a>
-            <a href='<%= ResolveUrl("~/Pages/Admin/Settings.aspx") %>' class="nav-item">SETTINGS</a>
+            <a href='<%= ResolveUrl("~/Pages/Guest/About.aspx") %>' class="nav-item">ABOUT US</a>
+
+            <%-- Chat Message Icon --%>
+            <asp:UpdatePanel ID="upChatIcon" runat="server" UpdateMode="Conditional" class="d-inline-flex">
+                <ContentTemplate>
+                    <asp:Button ID="btnAdminSignalRUpdate" runat="server" ClientIDMode="Static" OnClick="btnAdminSignalRUpdate_Click" style="display:none;" />
+                    <asp:HyperLink ID="hlChat" runat="server" NavigateUrl="~/Pages/Shared/Chat.aspx" CssClass="nav-item position-relative d-inline-flex align-items-center me-1" style="padding: 8px;">
+                        <i class="bi bi-chat-dots-fill" style="font-size: 1.25rem;"></i>
+                        <asp:Label ID="lblUnreadChatCount" runat="server" CssClass="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem;" Visible="false"></asp:Label>
+                    </asp:HyperLink>
+                </ContentTemplate>
+            </asp:UpdatePanel>
             
+            <%-- Notification Bell specific to System Logs --%>
+            <asp:UpdatePanel ID="upBell" runat="server" UpdateMode="Conditional">
+                <ContentTemplate>
+                    <asp:HyperLink ID="hlNotifications" runat="server" NavigateUrl="~/Pages/Admin/ManageAlertLogs.aspx" CssClass="nav-item position-relative d-inline-flex align-items-center me-2" style="padding: 8px;">
+                        <i class="bi bi-bell-fill" style="font-size: 1.3rem;"></i>
+                        <asp:Label ID="lblUnreadCount" runat="server" CssClass="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem;" Visible="false"></asp:Label>
+                    </asp:HyperLink>
+                </ContentTemplate>
+            </asp:UpdatePanel>
+
             <uc:ProfileDropdown runat="server" ID="ucProfileDropdown" />
         </div>
     </div>
@@ -66,7 +87,7 @@
                         <li><asp:HyperLink runat="server" NavigateUrl="~/Pages/Admin/Home.aspx">Admin Dashboard</asp:HyperLink></li>
                         <li><asp:HyperLink runat="server" NavigateUrl="~/Pages/Admin/ManageUsers.aspx">Manage Users</asp:HyperLink></li>
                         <li><asp:HyperLink runat="server" NavigateUrl="~/Pages/Admin/ManageSystemLogs.aspx">System Logs</asp:HyperLink></li>
-                        <li><asp:HyperLink runat="server" NavigateUrl="~/Pages/Shared/Settings.aspx">Account Settings</asp:HyperLink></li>
+                        <li><asp:HyperLink runat="server" NavigateUrl="~/Pages/Shared/Setting.aspx">Settings</asp:HyperLink></li>
                     </ul>
                 </div>
                 <div class="col-md-3">
@@ -92,9 +113,59 @@
         </div>
     </footer>
 
+    <%-- Toast Popup Container --%>
+    <div class="toast-container position-fixed bottom-0 end-0 p-4" style="z-index: 1055;">
+        <div id="liveNotificationToast" class="toast align-items-center text-white bg-dark border-0 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body fw-bold" id="toastMessageBody" style="font-size: 1rem;"></div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+
 </form>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src='<%= ResolveUrl("~/Scripts/jquery.signalR-2.4.3.min.js") %>'></script>
+    <script src='<%= ResolveUrl("~/signalr/hubs") %>'></script>
+    <script type="text/javascript">
+        $(function () {
+            // Connect to your existing Hubs
+            var notifier = $.connection.notificationHub;
+            var chat = $.connection.chatHub;
 
+            // 1. Listen for the specific Admin System Alert broadcast (Toasts)
+            notifier.client.receiveSystemAlert = function (alertMessage) {
+                document.getElementById('toastMessageBody').innerText = 'System Alert: ' + alertMessage;
+                var toastEl = document.getElementById('liveNotificationToast');
+                var toast = new bootstrap.Toast(toastEl);
+                toast.show();
+
+                $('#btnAdminSignalRUpdate').click();
+            };
+
+            // 2. NEW: Listen for Global Notifications (like someone logging in/out!)
+            notifier.client.receiveNotification = function (targetUserId) {
+                var myId = '<%= Session["UserId"] %>';
+                if (targetUserId == myId || targetUserId == 0) {
+                    $('#btnAdminSignalRUpdate').click();
+                }
+            };
+
+            // 3. Listen for Chat Messages
+            chat.client.receiveNewMessage = function (senderId, receiverId) {
+                var myId = '<%= Session["UserId"] %>';
+                if (receiverId == myId) {
+                    $('#btnAdminSignalRUpdate').click();
+                }
+            };
+
+            // Start the connection
+            $.connection.hub.start().done(function () {
+                console.log("Admin Master: Connected to NotificationHub and ChatHub!");
+            });
+        });
+    </script>
 </body>
 </html>

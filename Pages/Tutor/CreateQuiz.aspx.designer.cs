@@ -33,6 +33,15 @@ namespace WAPP.Pages.Tutor
         protected global::System.Web.UI.HtmlControls.HtmlGenericControl pageTitle;
 
         /// <summary>
+        /// btnDeleteQuiz control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Button btnDeleteQuiz;
+
+        /// <summary>
         /// Button2 control.
         /// </summary>
         /// <remarks>
@@ -121,14 +130,5 @@ namespace WAPP.Pages.Tutor
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.DropDownList ddlTimeLimit;
-
-        /// <summary>
-        /// ddlPassingScore control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.DropDownList ddlPassingScore;
     }
 }

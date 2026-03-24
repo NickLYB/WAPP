@@ -3,7 +3,7 @@ using System.Configuration;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Web.UI.WebControls;
-
+using WAPP.Utils;
 
 namespace WAPP.Pages.Tutor
 {
@@ -31,22 +31,21 @@ namespace WAPP.Pages.Tutor
                 type.SelectedValue == "" ||
                 skill.SelectedValue == "")
             {
-                // show message if you want (label on page)
                 lblMsg.Text = "Please fill in all fields.";
                 return;
             }
 
             if (!int.TryParse(duration.Text.Trim(), out int durationMinutes) || durationMinutes <= 0)
             {
-                 lblMsg.Text = "Duration must be a positive number.";
+                lblMsg.Text = "Duration must be a positive number.";
                 return;
             }
 
-            // 2) Get tutor id from session (you should have this from login)
+            // 2) Get tutor id from session 
             if (Session["UserId"] == null)
             {
                 // not logged in / session expired
-                Response.Redirect("~/Pages/Login.aspx");
+                Response.Redirect("~/Pages/Guest/Home.aspx");
                 return;
             }
 
@@ -61,7 +60,7 @@ namespace WAPP.Pages.Tutor
 
                 if (!allowed.Contains(ext))
                 {
-                     lblMsg.Text = "Only JPG/PNG/GIF files are allowed.";
+                    lblMsg.Text = "Only JPG/PNG/GIF files are allowed.";
                     return;
                 }
 
@@ -83,7 +82,7 @@ namespace WAPP.Pages.Tutor
 
             using (SqlConnection conn = new SqlConnection(connString))
             {
-                // If your table has an image column, add it here.
+                // If table has an image column, add it here.
                 // If not, remove image_path parts.
                 string sql = @"INSERT INTO course (title, description, course_type_id, duration_minutes, skill_level, tutor_id, status, image_path) VALUES (@title, @description, @course_type_id, @duration_minutes, @skill_level, @tutor_id, @status, @image_path); SELECT CAST(SCOPE_IDENTITY() AS INT);";
 
@@ -107,18 +106,20 @@ namespace WAPP.Pages.Tutor
 
                         Session["NewCourseId"] = newCourseId;
 
-                        // Redirect to your Teaching/My Course page
+                        SystemLogService.Write("COURSE_CREATED", $"Tutor created a new course: '{title.Text.Trim()}' (Course ID: {newCourseId}).", LogLevel.INFO, tutorId);
+
                         Response.Redirect("Teaching.aspx");
                     }
+                    catch (System.Threading.ThreadAbortException){}
                     catch (Exception ex)
                     {
-                        // For debugging (don't expose in production)
-                        lblMsg.Text = "Error: " + ex.Message;
+                        SystemLogService.Write("COURSE_CREATE_ERROR", $"DB Error creating course '{title.Text.Trim()}': {ex.Message}", LogLevel.ERROR, tutorId);
+
+                        lblMsg.Text = "An error occurred while creating the course. Please try again.";
                     }
                 }
             }
         }
-
 
         protected void Button2_Click(object sender, EventArgs e)
         {
@@ -132,7 +133,6 @@ namespace WAPP.Pages.Tutor
             using (SqlConnection conn = new SqlConnection(connString))
             {
                 string sql = "SELECT id, name FROM courseType";
-                // change table name if yours is different
 
                 using (SqlCommand cmd = new SqlCommand(sql, conn))
                 {
@@ -140,13 +140,12 @@ namespace WAPP.Pages.Tutor
                     SqlDataReader reader = cmd.ExecuteReader();
 
                     type.DataSource = reader;
-                    type.DataTextField = "name";   // what user sees
-                    type.DataValueField = "id";    // what gets stored
+                    type.DataTextField = "name";  
+                    type.DataValueField = "id";    
                     type.DataBind();
                 }
             }
 
-            // Optional default item
             type.Items.Insert(0, new ListItem("-- Select Type --", ""));
         }
     }

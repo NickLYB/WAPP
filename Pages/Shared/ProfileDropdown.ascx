@@ -26,7 +26,7 @@
         
         <li><hr class="dropdown-divider" style="margin: 10px 0;"></li>
         <li>
-            <asp:LinkButton ID="btnSignOut" runat="server" CssClass="dropdown-item text-danger py-2 fw-bold" OnClick="btnSignOut_Click">
+            <asp:LinkButton ID="btnSignOut" runat="server" CssClass="dropdown-item text-danger py-2 fw-bold" OnClick="btnSignOut_Click" CausesValidation="false">
                 <i class="bi bi-box-arrow-right me-2"></i> Sign Out
             </asp:LinkButton>
         </li>

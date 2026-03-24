@@ -5,6 +5,8 @@
     
     <script type="text/javascript">
         // Timer Logic
+        var isAutoSubmit = false;
+
         function startTimer(duration, display) {
             var timer = duration, minutes, seconds;
             var countdown = setInterval(function () {
@@ -23,7 +25,13 @@
 
                 if (--timer < 0) {
                     clearInterval(countdown);
+                    // 1. Set the flag to TRUE because time ran out
+                    isAutoSubmit = true;
+
+                    // 2. Alert the user
                     alert("Time is up! Your quiz will be submitted automatically.");
+
+                    // 3. Programmatically click the submit button
                     document.getElementById('<%= btnSubmitQuiz.ClientID %>').click();
                 }
             }, 1000);
@@ -102,7 +110,7 @@
                 
                 <asp:Button ID="btnSubmitQuiz" runat="server" Text="Submit Assessment" 
                     CssClass="btn btn-primary rounded-pill px-5 fw-bold shadow-sm" OnClick="btnSubmitQuiz_Click" 
-                    OnClientClick="return confirm('Are you sure you want to submit your final answers?');" />
+                    OnClientClick="if(isAutoSubmit) { return true; } else { return confirm('Are you sure you want to submit your final answers?'); }" />
             </div>
 
         </div>

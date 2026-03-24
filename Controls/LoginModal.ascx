@@ -25,8 +25,12 @@
                     </div>
 
                     <div class="text-center mt-3 border-top pt-3">
-                        <asp:HyperLink ID="hlForgot" runat="server" Font-Size="Small" NavigateUrl="~/ForgotPassword.aspx">Forgot Password?</asp:HyperLink>
-    
+                        <a href="javascript:void(0);" 
+                           class="small text-decoration-none" 
+                           data-bs-toggle="modal" 
+                           data-bs-target="#forgotPasswordModal" 
+                           data-bs-dismiss="modal">Forgot Password?</a>
+
                         <span class="mx-2">|</span>
     
                         <a href="javascript:void(0);" 

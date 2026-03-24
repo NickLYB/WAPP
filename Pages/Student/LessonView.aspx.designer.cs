@@ -204,6 +204,24 @@ namespace WAPP.Pages.Student
         protected global::System.Web.UI.WebControls.Repeater rptLessons;
 
         /// <summary>
+        /// litSidebarTutorName control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Literal litSidebarTutorName;
+
+        /// <summary>
+        /// hlTutorProfileBtn control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.HyperLink hlTutorProfileBtn;
+
+        /// <summary>
         /// litModalTitle control.
         /// </summary>
         /// <remarks>

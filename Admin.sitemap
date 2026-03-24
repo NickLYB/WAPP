@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<siteMap xmlns="http://schemas.microsoft.com/AspNet/SiteMap-File-1.0" >
+  <siteMapNode url="~/Pages/Admin/Home" title="Home"  description="">
+    <siteMapNode url="~/Pages/Admin/ManageAlertLogs" title="Manage Alert Logs"  description="" />
+    <siteMapNode url="~/Pages/Admin/ManageAnnouncements" title="Manage Announcement"  description="" >
+		<siteMapNode url="~/Pages/Admin/ComposeAnnouncement" title="Add Announcement"  description="" />
+	</siteMapNode>
+	<siteMapNode url="~/Pages/Admin/ManageSystemLogs" title="Manage System Logs"  description="" />
+	<siteMapNode url="~/Pages/Admin/ManageUsers" title="Manage Users"  description="" />
+
+	  <siteMapNode url="~/Pages/Shared/Chat" title="Messages" description="" />
+  </siteMapNode>
+</siteMap>

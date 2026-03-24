@@ -328,8 +328,7 @@
             const myId = $('#hfMyId').val();
             const currentContactId = $('#hfCurrentContactId').val();
 
-            // THE FIX: If I am the sender, DO NOTHING!
-            // My C# btnSend_Click method is already refreshing my screen.
+            //C# btnSend_Click method is already refreshing my screen.
             if (senderId === myId) {
                 return;
             }
@@ -349,7 +348,6 @@
             const signal = JSON.parse(dataJson);
             currentCallPartnerId = senderId;
 
-            // --- NEW: Handle Explicit Call End Signal ---
             if (signal.type === 'call_ended') {
                 endCall(true); // Pass true so we know the partner ended it
                 return;
@@ -402,6 +400,9 @@
         $.connection.hub.start().done(function () { console.log("Chat Connected!"); });
     });
 
+
+    //video function
+    //setup
     function resetVideoUI() {
         uiMainVideo.style.display = 'none';
         uiRemotePipVideo.style.display = 'none';
@@ -415,7 +416,6 @@
 
         btnShareScreen.html('<i class="bi bi-display me-2"></i> Share Screen');
     }
-
     async function setupCamera() {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
             alert("Camera API blocked! Make sure you are using HTTPS.");
@@ -431,7 +431,6 @@
             return false;
         }
     }
-
     function createPeerConnection() {
         const rtcConfig = myIceServers
             ? { iceServers: myIceServers }
@@ -487,13 +486,16 @@
             if (event.candidate) sendSignal({ ice: event.candidate });
         };
     }
-
     async function processIceQueue() {
         while (iceQueue.length > 0) {
             await peerConnection.addIceCandidate(new RTCIceCandidate(iceQueue.shift()));
         }
     }
-
+    function sendSignal(data) {
+        const myId = $('#hfMyId').val();
+        chatHub.server.sendVideoSignal(myId, currentCallPartnerId, JSON.stringify(data));
+    }
+    //start end call
     async function startCall() {
         const partnerId = $('#hfCurrentContactId').val();
         if (!partnerId || partnerId == "0") return;
@@ -511,66 +513,6 @@
 
         createPeerConnection();
     }
-
-    function sendSignal(data) {
-        const myId = $('#hfMyId').val();
-        chatHub.server.sendVideoSignal(myId, currentCallPartnerId, JSON.stringify(data));
-    }
-
-    async function toggleScreenShare() {
-        if (!peerConnection) return;
-
-        if (!isScreenSharing) {
-            try {
-                screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-                const screenTrack = screenStream.getVideoTracks()[0];
-
-                screenSender = peerConnection.addTrack(screenTrack, screenStream);
-                isScreenSharing = true;
-
-                uiRemotePipVideo.srcObject = uiMainVideo.srcObject;
-                uiRemotePipVideo.style.display = 'block';
-                uiMainVideo.srcObject = screenStream;
-
-                btnShareScreen.html('<i class="bi bi-camera-video me-2"></i> Stop Sharing');
-
-                sendSignal({ type: 'screen_share_started' });
-
-                screenTrack.onended = function () {
-                    stopScreenShare();
-                };
-            } catch (err) {
-                console.error("Error sharing screen:", err);
-            }
-        } else {
-            stopScreenShare();
-        }
-    }
-
-    function stopScreenShare() {
-        if (!isScreenSharing) return;
-
-        if (screenSender) {
-            peerConnection.removeTrack(screenSender);
-            screenSender = null;
-        }
-
-        if (screenStream) {
-            screenStream.getTracks().forEach(track => track.stop());
-            screenStream = null;
-        }
-
-        isScreenSharing = false;
-        btnShareScreen.html('<i class="bi bi-display me-2"></i> Share Screen');
-
-        uiMainVideo.srcObject = uiRemotePipVideo.srcObject;
-        uiRemotePipVideo.style.display = 'none';
-        uiRemotePipVideo.srcObject = null;
-
-        sendSignal({ type: 'screen_share_stopped' });
-    }
-
-    // --- UPDATED END CALL LOGIC ---
     function endCall(isRemote = false, customMessage = null) {
         if (!peerConnection && !localStream) return; // Prevent double firing
 
@@ -627,7 +569,69 @@
             currentCallPartnerId = null;
         }, 2000);
     }
+    //button
+    function checkCallButtonVisibility() {
+        const partnerId = $('#hfCurrentContactId').val();
+        if (partnerId && partnerId != "0" && partnerId != "") {
+            $('#btnStartCall').show();
+        } else {
+            $('#btnStartCall').hide();
+        }
+    }
+    //share screen
+    async function toggleScreenShare() {
+        if (!peerConnection) return;
 
+        if (!isScreenSharing) {
+            try {
+                screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+                const screenTrack = screenStream.getVideoTracks()[0];
+
+                screenSender = peerConnection.addTrack(screenTrack, screenStream);
+                isScreenSharing = true;
+
+                uiRemotePipVideo.srcObject = uiMainVideo.srcObject;
+                uiRemotePipVideo.style.display = 'block';
+                uiMainVideo.srcObject = screenStream;
+
+                btnShareScreen.html('<i class="bi bi-camera-video me-2"></i> Stop Sharing');
+
+                sendSignal({ type: 'screen_share_started' });
+
+                screenTrack.onended = function () {
+                    stopScreenShare();
+                };
+            } catch (err) {
+                console.error("Error sharing screen:", err);
+            }
+        } else {
+            stopScreenShare();
+        }
+    }
+    function stopScreenShare() {
+        if (!isScreenSharing) return;
+
+        if (screenSender) {
+            peerConnection.removeTrack(screenSender);
+            screenSender = null;
+        }
+
+        if (screenStream) {
+            screenStream.getTracks().forEach(track => track.stop());
+            screenStream = null;
+        }
+
+        isScreenSharing = false;
+        btnShareScreen.html('<i class="bi bi-display me-2"></i> Share Screen');
+
+        uiMainVideo.srcObject = uiRemotePipVideo.srcObject;
+        uiRemotePipVideo.style.display = 'none';
+        uiRemotePipVideo.srcObject = null;
+
+        sendSignal({ type: 'screen_share_stopped' });
+    }
+   
+    //chat function
     function handleLiveSearch(event) {
         if (event.keyCode === 13) {
             event.preventDefault();
@@ -643,21 +647,10 @@
             document.getElementById('btnSearchTrigger').click();
         }, 400);
     }
-
     function scrollToBottom() {
         const chatContainer = document.getElementById("chatMessagesContainer");
         if (chatContainer) { chatContainer.scrollTop = chatContainer.scrollHeight; }
     }
-
-    function checkCallButtonVisibility() {
-        const partnerId = $('#hfCurrentContactId').val();
-        if (partnerId && partnerId != "0" && partnerId != "") {
-            $('#btnStartCall').show();
-        } else {
-            $('#btnStartCall').hide();
-        }
-    }
-
     document.addEventListener("DOMContentLoaded", function () {
         scrollToBottom();
         checkCallButtonVisibility();

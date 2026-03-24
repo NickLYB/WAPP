@@ -55,13 +55,11 @@ namespace WAPP.Pages.Tutor
             base.OnInit(e);
             SiteMap.SiteMapResolve += SiteMap_Resolve;
         }
-
         protected override void OnUnload(EventArgs e)
         {
             SiteMap.SiteMapResolve -= SiteMap_Resolve;
             base.OnUnload(e);
         }
-
         private SiteMapNode SiteMap_Resolve(object sender, SiteMapResolveEventArgs e)
         {
             var ctx = e.Context;
@@ -100,6 +98,7 @@ namespace WAPP.Pages.Tutor
 
             return clone;
         }
+
         private void LoadCourseTitle(string cid)
         {
             using (SqlConnection conn = new SqlConnection(connStr))
@@ -111,7 +110,6 @@ namespace WAPP.Pages.Tutor
                 litCourseTitle.Text = title != null ? title.ToString() : "Unknown Course";
             }
         }
-
         private void LoadStudentProgress(string courseId)
         {
             // 1. Fetch the exact sequence of lessons for this course
@@ -226,7 +224,6 @@ namespace WAPP.Pages.Tutor
             }
         }
 
-        // Binds the inner repeater (the segments) inside the outer repeater (the students)
         protected void rptStudents_ItemDataBound(object sender, RepeaterItemEventArgs e)
         {
             if (e.Item.ItemType == ListItemType.Item || e.Item.ItemType == ListItemType.AlternatingItem)

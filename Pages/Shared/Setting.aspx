@@ -84,13 +84,21 @@
                     <asp:TextBox ID="txtConfirmPass" runat="server" CssClass="form-control" TextMode="Password"></asp:TextBox>
                     <asp:CompareValidator ID="cvPass" runat="server" ControlToValidate="txtConfirmPass" ControlToCompare="txtNewPass" ErrorMessage="Passwords do not match." ValidationGroup="PasswordGroup" CssClass="text-danger small"></asp:CompareValidator>
                 </div>
+                
+                <!-- NEW: Password Hint -->
+                <div class="col-12">
+                    <small class="text-muted" style="font-size: 12px; line-height: 1.2; display: block;">
+                        Password must be at least 8 characters and include a number, uppercase, lowercase, and special character.
+                    </small>
+                </div>
+
                 <div class="col-12 text-end mt-3">
                     <asp:Button ID="btnChangePassword" runat="server" Text="Update Password" CssClass="btn btn-warning fw-bold px-4 rounded-pill" ValidationGroup="PasswordGroup" OnClick="btnChangePassword_Click" />
                 </div>
             </div>
         </div>
 
-        <div class="settings-card" style="border: 2px solid #f8d7da; background-color: #fff5f5;">
+        <div id="divDangerZone" runat="server" class="settings-card" style="border: 2px solid #f8d7da; background-color: #fff5f5;">
             <h4 class="card-title text-danger" style="border-bottom-color: #f5c2c7;"><i class="bi bi-exclamation-triangle-fill me-2"></i>Danger Zone</h4>
             <p class="text-dark">Once you delete your account, there is no going back. Please be certain.</p>
             

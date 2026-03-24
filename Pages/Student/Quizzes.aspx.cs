@@ -4,6 +4,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Web.UI;
 using System.Web.UI.WebControls;
+using WAPP.Utils; // Accesses SystemLogService and LogLevel
 
 namespace WAPP.Pages.Student
 {
@@ -32,6 +33,14 @@ namespace WAPP.Pages.Student
                 LoadQuestions(quizId);
                 StartAttempt(quizId, enrollmentId);
             }
+        }
+
+        // Helper to grab the logged-in User's ID for our logs
+        private int? GetCurrentUserId()
+        {
+            if (Session["UserId"] != null && int.TryParse(Session["UserId"].ToString(), out int uid))
+                return uid;
+            return null;
         }
 
         private void LoadQuizInfo(int quizId)
@@ -101,7 +110,16 @@ namespace WAPP.Pages.Student
                 SqlCommand cmd = new SqlCommand(query, conn);
                 cmd.Parameters.AddWithValue("@eid", eid);
                 cmd.Parameters.AddWithValue("@qid", qid);
-                cmd.ExecuteNonQuery();
+                int rowsAffected = cmd.ExecuteNonQuery();
+
+                // ---> LOGGING ADDED: INFO (Student started a quiz)
+                // We only log if a NEW attempt was actually created (rowsAffected > 0)
+                if (rowsAffected > 0)
+                {
+                    SystemLogService.Write("QUIZ_ATTEMPT_STARTED",
+                        $"Student started an attempt for Quiz ID {qid} (Enrollment ID: {eid}).",
+                        LogLevel.INFO, GetCurrentUserId());
+                }
             }
         }
 
@@ -129,60 +147,82 @@ namespace WAPP.Pages.Student
                 return;
             }
 
-            int score = 0;
-            int totalQuestions = rptQuestions.Items.Count;
-
-            // 2. Calculate the score
-            foreach (RepeaterItem item in rptQuestions.Items)
+            try
             {
-                RadioButtonList rbl = (RadioButtonList)item.FindControl("rblOptions");
-                if (rbl.SelectedItem != null && int.TryParse(rbl.SelectedValue, out int selectedOptionId))
+                int score = 0;
+                int totalQuestions = rptQuestions.Items.Count;
+
+                // 2. Calculate the score
+                foreach (RepeaterItem item in rptQuestions.Items)
                 {
-                    if (IsCorrect(selectedOptionId)) score++;
-                }
-            }
-
-            int finalPercentage = (totalQuestions > 0) ? (score * 100) / totalQuestions : 0;
-
-            // 3. Update the attempt to GRADED and get the Attempt ID
-            int currentAttemptId = UpdateAttempt(finalPercentage);
-
-            // 4. Save the exact answers to the database so Review page can see them
-            if (currentAttemptId > 0)
-            {
-                using (SqlConnection conn = new SqlConnection(connStr))
-                {
-                    conn.Open();
-                    foreach (RepeaterItem item in rptQuestions.Items)
+                    RadioButtonList rbl = (RadioButtonList)item.FindControl("rblOptions");
+                    if (rbl.SelectedItem != null && int.TryParse(rbl.SelectedValue, out int selectedOptionId))
                     {
-                        RadioButtonList rbl = (RadioButtonList)item.FindControl("rblOptions");
-                        HiddenField hfQid = (HiddenField)item.FindControl("hfQuestionId");
+                        if (IsCorrect(selectedOptionId)) score++;
+                    }
+                }
 
-                        string query = "INSERT INTO quizAnswer (attempt_id, question_id, selected_option_id) VALUES (@aid, @qid, @sid)";
-                        using (SqlCommand cmd = new SqlCommand(query, conn))
+                int finalPercentage = (totalQuestions > 0) ? (score * 100) / totalQuestions : 0;
+
+                // 3. Update the attempt to GRADED and get the Attempt ID
+                int currentAttemptId = UpdateAttempt(finalPercentage);
+
+                // 4. Save the exact answers to the database so Review page can see them
+                if (currentAttemptId > 0)
+                {
+                    using (SqlConnection conn = new SqlConnection(connStr))
+                    {
+                        conn.Open();
+                        foreach (RepeaterItem item in rptQuestions.Items)
                         {
-                            cmd.Parameters.AddWithValue("@aid", currentAttemptId);
-                            cmd.Parameters.AddWithValue("@qid", hfQid.Value);
+                            RadioButtonList rbl = (RadioButtonList)item.FindControl("rblOptions");
+                            HiddenField hfQid = (HiddenField)item.FindControl("hfQuestionId");
 
-                            if (rbl.SelectedItem != null && !string.IsNullOrEmpty(rbl.SelectedValue))
-                                cmd.Parameters.AddWithValue("@sid", rbl.SelectedValue);
-                            else
-                                cmd.Parameters.AddWithValue("@sid", DBNull.Value);
+                            string query = "INSERT INTO quizAnswer (attempt_id, question_id, selected_option_id) VALUES (@aid, @qid, @sid)";
+                            using (SqlCommand cmd = new SqlCommand(query, conn))
+                            {
+                                cmd.Parameters.AddWithValue("@aid", currentAttemptId);
+                                cmd.Parameters.AddWithValue("@qid", hfQid.Value);
 
-                            cmd.ExecuteNonQuery();
+                                if (rbl.SelectedItem != null && !string.IsNullOrEmpty(rbl.SelectedValue))
+                                    cmd.Parameters.AddWithValue("@sid", rbl.SelectedValue);
+                                else
+                                    cmd.Parameters.AddWithValue("@sid", DBNull.Value);
+
+                                cmd.ExecuteNonQuery();
+                            }
                         }
                     }
                 }
-            }
 
-            // 5. Apply progression logic
-            if (finalPercentage >= 50)
+                // 5. Apply progression logic
+                if (finalPercentage >= 50)
+                {
+                    MarkLessonAsCompleted();
+                    CheckAndCompleteCourse();
+                }
+
+                // ---> LOGGING ADDED: INFO (Student successfully submitted a quiz)
+                SystemLogService.Write("QUIZ_SUBMITTED",
+                    $"Student submitted Quiz ID {quizId} and scored {finalPercentage}%.",
+                    LogLevel.INFO, GetCurrentUserId());
+
+                Response.Redirect("LessonView.aspx?resourceId=" + GetResourceIdByQuiz(quizId));
+            }
+            catch (System.Threading.ThreadAbortException)
             {
-                MarkLessonAsCompleted();
-                CheckAndCompleteCourse();
+                // Prevent Response.Redirect from triggering a false ERROR log
             }
+            catch (Exception ex)
+            {
+                // ---> LOGGING ADDED: ERROR (Database failure during grading writeback)
+                SystemLogService.Write("QUIZ_SUBMIT_ERROR",
+                    $"Database error while grading Quiz ID {quizId}: {ex.Message}",
+                    LogLevel.ERROR, GetCurrentUserId());
 
-            Response.Redirect("LessonView.aspx?resourceId=" + GetResourceIdByQuiz(quizId));
+                ScriptManager.RegisterStartupScript(this, GetType(), "QuizError",
+                    "alert('An error occurred while saving your quiz. Please try again.');", true);
+            }
         }
 
         private bool IsCorrect(int optionId)
@@ -297,16 +337,38 @@ namespace WAPP.Pages.Student
 
         protected void btnCancelQuiz_Click(object sender, EventArgs e)
         {
-            using (SqlConnection conn = new SqlConnection(connStr))
+            try
             {
-                string query = "DELETE FROM quizAttempt WHERE enrollment_id = @eid AND quiz_id = @qid AND status = 'IN_PROGRESS'";
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@eid", enrollmentId);
-                cmd.Parameters.AddWithValue("@qid", quizId);
-                conn.Open();
-                cmd.ExecuteNonQuery();
+                using (SqlConnection conn = new SqlConnection(connStr))
+                {
+                    string query = "DELETE FROM quizAttempt WHERE enrollment_id = @eid AND quiz_id = @qid AND status = 'IN_PROGRESS'";
+                    SqlCommand cmd = new SqlCommand(query, conn);
+                    cmd.Parameters.AddWithValue("@eid", enrollmentId);
+                    cmd.Parameters.AddWithValue("@qid", quizId);
+                    conn.Open();
+                    int rowsDeleted = cmd.ExecuteNonQuery();
+
+                    // ---> LOGGING ADDED: WARNING (Tripwire for suspicious quiz bailing)
+                    if (rowsDeleted > 0)
+                    {
+                        SystemLogService.Write("QUIZ_ATTEMPT_CANCELLED",
+                            $"Student cancelled an in-progress attempt for Quiz ID {quizId}.",
+                            LogLevel.WARNING, GetCurrentUserId());
+                    }
+                }
+                Response.Redirect("LessonView.aspx?resourceId=" + GetResourceIdByQuiz(quizId));
             }
-            Response.Redirect("LessonView.aspx?resourceId=" + GetResourceIdByQuiz(quizId));
+            catch (System.Threading.ThreadAbortException)
+            {
+                // Prevent Response.Redirect from triggering a false ERROR log
+            }
+            catch (Exception ex)
+            {
+                // ---> LOGGING ADDED: ERROR (Database failure during deletion)
+                SystemLogService.Write("QUIZ_CANCEL_ERROR",
+                    $"Database error while cancelling Quiz ID {quizId}: {ex.Message}",
+                    LogLevel.ERROR, GetCurrentUserId());
+            }
         }
     }
 }

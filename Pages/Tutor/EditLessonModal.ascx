@@ -17,8 +17,18 @@
 
     function initTinyMceEdit() {
         tinymce.remove('#<%= txtDescription.ClientID %>'); // Clear existing instance if it exists
+        
+        // Check if dark mode is active on the page
+        var isDark = document.documentElement.classList.contains('dark-mode');
+        
         tinymce.init({
             selector: '#<%= txtDescription.ClientID %>',
+
+            // Enable TinyMCE native dark mode
+            skin: isDark ? 'oxide-dark' : 'oxide',
+            content_css: isDark ? 'dark' : 'default',
+            content_style: isDark ? "body { background-color: #2d2d2d; color: #ffffff; }" : "",
+
             plugins: 'lists link charmap preview code textcolor',
             toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline | forecolor backcolor | alignleft aligncenter alignright | bullist numlist | link code',
             menubar: false,

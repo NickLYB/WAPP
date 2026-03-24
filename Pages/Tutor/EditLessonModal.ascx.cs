@@ -159,7 +159,6 @@ namespace WAPP.Pages.Tutor
             // Refresh the main page to show the updated data
             Response.Redirect(Request.RawUrl);
         }
-
         protected void btnDelete_Click(object sender, EventArgs e)
         {
             int lessonId = Convert.ToInt32(hfLessonId.Value);
@@ -176,6 +175,7 @@ namespace WAPP.Pages.Tutor
             }
             Response.Redirect(Request.RawUrl);
         }
+        
         private string ConvertToYouTubeEmbed(string rawUrl)
         {
             try

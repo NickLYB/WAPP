@@ -4,6 +4,8 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Web.UI;
 using System.Web.UI.WebControls;
+using System.Collections.Generic;
+using WAPP.Utils;
 
 namespace WAPP.Pages.Admin
 {
@@ -13,44 +15,60 @@ namespace WAPP.Pages.Admin
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            // 1. Security Check: Ensure user is logged in AND has role_id 1 (Admin)
             if (Session["UserName"] == null || Session["role_id"] == null || Convert.ToInt32(Session["role_id"]) != 1)
             {
                 Response.Redirect("~/Pages/Guest/Home.aspx");
                 return;
             }
 
-            // 2. Load Data on Initial Visit
             if (!IsPostBack)
             {
-                LoadRoles();
+                if (Request.QueryString["msg"] == "success")
+                {
+                    lblMessage.Visible = true;
+                    lblMessage.Text = "Announcement created successfully!";
+                    lblMessage.CssClass = "alert alert-success d-block fw-bold mb-4";
+                }
+
+                LoadFilters();
                 BindData();
             }
         }
 
-        private void LoadRoles()
+        private void LoadFilters()
         {
             using (SqlConnection con = new SqlConnection(connStr))
             {
-                SqlCommand cmd = new SqlCommand("SELECT id, name FROM [role]", con);
                 con.Open();
+
+                SqlCommand cmd = new SqlCommand("SELECT id, name FROM [role]", con);
                 DataTable dt = new DataTable();
                 dt.Load(cmd.ExecuteReader());
 
-                // Populate Filter Dropdown
-                ddlTargetFilter.DataSource = dt;
-                ddlTargetFilter.DataTextField = "name";
-                ddlTargetFilter.DataValueField = "id";
-                ddlTargetFilter.DataBind();
-                ddlTargetFilter.Items.Insert(0, new ListItem("All Roles", "All"));
+                ddlFilterRole.DataSource = dt;
+                ddlFilterRole.DataTextField = "name";
+                ddlFilterRole.DataValueField = "id";
+                ddlFilterRole.DataBind();
+                ddlFilterRole.Items.Insert(0, new ListItem("All Roles", "All"));
 
-                // Populate Compose Radio Buttons
-                rblTarget.DataSource = dt;
-                rblTarget.DataTextField = "name";
-                rblTarget.DataValueField = "id";
-                rblTarget.DataBind();
-                rblTarget.Items.Insert(0, new ListItem("Broadcast (All)", "0")); // 0 for broadcast logic
-                rblTarget.SelectedIndex = 0;
+                ddlFilterMonth.Items.Clear();
+                ddlFilterMonth.Items.Add(new ListItem("All Months", "All"));
+                for (int i = 1; i <= 12; i++)
+                {
+                    ddlFilterMonth.Items.Add(new ListItem(System.Globalization.DateTimeFormatInfo.InvariantInfo.GetMonthName(i), i.ToString()));
+                }
+
+                using (SqlCommand cmdYear = new SqlCommand("SELECT DISTINCT YEAR(created_at) as YearVal FROM announcement ORDER BY YearVal DESC", con))
+                {
+                    using (SqlDataReader rdrYear = cmdYear.ExecuteReader())
+                    {
+                        ddlFilterYear.DataSource = rdrYear;
+                        ddlFilterYear.DataTextField = "YearVal";
+                        ddlFilterYear.DataValueField = "YearVal";
+                        ddlFilterYear.DataBind();
+                        ddlFilterYear.Items.Insert(0, new ListItem("All Years", "All"));
+                    }
+                }
             }
         }
 
@@ -58,10 +76,8 @@ namespace WAPP.Pages.Admin
         {
             using (SqlConnection con = new SqlConnection(connStr))
             {
-                // Note: Make sure "created_by" exists in your DB or remove it if not needed.
-                // Assuming Admin role ID is 1, or that Admin can see all announcements.
-                string sql = @"SELECT a.Id, a.title, a.message, ISNULL(r.name, 'Broadcast (All)') AS RoleName, 
-                               a.created_at, a.status
+                string sql = @"SELECT a.Id, a.title, a.message, ISNULL(r.name, 'All Roles') AS role_name, 
+                               a.created_at, a.status 
                                FROM announcement a
                                LEFT JOIN [role] r ON a.target_role_id = r.Id
                                WHERE 1=1";
@@ -70,26 +86,39 @@ namespace WAPP.Pages.Admin
                 {
                     cmd.Connection = con;
 
-                    if (!string.IsNullOrEmpty(txtSearch.Text))
+                    // Universal Backend Search
+                    if (!string.IsNullOrWhiteSpace(txtSearch.Text))
                     {
-                        sql += " AND (a.title LIKE @s OR a.message LIKE @s)";
+                        sql += @" AND (a.title LIKE @s OR a.message LIKE @s OR ISNULL(r.name, 'All Roles') LIKE @s 
+                                  OR a.status LIKE @s OR CAST(a.Id AS NVARCHAR) LIKE @s)";
                         cmd.Parameters.AddWithValue("@s", "%" + txtSearch.Text.Trim() + "%");
                     }
 
-                    if (ddlTargetFilter.SelectedValue != "All")
+                    if (ddlFilterRole.SelectedValue != "All")
                     {
                         sql += " AND a.target_role_id = @target";
-                        cmd.Parameters.AddWithValue("@target", ddlTargetFilter.SelectedValue);
+                        cmd.Parameters.AddWithValue("@target", ddlFilterRole.SelectedValue);
                     }
 
-                    if (ddlStatusFilter.SelectedValue != "All")
+                    if (ddlFilterStatus.SelectedValue != "All")
                     {
                         sql += " AND a.status = @status";
-                        cmd.Parameters.AddWithValue("@status", ddlStatusFilter.SelectedValue);
+                        cmd.Parameters.AddWithValue("@status", ddlFilterStatus.SelectedValue);
                     }
 
-                    // Append order by at the very end
-                    sql += " ORDER BY a.created_at DESC"; // Defaulting to DESC for recent first
+                    if (ddlFilterMonth.SelectedValue != "All")
+                    {
+                        sql += " AND MONTH(a.created_at) = @month";
+                        cmd.Parameters.AddWithValue("@month", ddlFilterMonth.SelectedValue);
+                    }
+
+                    if (ddlFilterYear.SelectedValue != "All")
+                    {
+                        sql += " AND YEAR(a.created_at) = @year";
+                        cmd.Parameters.AddWithValue("@year", ddlFilterYear.SelectedValue);
+                    }
+
+                    sql += ddlSortBy.SelectedValue == "Oldest" ? " ORDER BY a.created_at ASC" : " ORDER BY a.created_at DESC";
 
                     cmd.CommandText = sql;
 
@@ -97,63 +126,240 @@ namespace WAPP.Pages.Admin
                     DataTable dt = new DataTable();
                     da.Fill(dt);
 
+                    ViewState["TotalAnnounceRecords"] = dt.Rows.Count;
                     gvAnnouncements.DataSource = dt;
                     gvAnnouncements.DataBind();
-
-                    UpdatePagingLabels(dt.Rows.Count);
                 }
             }
+            UpdatePager();
         }
 
-        protected void btnSendNow_Click(object sender, EventArgs e)
+        protected void btnClear_Click(object sender, EventArgs e)
         {
-            // Basic validation
-            if (string.IsNullOrWhiteSpace(txtTitle.Text) || string.IsNullOrWhiteSpace(txtMessage.Text))
-            {
-                ScriptManager.RegisterStartupScript(this, GetType(), "alert", "alert('Title and Message are required.');", true);
-                return;
-            }
-
-            using (SqlConnection con = new SqlConnection(connStr))
-            {
-                // Added created_by so the system knows who posted it
-                string sql = @"INSERT INTO announcement (title, message, target_role_id, status, created_by, created_at) 
-                               VALUES (@t, @m, @tg, 'ACTIVE', @cb, @cd)";
-                SqlCommand cmd = new SqlCommand(sql, con);
-
-                cmd.Parameters.AddWithValue("@t", txtTitle.Text.Trim());
-                cmd.Parameters.AddWithValue("@m", txtMessage.Text.Trim());
-                cmd.Parameters.AddWithValue("@cb", Convert.ToInt32(Session["UserId"])); // Admin's ID
-                cmd.Parameters.AddWithValue("@cd", DateTime.Now);
-
-                // If "Broadcast (All)" is selected (value 0), insert NULL into DB
-                if (rblTarget.SelectedValue == "0")
-                {
-                    cmd.Parameters.AddWithValue("@tg", DBNull.Value);
-                }
-                else
-                {
-                    cmd.Parameters.AddWithValue("@tg", rblTarget.SelectedValue);
-                }
-
-                con.Open();
-                cmd.ExecuteNonQuery();
-            }
-
-            // Clear the form inputs after successful insertion
-            txtTitle.Text = string.Empty;
-            txtMessage.Text = string.Empty;
-            rblTarget.SelectedIndex = 0;
+            txtSearch.Text = "";
+            ddlSortBy.SelectedIndex = 0;
+            ddlFilterRole.SelectedIndex = 0;
+            ddlFilterStatus.SelectedIndex = 0;
+            ddlFilterMonth.SelectedIndex = 0;
+            ddlFilterYear.SelectedIndex = 0;
+            lblMessage.Visible = false;
+            gvAnnouncements.PageIndex = 0;
 
             BindData();
-
-            // Trigger the new Bootstrap modal closing script
-            ScriptManager.RegisterStartupScript(this, GetType(), "closeCompose", "closeComposeModal();", true);
+            upPanelAnnouncements.Update();
         }
 
-        protected void Filter_Changed(object sender, EventArgs e) { gvAnnouncements.PageIndex = 0; BindData(); }
-        protected void BtnSearch_Click(object sender, EventArgs e) { gvAnnouncements.PageIndex = 0; BindData(); }
+        // =======================================================
+        // Grid View Interactions (View Details)
+        // =======================================================
+        protected void gvAnnouncements_RowDataBound(object sender, GridViewRowEventArgs e)
+        {
+            if (e.Row.RowType == DataControlRowType.DataRow)
+            {
+                e.Row.CssClass = "clickable-row";
+                e.Row.Attributes["onclick"] = ClientScript.GetPostBackClientHyperlink(gvAnnouncements, "View$" + e.Row.RowIndex);
+            }
+        }
+
+        protected void gvAnnouncements_RowCommand(object sender, GridViewCommandEventArgs e)
+        {
+            if (e.CommandName == "View")
+            {
+                int rowIndex = Convert.ToInt32(e.CommandArgument);
+                int announceId = Convert.ToInt32(gvAnnouncements.DataKeys[rowIndex].Value);
+                LoadAnnouncementDetails(announceId);
+                ScriptManager.RegisterStartupScript(this, this.GetType(), "OpenView", "openViewModal();", true);
+            }
+        }
+
+        private void LoadAnnouncementDetails(int id)
+        {
+            using (SqlConnection conn = new SqlConnection(connStr))
+            {
+                string sql = @"SELECT a.Id, a.title, a.message, ISNULL(r.name, 'All Roles') AS role_name, 
+                               a.created_at, a.status 
+                               FROM announcement a
+                               LEFT JOIN [role] r ON a.target_role_id = r.Id
+                               WHERE a.Id = @Id";
+
+                using (SqlCommand cmd = new SqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@Id", id);
+                    conn.Open();
+                    using (SqlDataReader rdr = cmd.ExecuteReader())
+                    {
+                        if (rdr.Read())
+                        {
+                            litViewId.Text = "A" + rdr["Id"].ToString().PadLeft(3, '0');
+                            litViewDate.Text = Convert.ToDateTime(rdr["created_at"]).ToString("dd/MM/yyyy HH:mm");
+                            litViewTitle.Text = rdr["title"].ToString();
+                            litViewTarget.Text = rdr["role_name"].ToString();
+
+                            string status = rdr["status"].ToString();
+                            string statusClass = status == "ACTIVE" ? "ec-status-active" : "ec-status-locked";
+                            litViewStatus.Text = $"<span class='ec-status-pill {statusClass}'>{status}</span>";
+
+                            litViewMessage.Text = rdr["message"].ToString();
+                        }
+                    }
+                }
+            }
+            upPanelAnnouncements.Update();
+        }
+
+        // =======================================================
+        // Compose & Delete Logic
+        // =======================================================
+        protected void btnComposeRedirect_Click(object sender, EventArgs e)
+        {
+            Response.Redirect("ComposeAnnouncement.aspx");
+        }
+
+        protected void btnTriggerRemove_Click(object sender, EventArgs e)
+        {
+            lblMessage.Visible = false;
+            List<string> selectedTitles = new List<string>();
+
+            foreach (GridViewRow row in gvAnnouncements.Rows)
+            {
+                CheckBox chk = (CheckBox)row.FindControl("chkSelect");
+                if (chk != null && chk.Checked)
+                {
+                    int rawId = Convert.ToInt32(gvAnnouncements.DataKeys[row.RowIndex].Value);
+                    string formattedId = "A" + rawId.ToString().PadLeft(3, '0');
+                    string title = row.Cells[2].Text;
+                    selectedTitles.Add($"{formattedId} - {title}");
+                }
+            }
+
+            if (selectedTitles.Count > 0)
+            {
+                litSelectedTitles.Text = string.Join("<br/>", selectedTitles);
+                upPanelAnnouncements.Update();
+                ScriptManager.RegisterStartupScript(this, this.GetType(), "OpenModal", "openRemoveModal();", true);
+            }
+            else
+            {
+                lblMessage.Visible = true;
+                lblMessage.Text = "Please select at least one announcement to remove.";
+                lblMessage.CssClass = "alert alert-warning d-block mb-4";
+                upPanelAnnouncements.Update();
+            }
+        }
+
+        protected void btnConfirmRemove_Click(object sender, EventArgs e)
+        {
+            int adminId = Session["UserId"] != null ? Convert.ToInt32(Session["UserId"]) : 1;
+            List<int> selectedIds = new List<int>();
+
+            foreach (GridViewRow row in gvAnnouncements.Rows)
+            {
+                CheckBox chk = (CheckBox)row.FindControl("chkSelect");
+                if (chk != null && chk.Checked) selectedIds.Add(Convert.ToInt32(gvAnnouncements.DataKeys[row.RowIndex].Value));
+            }
+
+            if (selectedIds.Count > 0)
+            {
+                try
+                {
+                    using (SqlConnection conn = new SqlConnection(connStr))
+                    {
+                        string[] paramNames = new string[selectedIds.Count];
+                        for (int i = 0; i < selectedIds.Count; i++) paramNames[i] = "@id" + i;
+
+                        string inClause = string.Join(",", paramNames);
+
+                        string sqlDelNotif = $"DELETE FROM [notification] WHERE announcement_id IN ({inClause})";
+                        string sqlDelAnn = $"DELETE FROM [announcement] WHERE Id IN ({inClause})";
+
+                        conn.Open();
+                        using (SqlTransaction trans = conn.BeginTransaction())
+                        {
+                            try
+                            {
+                                using (SqlCommand cmd = new SqlCommand(sqlDelNotif, conn, trans))
+                                {
+                                    for (int i = 0; i < selectedIds.Count; i++) cmd.Parameters.AddWithValue(paramNames[i], selectedIds[i]);
+                                    cmd.ExecuteNonQuery();
+                                }
+
+                                using (SqlCommand cmd = new SqlCommand(sqlDelAnn, conn, trans))
+                                {
+                                    for (int i = 0; i < selectedIds.Count; i++) cmd.Parameters.AddWithValue(paramNames[i], selectedIds[i]);
+                                    cmd.ExecuteNonQuery();
+                                }
+                                trans.Commit();
+                            }
+                            catch
+                            {
+                                trans.Rollback();
+                                throw;
+                            }
+                        }
+                    }
+
+                    SystemLogService.Write("ADMIN_ANNOUNCEMENT_DELETED", $"Admin deleted announcement IDs: {string.Join(", ", selectedIds)}.", LogLevel.WARNING, adminId);
+
+                    BindData();
+                    lblMessage.Visible = true;
+                    lblMessage.Text = "Selected announcement(s) deleted permanently.";
+                    lblMessage.CssClass = "alert alert-success d-block mb-4 fw-bold";
+                    upPanelAnnouncements.Update();
+                    ScriptManager.RegisterStartupScript(this, this.GetType(), "CloseModal", "closeRemoveModal();", true);
+                }
+                catch (Exception ex)
+                {
+                    SystemLogService.Write("ADMIN_ANNOUNCEMENT_DELETE_ERROR", $"DB Error deleting announcements: {ex.Message}", LogLevel.ERROR, adminId);
+                    lblMessage.Visible = true;
+                    lblMessage.Text = "Error removing records: " + ex.Message;
+                    lblMessage.CssClass = "alert alert-danger d-block mb-4 fw-bold";
+                    upPanelAnnouncements.Update();
+                }
+            }
+        }
+
+        // =======================================================
+        // Standard Pagination and Filtering
+        // =======================================================
+        protected void FilterGrid_Changed(object sender, EventArgs e) { lblMessage.Visible = false; gvAnnouncements.PageIndex = 0; BindData(); }
+        protected void BtnSearch_Click(object sender, EventArgs e) { lblMessage.Visible = false; gvAnnouncements.PageIndex = 0; BindData(); }
         protected void gvAnnouncements_PageIndexChanging(object sender, GridViewPageEventArgs e) { gvAnnouncements.PageIndex = e.NewPageIndex; BindData(); }
+
+        private void UpdatePager()
+        {
+            int totalRecords = ViewState["TotalAnnounceRecords"] != null ? Convert.ToInt32(ViewState["TotalAnnounceRecords"]) : 0;
+            int totalPages = (int)Math.Ceiling((double)totalRecords / gvAnnouncements.PageSize);
+            if (totalPages == 0) totalPages = 1;
+
+            int startRecord = (gvAnnouncements.PageIndex * gvAnnouncements.PageSize) + 1;
+            int endRecord = startRecord + gvAnnouncements.Rows.Count - 1;
+            if (endRecord > totalRecords) endRecord = totalRecords;
+            if (totalRecords == 0) { startRecord = 0; endRecord = 0; }
+
+            litPagerInfo.Text = $"Showing {startRecord}-{endRecord} of {totalRecords} announcements";
+            txtPageJump.Text = (gvAnnouncements.PageIndex + 1).ToString();
+
+            btnPrev.Enabled = gvAnnouncements.PageIndex > 0;
+            btnNext.Enabled = gvAnnouncements.PageIndex < (totalPages - 1);
+
+            btnPrev.CssClass = btnPrev.Enabled ? "btn btn-outline-primary btn-sm fw-bold px-3" : "btn btn-outline-secondary btn-sm fw-bold px-3 disabled";
+            btnNext.CssClass = btnNext.Enabled ? "btn btn-outline-primary btn-sm fw-bold px-3" : "btn btn-outline-secondary btn-sm fw-bold px-3 disabled";
+        }
+
+        protected void txtPageJump_TextChanged(object sender, EventArgs e)
+        {
+            int totalRecords = ViewState["TotalAnnounceRecords"] != null ? Convert.ToInt32(ViewState["TotalAnnounceRecords"]) : 0;
+            int totalPages = (int)Math.Ceiling((double)totalRecords / gvAnnouncements.PageSize);
+            if (totalPages == 0) totalPages = 1;
+
+            if (int.TryParse(txtPageJump.Text, out int pageNum))
+            {
+                if (pageNum >= 1 && pageNum <= totalPages) gvAnnouncements.PageIndex = pageNum - 1;
+                else if (pageNum < 1) gvAnnouncements.PageIndex = 0;
+                else gvAnnouncements.PageIndex = totalPages - 1;
+            }
+            BindData();
+        }
 
         protected void btnPrev_Click(object sender, EventArgs e)
         {
@@ -166,34 +372,12 @@ namespace WAPP.Pages.Admin
 
         protected void btnNext_Click(object sender, EventArgs e)
         {
-            if (gvAnnouncements.PageIndex < gvAnnouncements.PageCount - 1)
+            int totalRecords = ViewState["TotalAnnounceRecords"] != null ? Convert.ToInt32(ViewState["TotalAnnounceRecords"]) : 0;
+            if (gvAnnouncements.PageIndex < ((int)Math.Ceiling((double)totalRecords / gvAnnouncements.PageSize) - 1))
             {
                 gvAnnouncements.PageIndex++;
                 BindData();
             }
-        }
-
-        private void UpdatePagingLabels(int total)
-        {
-            if (total == 0)
-            {
-                lblShowing.Text = "Showing 0 announcements";
-                btnPrev.Enabled = false;
-                btnNext.Enabled = false;
-                btnPrev.CssClass = "ec-pager-link disabled";
-                btnNext.CssClass = "ec-pager-link disabled";
-                return;
-            }
-
-            int start = (gvAnnouncements.PageIndex * gvAnnouncements.PageSize) + 1;
-            int end = Math.Min((gvAnnouncements.PageIndex + 1) * gvAnnouncements.PageSize, total);
-            lblShowing.Text = $"Showing {start}-{end} of {total} announcements";
-
-            btnPrev.Enabled = gvAnnouncements.PageIndex > 0;
-            btnNext.Enabled = gvAnnouncements.PageIndex < gvAnnouncements.PageCount - 1;
-
-            btnPrev.CssClass = btnPrev.Enabled ? "ec-pager-link" : "ec-pager-link disabled";
-            btnNext.CssClass = btnNext.Enabled ? "ec-pager-link" : "ec-pager-link disabled";
         }
     }
 }

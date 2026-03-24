@@ -36,14 +36,16 @@
                         <div class="mb-3">
                             <asp:TextBox ID="txtEmail" runat="server" placeholder="Email Address" CssClass="login-input w-100"></asp:TextBox>
                         </div>
-
-                        <div class="row g-2 mb-3">
+                        <div class="row g-2 mb-1">
                             <div class="col-md-6">
                                 <asp:TextBox ID="txtPassword" runat="server" TextMode="Password" placeholder="Password" CssClass="login-input w-100"></asp:TextBox>
                             </div>
                             <div class="col-md-6">
-                                <asp:TextBox ID="txtConfirmPassword" runat="server" TextMode="Password" placeholder="Confirm" CssClass="login-input w-100"></asp:TextBox>
+                                <asp:TextBox ID="txtConfirmPassword" runat="server" TextMode="Password" placeholder="Confirm Password" CssClass="login-input w-100"></asp:TextBox>
                             </div>
+                        </div>
+                        <div class="mb-3">
+                            <small class="text-muted" style="font-size: 11px;">Password must be at least 8 characters and include a number, uppercase, lowercase, and special character.</small>
                         </div>
 
                         <div class="mb-3">

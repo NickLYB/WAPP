@@ -1,14 +1,44 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
 using System.Web.UI;
-using System.Web.UI.WebControls;
 
 namespace WAPP.Pages.Guest
 {
     public partial class About : System.Web.UI.Page
     {
+        protected void Page_PreInit(object sender, EventArgs e)
+        {
+            // Check if a user is logged in
+            if (Session["role_id"] != null)
+            {
+                string userRole = Session["role_id"].ToString();
+
+                // Swap the master page based on the role
+                switch (userRole)
+                {
+                    case "1":
+                        this.MasterPageFile = "~/Masters/Admin.master";
+                        break;
+                    case "2":
+                        this.MasterPageFile = "~/Masters/Staff.Master";
+                        break;
+                    case "3":
+                        this.MasterPageFile = "~/Masters/Tutor.Master";
+                        break;
+                    case "4":
+                        this.MasterPageFile = "~/Masters/Student.Master";
+                        break;
+                    default:
+                        this.MasterPageFile = "~/Masters/Guest.Master";
+                        break;
+                }
+            }
+            else
+            {
+                // If no session exists, default to Guest.Master
+                this.MasterPageFile = "~/Masters/Guest.Master";
+            }
+        }
+
         protected void Page_Load(object sender, EventArgs e)
         {
 

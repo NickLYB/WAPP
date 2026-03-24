@@ -6,12 +6,14 @@ using System.Linq;
 using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
+using WAPP.Utils;
 
 namespace WAPP.Pages.Tutor
 {
     [Serializable]
     public class QuestionItem
     {
+        public int QuestionId { get; set; } = 0;
         public string QuestionText { get; set; } = "";
         public string OptionA { get; set; } = "";
         public string OptionB { get; set; } = "";
@@ -19,6 +21,7 @@ namespace WAPP.Pages.Tutor
         public string OptionD { get; set; } = "";
         public string CorrectAnswer { get; set; } = "A";
     }
+
     public partial class CreateNewQuiz : System.Web.UI.Page
     {
         private List<QuestionItem> QuizQuestions
@@ -34,6 +37,7 @@ namespace WAPP.Pages.Tutor
                 ViewState["QuizQuestions"] = value;
             }
         }
+
         protected void Page_Load(object sender, EventArgs e)
         {
             if (Session["UserName"] == null || Session["role_id"] == null || (int)Session["role_id"] != 3)
@@ -43,8 +47,8 @@ namespace WAPP.Pages.Tutor
 
             if (!IsPostBack)
             {
-                // 1. Always load the lessons for this course first
-                LoadLessonDropDownList(CourseId);
+                // 1. Load lessons, passing the current QuizId (0 if creating new) so the assigned lesson isn't hidden
+                LoadLessonDropDownList(CourseId, IsEditMode ? QuizId : 0);
 
                 // 2. Check for Lesson ID in QueryString (The "Lock" logic)
                 if (int.TryParse(Request.QueryString["lessonId"], out int lockedLessonId))
@@ -70,8 +74,9 @@ namespace WAPP.Pages.Tutor
                     LoadQuizHeader(QuizId);
                     LoadQuizQuestions(QuizId);
                     Button1.Text = "Update Quiz";
-                    // title heading if you want:
-                    // (change your H1 to runat=server to set text)
+
+                    // ---> TURN ON DELETE BUTTON IN EDIT MODE <---
+                    btnDeleteQuiz.Visible = true;
                 }
                 else
                 {
@@ -93,6 +98,7 @@ namespace WAPP.Pages.Tutor
             SiteMap.SiteMapResolve -= SiteMap_Resolve;
             base.OnUnload(e);
         }
+
         private string GetCourseName(int courseId)
         {
             string cs = ConfigurationManager.ConnectionStrings["MyDbConn"].ConnectionString;
@@ -106,6 +112,7 @@ namespace WAPP.Pages.Tutor
                 return cmd.ExecuteScalar()?.ToString();
             }
         }
+
         private void LoadQuizHeader(int quizId)
         {
             string cs = ConfigurationManager.ConnectionStrings["MyDbConn"].ConnectionString;
@@ -127,7 +134,7 @@ namespace WAPP.Pages.Tutor
                         txtDescription.Text = r["description"]?.ToString();
 
                         int mins = Convert.ToInt32(r["duration_minutes"]);
-                        if (mins == 9999) mins = 0; // your "no limit"
+                        if (mins == 9999) mins = 0;
 
                         if (ddlTimeLimit.Items.FindByValue(mins.ToString()) != null)
                             ddlTimeLimit.SelectedValue = mins.ToString();
@@ -137,6 +144,7 @@ namespace WAPP.Pages.Tutor
                 }
             }
         }
+
         private void LoadQuizQuestions(int quizId)
         {
             var list = new List<QuestionItem>();
@@ -173,6 +181,7 @@ namespace WAPP.Pages.Tutor
                             currentQid = qid;
                             current = new QuestionItem
                             {
+                                QuestionId = qid,
                                 QuestionText = r["question_text"]?.ToString() ?? "",
                                 CorrectAnswer = "A"
                             };
@@ -201,6 +210,7 @@ namespace WAPP.Pages.Tutor
             QuizQuestions = list;
             BindQuestionRepeater();
         }
+
         private SiteMapNode SiteMap_Resolve(object sender, SiteMapResolveEventArgs e)
         {
             var ctx = e.Context;
@@ -225,7 +235,6 @@ namespace WAPP.Pages.Tutor
             if (string.IsNullOrWhiteSpace(courseTitle))
                 return clone;
 
-            // Optional: Append ID to current node's URL to be perfectly consistent
             clone.Url += $"?id={courseId}";
 
             // Walk up: Announcement -> Edit -> Courses
@@ -234,18 +243,18 @@ namespace WAPP.Pages.Tutor
                 // Update the title
                 clone.ParentNode.Title = $"Edit - {courseTitle}";
 
-                // CRITICAL FIX: Append the ID to the Parent Node's URL!
-                // This ensures the breadcrumb link actually sends you back to the right course.
                 clone.ParentNode.Url += $"?id={courseId}";
             }
 
             return clone;
         }
+
         private void BindQuestionRepeater()
         {
             rptQuestions.DataSource = QuizQuestions;
             rptQuestions.DataBind();
         }
+
         private void SaveCurrentRepeaterData()
         {
             List<QuestionItem> currentList = new List<QuestionItem>();
@@ -254,6 +263,10 @@ namespace WAPP.Pages.Tutor
             {
                 if (item.ItemType == ListItemType.Item || item.ItemType == ListItemType.AlternatingItem)
                 {
+                    HiddenField hfQId = (HiddenField)item.FindControl("hfQuestionId");
+                    int qId = 0;
+                    if (hfQId != null) int.TryParse(hfQId.Value, out qId);
+
                     // Find the textboxes inside this specific repeater row
                     TextBox txtQ = (TextBox)item.FindControl("txtQuestionText");
                     TextBox txtA = (TextBox)item.FindControl("txtOptionA");
@@ -265,6 +278,7 @@ namespace WAPP.Pages.Tutor
                     // Save the data to a new object
                     currentList.Add(new QuestionItem
                     {
+                        QuestionId = qId,
                         QuestionText = txtQ.Text,
                         OptionA = txtA.Text,
                         OptionB = txtB.Text,
@@ -278,6 +292,7 @@ namespace WAPP.Pages.Tutor
             // Update ViewState memory with the fresh user inputs
             QuizQuestions = currentList;
         }
+
         protected void btnAddQuestion_Click(object sender, EventArgs e)
         {
             SaveCurrentRepeaterData(); // Save their existing work
@@ -286,6 +301,7 @@ namespace WAPP.Pages.Tutor
 
             BindQuestionRepeater(); // Redraw screen
         }
+
         protected void rptQuestions_ItemCommand(object source, RepeaterCommandEventArgs e)
         {
             if (e.CommandName == "Remove")
@@ -303,6 +319,7 @@ namespace WAPP.Pages.Tutor
                 }
             }
         }
+
         protected void Button1_Click(object sender, EventArgs e)
         {
             if (IsEditMode)
@@ -328,6 +345,7 @@ namespace WAPP.Pages.Tutor
                 Response.Redirect("~/Pages/Tutor/Teaching.aspx");
             }
         }
+
         private bool IsEditMode => int.TryParse(Request.QueryString["quizId"], out _);
 
         private int CourseId
@@ -352,6 +370,12 @@ namespace WAPP.Pages.Tutor
         {
             lblMsg.ForeColor = System.Drawing.Color.Red;
 
+            if (ddlTargetLesson.SelectedValue == "0")
+            {
+                lblMsg.Text = "Please select a target lesson for this quiz.";
+                return;
+            }
+
             // 1. Basic Form Validation
             if (string.IsNullOrWhiteSpace(txtQuizTitle.Text) || string.IsNullOrWhiteSpace(txtDescription.Text))
             {
@@ -373,40 +397,59 @@ namespace WAPP.Pages.Tutor
             SaveCurrentRepeaterData();
 
             // Ensure at least one valid question exists
-            if (QuizQuestions.Count == 0 || string.IsNullOrWhiteSpace(QuizQuestions[0].QuestionText))
+            if (QuizQuestions.Count == 0)
             {
                 lblMsg.Text = "Please add at least one complete question before saving.";
                 return;
             }
 
+            for (int i = 0; i < QuizQuestions.Count; i++)
+            {
+                var q = QuizQuestions[i];
+                if (string.IsNullOrWhiteSpace(q.QuestionText) ||
+                    string.IsNullOrWhiteSpace(q.OptionA) ||
+                    string.IsNullOrWhiteSpace(q.OptionB) ||
+                    string.IsNullOrWhiteSpace(q.OptionC) ||
+                    string.IsNullOrWhiteSpace(q.OptionD))
+                {
+                    lblMsg.Text = $"Question {i + 1} is incomplete. The question text and all options (A, B, C, D) must be filled.";
+                    return;
+                }
+            }
+
+            int? currentUserId = Session["UserId"] != null ? (int?)Convert.ToInt32(Session["UserId"]) : null;
             string cs = ConfigurationManager.ConnectionStrings["MyDbConn"].ConnectionString;
 
             using (SqlConnection con = new SqlConnection(cs))
             {
                 con.Open();
 
+                string checkSql = "SELECT quiz_id FROM learningResource WHERE Id = @lid";
+                using (SqlCommand cmdCheck = new SqlCommand(checkSql, con))
+                {
+                    cmdCheck.Parameters.AddWithValue("@lid", ddlTargetLesson.SelectedValue);
+                    object existingQuiz = cmdCheck.ExecuteScalar();
+
+                    if (existingQuiz != null && existingQuiz != DBNull.Value)
+                    {
+                        lblMsg.Text = "The selected lesson already has a quiz assigned. One lesson can only have one quiz.";
+                        return;
+                    }
+                }
+
                 // 3. Start a Transaction (If one insert fails, they ALL fail safely)
                 using (SqlTransaction transaction = con.BeginTransaction())
                 {
                     try
                     {
-                        // --- STEP A: Insert the Quiz ---
+                        // --- STEP A: Insert the Quiz FIRST ---
                         string quizSql = @"
                     INSERT INTO quiz (course_id, title, description, duration_minutes) 
                     VALUES (@courseId, @title, @desc, @duration); 
                     SELECT CAST(SCOPE_IDENTITY() as int);"; // Gets the new Quiz ID
 
                         int newQuizId = 0;
-                        if (ddlTargetLesson.SelectedValue != "0")
-                        {
-                            string linkSql = "UPDATE learningResource SET quiz_id = @qid WHERE Id = @lid";
-                            using (SqlCommand cmdLink = new SqlCommand(linkSql, con, transaction))
-                            {
-                                cmdLink.Parameters.AddWithValue("@qid", newQuizId);
-                                cmdLink.Parameters.AddWithValue("@lid", ddlTargetLesson.SelectedValue);
-                                cmdLink.ExecuteNonQuery();
-                            }
-                        }
+
                         using (SqlCommand cmd = new SqlCommand(quizSql, con, transaction))
                         {
                             cmd.Parameters.AddWithValue("@courseId", courseId);
@@ -415,6 +458,17 @@ namespace WAPP.Pages.Tutor
                             cmd.Parameters.AddWithValue("@duration", duration);
 
                             newQuizId = (int)cmd.ExecuteScalar();
+                        }
+
+                        if (ddlTargetLesson.SelectedValue != "0")
+                        {
+                            string linkSql = "UPDATE learningResource SET quiz_id = @qid WHERE Id = @lid";
+                            using (SqlCommand cmdLink = new SqlCommand(linkSql, con, transaction))
+                            {
+                                cmdLink.Parameters.AddWithValue("@qid", newQuizId); // Now it has the real ID!
+                                cmdLink.Parameters.AddWithValue("@lid", ddlTargetLesson.SelectedValue);
+                                cmdLink.ExecuteNonQuery();
+                            }
                         }
 
                         // --- STEP B: Loop through and insert Questions and Options ---
@@ -429,9 +483,6 @@ namespace WAPP.Pages.Tutor
 
                         foreach (QuestionItem q in QuizQuestions)
                         {
-                            // Skip empty/blank questions that the user added but didn't fill out
-                            if (string.IsNullOrWhiteSpace(q.QuestionText)) continue;
-
                             int newQuestionId = 0;
 
                             // Insert the Question
@@ -448,7 +499,7 @@ namespace WAPP.Pages.Tutor
                                 using (SqlCommand cmdO = new SqlCommand(optionSql, con, transaction))
                                 {
                                     cmdO.Parameters.AddWithValue("@qId", newQuestionId);
-                                    cmdO.Parameters.AddWithValue("@optText", string.IsNullOrWhiteSpace(optText) ? "" : optText.Trim());
+                                    cmdO.Parameters.AddWithValue("@optText", optText.Trim());
                                     cmdO.Parameters.AddWithValue("@isCorrect", isCorrect);
                                     cmdO.ExecuteNonQuery();
                                 }
@@ -464,6 +515,10 @@ namespace WAPP.Pages.Tutor
                         // --- STEP C: If everything worked, commit the changes to the database! ---
                         transaction.Commit();
 
+                        SystemLogService.Write("QUIZ_CREATED",
+                            $"Tutor created quiz '{txtQuizTitle.Text.Trim()}' (Quiz ID: {newQuizId}) for Course ID {courseId}.",
+                            LogLevel.INFO, currentUserId);
+
                         // Clear memory and redirect back to the Edit Course page
                         ViewState["QuizQuestions"] = null;
                         Response.Redirect($"~/Pages/Tutor/EditCourse.aspx?id={courseId}", false);
@@ -473,41 +528,92 @@ namespace WAPP.Pages.Tutor
                     {
                         // If anything broke, rollback all database changes so no corrupt data is left behind
                         transaction.Rollback();
-                        lblMsg.Text = "Database Error: " + ex.Message;
+
+                        SystemLogService.Write("QUIZ_CREATE_ERROR",
+                            $"DB Error creating quiz for Course ID {courseId}: {ex.Message}",
+                            LogLevel.ERROR, currentUserId);
+
+                        lblMsg.Text = "Database Error while saving the quiz: " + ex.Message;
                     }
                 }
             }
         }
+
         private void UpdateQuizAndQuestions(int quizId)
         {
             lblMsg.ForeColor = System.Drawing.Color.Red;
 
-            if (string.IsNullOrWhiteSpace(txtQuizTitle.Text) ||
-    string.IsNullOrWhiteSpace(txtDescription.Text))
+            // FIX 1: Must select a lesson
+            if (ddlTargetLesson.SelectedValue == "0")
+            {
+                lblMsg.Text = "Please select a target lesson for this quiz.";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(txtQuizTitle.Text) || string.IsNullOrWhiteSpace(txtDescription.Text))
             {
                 lblMsg.Text = "Please fill in the Quiz Title and Description.";
                 return;
             }
+
             int courseId = CourseId;
             int duration = Convert.ToInt32(ddlTimeLimit.SelectedValue);
             if (duration <= 0) duration = 9999;
 
             SaveCurrentRepeaterData();
 
+            if (QuizQuestions.Count == 0)
+            {
+                lblMsg.Text = "Please add at least one complete question before saving.";
+                return;
+            }
+
+            // FIX 2: Check that all questions and options A-D are filled
+            for (int i = 0; i < QuizQuestions.Count; i++)
+            {
+                var q = QuizQuestions[i];
+                if (string.IsNullOrWhiteSpace(q.QuestionText) ||
+                    string.IsNullOrWhiteSpace(q.OptionA) ||
+                    string.IsNullOrWhiteSpace(q.OptionB) ||
+                    string.IsNullOrWhiteSpace(q.OptionC) ||
+                    string.IsNullOrWhiteSpace(q.OptionD))
+                {
+                    lblMsg.Text = $"Question {i + 1} is incomplete. The question text and all options (A, B, C, D) must be filled.";
+                    return;
+                }
+            }
+
+            int? currentUserId = Session["UserId"] != null ? (int?)Convert.ToInt32(Session["UserId"]) : null;
             string cs = ConfigurationManager.ConnectionStrings["MyDbConn"].ConnectionString;
 
             using (SqlConnection con = new SqlConnection(cs))
             {
                 con.Open();
+
+                // FIX 3: 1 Lesson can only have 1 Quiz Check (Allow if it's assigned to THIS quiz)
+                string checkSql = "SELECT quiz_id FROM learningResource WHERE Id = @lid";
+                using (SqlCommand cmdCheck = new SqlCommand(checkSql, con))
+                {
+                    cmdCheck.Parameters.AddWithValue("@lid", ddlTargetLesson.SelectedValue);
+                    object existingQuiz = cmdCheck.ExecuteScalar();
+
+                    if (existingQuiz != null && existingQuiz != DBNull.Value)
+                    {
+                        int assignedQuizId = Convert.ToInt32(existingQuiz);
+                        if (assignedQuizId != quizId)
+                        {
+                            lblMsg.Text = "The selected lesson already has a different quiz assigned. One lesson can only have one quiz.";
+                            return;
+                        }
+                    }
+                }
+
                 using (SqlTransaction tran = con.BeginTransaction())
                 {
                     try
                     {
-                        // 1) update quiz header
-                        using (SqlCommand cmd = new SqlCommand(@"
-                    UPDATE quiz
-                    SET title=@t, description=@d, duration_minutes=@dur
-                    WHERE Id=@id", con, tran))
+                        // 1. Update quiz header
+                        using (SqlCommand cmd = new SqlCommand("UPDATE quiz SET title=@t, description=@d, duration_minutes=@dur WHERE Id=@id", con, tran))
                         {
                             cmd.Parameters.AddWithValue("@t", txtQuizTitle.Text.Trim());
                             cmd.Parameters.AddWithValue("@d", txtDescription.Text.Trim());
@@ -516,71 +622,98 @@ namespace WAPP.Pages.Tutor
                             cmd.ExecuteNonQuery();
                         }
 
-                        // 2) delete old options then questions
-                        using (SqlCommand cmd = new SqlCommand(@"
-                    DELETE ao
-                    FROM answerOption ao
-                    INNER JOIN question q ON ao.question_id = q.Id
-                    WHERE q.quiz_id = @qid", con, tran))
+                        // 2. Delete questions that the Tutor removed via the UI (if any)
+                        var keptIds = QuizQuestions.Where(q => q.QuestionId > 0).Select(q => q.QuestionId.ToString()).ToList();
+                        string keptIdsStr = string.Join(",", keptIds);
+                        string deleteFilter = string.IsNullOrEmpty(keptIdsStr) ? "" : $"AND Id NOT IN ({keptIdsStr})";
+
+                        using (SqlCommand cmdDelOpts = new SqlCommand($"DELETE FROM answerOption WHERE question_id IN (SELECT Id FROM question WHERE quiz_id = @qid {deleteFilter})", con, tran))
                         {
-                            cmd.Parameters.AddWithValue("@qid", quizId);
-                            cmd.ExecuteNonQuery();
+                            cmdDelOpts.Parameters.AddWithValue("@qid", quizId);
+                            cmdDelOpts.ExecuteNonQuery();
+                        }
+                        using (SqlCommand cmdDelQ = new SqlCommand($"DELETE FROM question WHERE quiz_id = @qid {deleteFilter}", con, tran))
+                        {
+                            cmdDelQ.Parameters.AddWithValue("@qid", quizId);
+                            cmdDelQ.ExecuteNonQuery();
                         }
 
-                        using (SqlCommand cmd = new SqlCommand("DELETE FROM question WHERE quiz_id=@qid", con, tran))
-                        {
-                            cmd.Parameters.AddWithValue("@qid", quizId);
-                            cmd.ExecuteNonQuery();
-                        }
+                        // 3. Process Questions (Update existing, Insert new)
+                        string insertQuestionSql = "INSERT INTO question (quiz_id, question_text) VALUES (@quizId, @qText); SELECT CAST(SCOPE_IDENTITY() as int);";
+                        string insertOptionSql = "INSERT INTO answerOption (question_id, text, is_correct) VALUES (@qId, @optText, @isCorrect);";
 
-                        // 3) reinsert questions/options (same logic as create, but using existing quizId)
-                        string questionSql = @"
-                    INSERT INTO question (quiz_id, question_text)
-                    VALUES (@quizId, @qText);
-                    SELECT CAST(SCOPE_IDENTITY() as int);";
+                        string updateQuestionSql = "UPDATE question SET question_text = @qText WHERE Id = @qId;";
 
-                        string optionSql = @"
-                    INSERT INTO answerOption (question_id, text, is_correct)
-                    VALUES (@qId, @optText, @isCorrect);";
+                        string updateOptionsSql = @"
+                            WITH OrderedOptions AS (
+                                SELECT Id, text, is_correct, ROW_NUMBER() OVER (ORDER BY Id ASC) as RowNum
+                                FROM answerOption WHERE question_id = @qId
+                            )
+                            UPDATE OrderedOptions
+                            SET text = CASE RowNum WHEN 1 THEN @oA WHEN 2 THEN @oB WHEN 3 THEN @oC WHEN 4 THEN @oD END,
+                                is_correct = CASE RowNum WHEN 1 THEN @cA WHEN 2 THEN @cB WHEN 3 THEN @cC WHEN 4 THEN @cD END;";
 
                         foreach (var q in QuizQuestions)
                         {
-                            if (string.IsNullOrWhiteSpace(q.QuestionText)) continue;
-
-                            int newQuestionId;
-                            using (SqlCommand cmdQ = new SqlCommand(questionSql, con, tran))
+                            if (q.QuestionId > 0)
                             {
-                                cmdQ.Parameters.AddWithValue("@quizId", quizId);
-                                cmdQ.Parameters.AddWithValue("@qText", q.QuestionText.Trim());
-                                newQuestionId = (int)cmdQ.ExecuteScalar();
-                            }
-
-                            void InsertOption(string optText, bool isCorrect)
-                            {
-                                using (SqlCommand cmdO = new SqlCommand(optionSql, con, tran))
+                                // --- UPDATE EXISTING QUESTION ---
+                                using (SqlCommand cmdUpdQ = new SqlCommand(updateQuestionSql, con, tran))
                                 {
-                                    cmdO.Parameters.AddWithValue("@qId", newQuestionId);
-                                    cmdO.Parameters.AddWithValue("@optText", string.IsNullOrWhiteSpace(optText) ? "" : optText.Trim());
-                                    cmdO.Parameters.AddWithValue("@isCorrect", isCorrect);
-                                    cmdO.ExecuteNonQuery();
+                                    cmdUpdQ.Parameters.AddWithValue("@qText", q.QuestionText.Trim());
+                                    cmdUpdQ.Parameters.AddWithValue("@qId", q.QuestionId);
+                                    cmdUpdQ.ExecuteNonQuery();
+                                }
+                                using (SqlCommand cmdUpdO = new SqlCommand(updateOptionsSql, con, tran))
+                                {
+                                    cmdUpdO.Parameters.AddWithValue("@qId", q.QuestionId);
+                                    cmdUpdO.Parameters.AddWithValue("@oA", q.OptionA.Trim());
+                                    cmdUpdO.Parameters.AddWithValue("@oB", q.OptionB.Trim());
+                                    cmdUpdO.Parameters.AddWithValue("@oC", q.OptionC.Trim());
+                                    cmdUpdO.Parameters.AddWithValue("@oD", q.OptionD.Trim());
+                                    cmdUpdO.Parameters.AddWithValue("@cA", q.CorrectAnswer == "A");
+                                    cmdUpdO.Parameters.AddWithValue("@cB", q.CorrectAnswer == "B");
+                                    cmdUpdO.Parameters.AddWithValue("@cC", q.CorrectAnswer == "C");
+                                    cmdUpdO.Parameters.AddWithValue("@cD", q.CorrectAnswer == "D");
+                                    cmdUpdO.ExecuteNonQuery();
                                 }
                             }
+                            else
+                            {
+                                // --- INSERT NEW QUESTION ---
+                                int newQuestionId;
+                                using (SqlCommand cmdInsQ = new SqlCommand(insertQuestionSql, con, tran))
+                                {
+                                    cmdInsQ.Parameters.AddWithValue("@quizId", quizId);
+                                    cmdInsQ.Parameters.AddWithValue("@qText", q.QuestionText.Trim());
+                                    newQuestionId = (int)cmdInsQ.ExecuteScalar();
+                                }
 
-                            InsertOption(q.OptionA, q.CorrectAnswer == "A");
-                            InsertOption(q.OptionB, q.CorrectAnswer == "B");
-                            InsertOption(q.OptionC, q.CorrectAnswer == "C");
-                            InsertOption(q.OptionD, q.CorrectAnswer == "D");
+                                void InsertOpt(string optText, bool isCorrect)
+                                {
+                                    using (SqlCommand cmdInsO = new SqlCommand(insertOptionSql, con, tran))
+                                    {
+                                        cmdInsO.Parameters.AddWithValue("@qId", newQuestionId);
+                                        cmdInsO.Parameters.AddWithValue("@optText", optText.Trim());
+                                        cmdInsO.Parameters.AddWithValue("@isCorrect", isCorrect);
+                                        cmdInsO.ExecuteNonQuery();
+                                    }
+                                }
+
+                                InsertOpt(q.OptionA, q.CorrectAnswer == "A");
+                                InsertOpt(q.OptionB, q.CorrectAnswer == "B");
+                                InsertOpt(q.OptionC, q.CorrectAnswer == "C");
+                                InsertOpt(q.OptionD, q.CorrectAnswer == "D");
+                            }
                         }
 
-                        // --- STEP 4: Update Target Lesson Link ---
-                        // 1. Clear old links to this quiz
+                        // 4. Update Target Lesson Link
                         using (SqlCommand cmdClear = new SqlCommand("UPDATE learningResource SET quiz_id = NULL WHERE quiz_id = @qid", con, tran))
                         {
                             cmdClear.Parameters.AddWithValue("@qid", quizId);
                             cmdClear.ExecuteNonQuery();
                         }
 
-                        // 2. Set the new link (if they selected a lesson)
                         if (ddlTargetLesson.SelectedValue != "0")
                         {
                             using (SqlCommand cmdLink = new SqlCommand("UPDATE learningResource SET quiz_id = @qid WHERE Id = @lid", con, tran))
@@ -590,28 +723,52 @@ namespace WAPP.Pages.Tutor
                                 cmdLink.ExecuteNonQuery();
                             }
                         }
+
                         tran.Commit();
+
+                        SystemLogService.Write("QUIZ_UPDATED", $"Tutor modified quiz '{txtQuizTitle.Text.Trim()}' (Quiz ID: {quizId}).", LogLevel.NOTICE, currentUserId);
 
                         Response.Redirect($"~/Pages/Tutor/EditCourse.aspx?id={courseId}", false);
                         Context.ApplicationInstance.CompleteRequest();
                     }
+                    catch (SqlException sqlEx)
+                    {
+                        tran.Rollback();
+                        if (sqlEx.Number == 547)
+                        {
+                            lblMsg.Text = "You cannot REMOVE a question because a student has already answered it. Please put the question back, or you must create a new quiz.";
+                        }
+                        else
+                        {
+                            lblMsg.Text = "Database Error: " + sqlEx.Message;
+                        }
+                    }
                     catch (Exception ex)
                     {
                         tran.Rollback();
-                        lblMsg.Text = "Database Error: " + ex.Message;
+                        SystemLogService.Write("QUIZ_UPDATE_ERROR", $"DB Error updating Quiz ID {quizId}: {ex.Message}", LogLevel.ERROR, currentUserId);
+                        lblMsg.Text = "Error: " + ex.Message;
                     }
                 }
             }
         }
 
-        private void LoadLessonDropDownList(int courseId)
+        private void LoadLessonDropDownList(int courseId, int currentQuizId)
         {
             string cs = ConfigurationManager.ConnectionStrings["MyDbConn"].ConnectionString;
             using (SqlConnection con = new SqlConnection(cs))
             {
-                string sql = "SELECT Id, title FROM learningResource WHERE course_id = @cid ORDER BY sequence_order";
+                // Filter: Only get lessons where quiz_id is NULL, OR where the quiz_id matches the one we are currently editing
+                string sql = @"
+            SELECT Id, title 
+            FROM learningResource 
+            WHERE course_id = @cid 
+              AND (quiz_id IS NULL OR quiz_id = @qid)
+            ORDER BY sequence_order";
+
                 SqlCommand cmd = new SqlCommand(sql, con);
                 cmd.Parameters.AddWithValue("@cid", courseId);
+                cmd.Parameters.AddWithValue("@qid", currentQuizId);
                 con.Open();
 
                 ddlTargetLesson.DataSource = cmd.ExecuteReader();
@@ -647,6 +804,82 @@ namespace WAPP.Pages.Tutor
                         // LOCK IT for Edit Mode
                         ddlTargetLesson.Enabled = false;
                         lblLessonLockHint.Visible = true;
+                    }
+                }
+            }
+        }
+
+        protected void btnDeleteQuiz_Click(object sender, EventArgs e)
+        {
+            if (!IsEditMode) return;
+
+            int quizId = QuizId;
+            int courseId = CourseId;
+            int? currentUserId = Session["UserId"] != null ? (int?)Convert.ToInt32(Session["UserId"]) : null;
+
+            string cs = ConfigurationManager.ConnectionStrings["MyDbConn"].ConnectionString;
+
+            using (SqlConnection con = new SqlConnection(cs))
+            {
+                con.Open();
+                using (SqlTransaction tran = con.BeginTransaction())
+                {
+                    try
+                    {
+                        // 1. Unlink the quiz from the lesson
+                        using (SqlCommand cmdClear = new SqlCommand("UPDATE learningResource SET quiz_id = NULL WHERE quiz_id = @qid", con, tran))
+                        {
+                            cmdClear.Parameters.AddWithValue("@qid", quizId);
+                            cmdClear.ExecuteNonQuery();
+                        }
+
+                        // 2. Delete all Answer Options for these questions
+                        using (SqlCommand cmdDelOpts = new SqlCommand("DELETE FROM answerOption WHERE question_id IN (SELECT Id FROM question WHERE quiz_id = @qid)", con, tran))
+                        {
+                            cmdDelOpts.Parameters.AddWithValue("@qid", quizId);
+                            cmdDelOpts.ExecuteNonQuery();
+                        }
+
+                        // 3. Delete all Questions
+                        using (SqlCommand cmdDelQ = new SqlCommand("DELETE FROM question WHERE quiz_id = @qid", con, tran))
+                        {
+                            cmdDelQ.Parameters.AddWithValue("@qid", quizId);
+                            cmdDelQ.ExecuteNonQuery();
+                        }
+
+                        // 4. Finally, delete the Quiz itself
+                        using (SqlCommand cmdDelQuiz = new SqlCommand("DELETE FROM quiz WHERE Id = @qid", con, tran))
+                        {
+                            cmdDelQuiz.Parameters.AddWithValue("@qid", quizId);
+                            cmdDelQuiz.ExecuteNonQuery();
+                        }
+
+                        tran.Commit();
+
+                        SystemLogService.Write("QUIZ_DELETED", $"Tutor deleted quiz ID: {quizId}.", LogLevel.NOTICE, currentUserId);
+
+                        // Kick them back to the Edit Course page
+                        Response.Redirect($"~/Pages/Tutor/EditCourse.aspx?id={courseId}", false);
+                        Context.ApplicationInstance.CompleteRequest();
+                    }
+                    catch (SqlException sqlEx)
+                    {
+                        tran.Rollback();
+                        // 547 is the Foreign Key violation error (meaning a student has already answered this quiz!)
+                        if (sqlEx.Number == 547)
+                        {
+                            lblMsg.Text = "You cannot delete this quiz because students have already attempted it.";
+                        }
+                        else
+                        {
+                            lblMsg.Text = "Database Error: " + sqlEx.Message;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        tran.Rollback();
+                        SystemLogService.Write("QUIZ_DELETE_ERROR", $"DB Error deleting Quiz ID {quizId}: {ex.Message}", LogLevel.ERROR, currentUserId);
+                        lblMsg.Text = "Error: " + ex.Message;
                     }
                 }
             }

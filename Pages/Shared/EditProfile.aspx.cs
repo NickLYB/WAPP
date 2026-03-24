@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Configuration;
 using System.Data.SqlClient;
+using System.IO; 
 using System.Web.UI;
 
 namespace WAPP.Pages.Shared
@@ -9,7 +10,6 @@ namespace WAPP.Pages.Shared
     {
         string connString = ConfigurationManager.ConnectionStrings["MyDbConn"].ConnectionString;
 
-        // Dynamically attach the correct Master Page based on the logged-in role
         protected void Page_PreInit(object sender, EventArgs e)
         {
             if (Session["role_id"] == null)
@@ -46,7 +46,7 @@ namespace WAPP.Pages.Shared
             {
                 using (SqlConnection conn = new SqlConnection(connString))
                 {
-                    string sql = "SELECT fname, lname, email, contact, dob, role_id FROM [user] WHERE Id = @Id";
+                    string sql = "SELECT fname, lname, email, contact, dob, role_id, profile_pic FROM [user] WHERE Id = @Id";
                     using (SqlCommand cmd = new SqlCommand(sql, conn))
                     {
                         cmd.Parameters.AddWithValue("@Id", userId);
@@ -67,6 +67,12 @@ namespace WAPP.Pages.Shared
 
                                 litFullName.Text = $"{rdr["fname"]} {rdr["lname"]}";
                                 litRole.Text = GetRoleName(Convert.ToInt32(rdr["role_id"]));
+
+                                // Load the profile picture if it exists in the database
+                                if (rdr["profile_pic"] != DBNull.Value && !string.IsNullOrWhiteSpace(rdr["profile_pic"].ToString()))
+                                {
+                                    imgAvatar.ImageUrl = rdr["profile_pic"].ToString();
+                                }
                             }
                         }
                     }
@@ -100,21 +106,75 @@ namespace WAPP.Pages.Shared
             if (Session["UserId"] == null) return;
             int userId = Convert.ToInt32(Session["UserId"]);
 
+            // --- 1. HANDLE PROFILE PICTURE UPLOAD ---
+            string newProfilePicPath = null;
+            if (fuProfilePic.HasFile)
+            {
+                try
+                {
+                    // Check if it's actually an image
+                    string ext = Path.GetExtension(fuProfilePic.FileName).ToLower();
+                    if (ext != ".jpg" && ext != ".jpeg" && ext != ".png" && ext != ".gif")
+                    {
+                        lblMessage.Visible = true;
+                        lblMessage.Text = "Only JPG, PNG, and GIF files are allowed!";
+                        lblMessage.CssClass = "alert alert-warning d-block";
+                        return; // Stop the save process
+                    }
+
+                    // Create the GUID filename
+                    string uniqueFileName = Guid.NewGuid().ToString() + ext;
+
+                    // Make sure the Uploads/ProfilePic directory actually exists
+                    string folderPath = Server.MapPath("~/Uploads/ProfilePic/");
+                    if (!Directory.Exists(folderPath))
+                    {
+                        Directory.CreateDirectory(folderPath);
+                    }
+
+                    // Save the file to the server physically
+                    string savePath = Path.Combine(folderPath, uniqueFileName);
+                    fuProfilePic.SaveAs(savePath);
+
+                    // Set the virtual path so we can save it to the database
+                    newProfilePicPath = "~/Uploads/ProfilePic/" + uniqueFileName;
+                }
+                catch (Exception ex)
+                {
+                    lblMessage.Visible = true;
+                    lblMessage.Text = "Failed to upload picture: " + ex.Message;
+                    lblMessage.CssClass = "alert alert-danger d-block";
+                    return;
+                }
+            }
+
             try
             {
                 using (SqlConnection conn = new SqlConnection(connString))
                 {
-                    // Exact same clean SQL structure as your UserManagement file!
-                    string sql = @"UPDATE [user] SET fname=@fname, lname=@lname, dob=@dob, contact=@contact, email=@email WHERE Id=@Id";
+                    string sql = @"UPDATE [user] SET fname=@fname, lname=@lname, dob=@dob, contact=@contact, email=@email";
+
+                    if (newProfilePicPath != null)
+                    {
+                        sql += ", profile_pic=@profile_pic";
+                    }
+
+                    sql += " WHERE Id=@Id";
 
                     using (SqlCommand cmd = new SqlCommand(sql, conn))
                     {
                         cmd.Parameters.AddWithValue("@Id", userId);
                         cmd.Parameters.AddWithValue("@fname", txtFname.Text.Trim());
                         cmd.Parameters.AddWithValue("@lname", txtLname.Text.Trim());
-                        cmd.Parameters.AddWithValue("@dob", txtDob.Text); // No complex parsing needed
+                        cmd.Parameters.AddWithValue("@dob", txtDob.Text);
                         cmd.Parameters.AddWithValue("@contact", txtPhone.Text.Trim());
                         cmd.Parameters.AddWithValue("@email", txtEmail.Text.Trim());
+
+                        // Add the picture parameter only if we actually uploaded one
+                        if (newProfilePicPath != null)
+                        {
+                            cmd.Parameters.AddWithValue("@profile_pic", newProfilePicPath);
+                        }
 
                         conn.Open();
                         cmd.ExecuteNonQuery();
@@ -124,16 +184,22 @@ namespace WAPP.Pages.Shared
                 // Update the session name so the Top Navbar changes instantly
                 Session["UserName"] = txtFname.Text.Trim() + " " + txtLname.Text.Trim();
 
+                // If they uploaded a new picture, you might want to update a Session variable for it too 
+                // so the master page navigation bar can update instantly!
+                if (newProfilePicPath != null)
+                {
+                    Session["ProfilePic"] = newProfilePicPath;
+                }
+
                 lblMessage.Visible = true;
                 lblMessage.Text = "Profile updated successfully!";
                 lblMessage.CssClass = "alert alert-success d-block";
 
-                LoadUserData(); // Refresh the labels below the avatar
+                LoadUserData(); // Refresh the labels and avatar
             }
             catch (SqlException sqlEx)
             {
                 lblMessage.Visible = true;
-                // Error 2627 and 2601 mean "Unique Constraint Violation" (Email already exists)
                 if (sqlEx.Number == 2627 || sqlEx.Number == 2601)
                 {
                     lblMessage.Text = "The email address you entered is already registered to another account.";

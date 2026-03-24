@@ -37,19 +37,16 @@ namespace WAPP.Pages.Tutor
             }
         }
 
-        // --- SITEMAP RESOLVER LOGIC ---
         protected override void OnInit(EventArgs e)
         {
             base.OnInit(e);
             SiteMap.SiteMapResolve += SiteMap_Resolve;
         }
-
         protected override void OnUnload(EventArgs e)
         {
             SiteMap.SiteMapResolve -= SiteMap_Resolve;
             base.OnUnload(e);
         }
-
         private SiteMapNode SiteMap_Resolve(object sender, SiteMapResolveEventArgs e)
         {
             var ctx = e.Context;
@@ -108,7 +105,6 @@ namespace WAPP.Pages.Tutor
             return clone;
         }
 
-        // --- DATA BINDING LOGIC ---
         private void LoadQuizDetails(int quizId)
         {
             using (SqlConnection con = new SqlConnection(connStr))
@@ -220,7 +216,6 @@ namespace WAPP.Pages.Tutor
                 BindAttemptsData(Convert.ToInt32(Request.QueryString["quiz_id"]));
             }
         }
-
         protected void btnNext_Click(object sender, EventArgs e)
         {
             if (gvAttempts.PageIndex < gvAttempts.PageCount - 1)

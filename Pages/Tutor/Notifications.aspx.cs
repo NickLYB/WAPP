@@ -24,6 +24,17 @@ namespace WAPP.Pages.Tutor
             {
                 LoadNotifications();
             }
+            else
+            {
+                // Catch the async postback fired by Tutor.Master when an announcement notification is received
+                string eventTarget = Request.Params["__EVENTTARGET"];
+                if (!string.IsNullOrEmpty(eventTarget) && eventTarget.Contains("btnTutorSignalRUpdate"))
+                {
+                    // Master page got an announcement! Piggyback and refresh our notifications panel!
+                    LoadNotifications();
+                    upNotifications.Update();
+                }
+            }
         }
 
         private void LoadNotifications()
@@ -32,7 +43,6 @@ namespace WAPP.Pages.Tutor
 
             using (SqlConnection conn = new SqlConnection(cs))
             {
-                // Updated query to use a CASE statement for the title
                 string query = @"
                     SELECT 
                         n.Id AS notification_id,
@@ -88,6 +98,7 @@ namespace WAPP.Pages.Tutor
                 int notificationId = Convert.ToInt32(e.CommandArgument);
                 UpdateNotificationStatus(notificationId, userId, "ARCHIVED");
                 LoadNotifications();
+                UpdateMasterBell(); // Update Bell Count since deleting an unread item reduces the count
             }
             else if (e.CommandName == "View")
             {
@@ -106,6 +117,7 @@ namespace WAPP.Pages.Tutor
 
                     // 2. Reload the list so the "New" badge disappears immediately
                     LoadNotifications();
+                    UpdateMasterBell(); 
 
                     // 3. Populate Modal
                     lblModalTitle.Text = title;
@@ -149,6 +161,7 @@ namespace WAPP.Pages.Tutor
             }
 
             LoadNotifications();
+            UpdateMasterBell(); // Clear the bell!
         }
 
         private void UpdateNotificationStatus(int notificationId, int userId, string newStatus)
@@ -173,6 +186,21 @@ namespace WAPP.Pages.Tutor
             }
         }
 
+        // REACH UP to the Master Page and forcefully update the Notification Bell UI
+        private void UpdateMasterBell()
+        {
+            var master = this.Master as WAPP.Masters.Tutor;
+            if (master != null)
+            {
+                master.UpdateUnreadCount();
+                var upBell = master.FindControl("upBell") as UpdatePanel;
+                if (upBell != null)
+                {
+                    upBell.Update();
+                }
+            }
+        }
+
         protected string FormatDate(object dateObj)
         {
             if (dateObj == null || dateObj == DBNull.Value) return "";
@@ -186,7 +214,6 @@ namespace WAPP.Pages.Tutor
             return dateObj.ToString();
         }
 
-        // Helper Method: Strips HTML tags for the preview text in the list
         protected string StripHTML(object input)
         {
             if (input == null || input == DBNull.Value) return "";

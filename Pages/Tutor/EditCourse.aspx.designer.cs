@@ -105,6 +105,15 @@ namespace WAPP.Pages.Tutor
         protected global::System.Web.UI.WebControls.Button btnEditOverview;
 
         /// <summary>
+        /// lblCourseStatus control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblCourseStatus;
+
+        /// <summary>
         /// lblCourseType control.
         /// </summary>
         /// <remarks>
@@ -175,6 +184,24 @@ namespace WAPP.Pages.Tutor
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.HyperLink lnkCreateQuiz;
+
+        /// <summary>
+        /// btnPublish control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Button btnPublish;
+
+        /// <summary>
+        /// btnUnpublish control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Button btnUnpublish;
 
         /// <summary>
         /// EditLessonModal1 control.

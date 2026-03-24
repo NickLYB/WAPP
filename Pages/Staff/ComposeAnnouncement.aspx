@@ -3,110 +3,143 @@
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
     <script type="text/javascript">
         function openScheduleModal() {
+            // Check ASP.NET validation before opening the modal!
+            if (typeof Page_ClientValidate === "function") {
+                var isValid = Page_ClientValidate("Compose");
+                if (!isValid) {
+                    return false;
+                }
+            }
             bootstrap.Modal.getOrCreateInstance(document.getElementById('scheduleModal')).show();
-            return false; // Prevent postback
+            return false;
         }
     </script>
     <style>
-        /* FULL WINDOW FIT STYLES (No separate background box) */
-        .compose-container { 
-            background-color: transparent; /* Blends perfectly with your master page */
-            min-height: 80vh; 
-            width: 100%;       
-            padding: 20px 40px; 
-            box-sizing: border-box; 
-        }
+        .btn-outline-primary { border-color: var(--ec-primary); color: var(--ec-primary); }
+        .btn-outline-primary:hover { background-color: var(--ec-primary); color: white; }
         
-        .page-title { color: #a10d2d; font-weight: 900; font-size: 32px; letter-spacing: 1px; margin-bottom: 5px; }
-        .sub-title { font-weight: 700; font-size: 22px; color: #333; margin-bottom: 40px; }
-        .form-label-custom { font-weight: 800; font-size: 18px; color: #000; width: 160px; text-align: right; padding-right: 20px; }
+        .btn-outline-success { border-color: #198754; color: #198754; }
+        .btn-outline-success:hover { background-color: #198754; color: white; }
         
-        /* Custom Radio Buttons */
-        .radio-group input[type="radio"] { display: none; }
-        .radio-group label {
-            background-color: #fff; border: 2px solid #a10d2d; color: #a10d2d;
-            padding: 10px 40px; border-radius: 30px; font-weight: bold; cursor: pointer; margin-right: 15px;
-            transition: all 0.3s ease-in-out;
-            box-shadow: 0px 4px 6px rgba(0,0,0,0.05);
-        }
-        .radio-group input[type="radio"]:checked + label { background-color: #a10d2d; color: #fff; box-shadow: inset 0px 4px 6px rgba(0,0,0,0.2); }
-        .radio-group label:hover { transform: translateY(-2px); box-shadow: 0px 6px 10px rgba(0,0,0,0.1); }
+        .btn-outline-secondary { border-color: #6c757d; color: #6c757d; }
+        .btn-outline-secondary:hover { background-color: #6c757d; color: white; }
 
-        /* Full Width Inputs */
-        .input-wrapper { flex-grow: 1; max-width: 1200px; }
-        .custom-input { border: 2px solid #a10d2d; border-radius: 12px; padding: 15px 20px; font-size: 16px; width: 100%; box-shadow: inset 0px 2px 4px rgba(0,0,0,0.05); }
-        .custom-textarea { border: 2px solid #a10d2d; border-radius: 12px; padding: 20px; font-size: 16px; width: 100%; height: 400px; resize: vertical; box-shadow: inset 0px 2px 4px rgba(0,0,0,0.05); }
+        .radio-group > span {
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            gap: 15px;
+            align-items: center;
+        }
         
-        /* Action Buttons */
-        .btn-send { background-color: #a10d2d; color: white; border-radius: 12px; padding: 12px 40px; font-weight: bold; font-size: 18px; border: none; transition: 0.3s; box-shadow: 0px 4px 8px rgba(161,13,45,0.3); cursor: pointer; }
-        .btn-send:hover { background-color: #800a23; color: white; transform: translateY(-2px); }
+        .radio-group input[type="radio"] { 
+            display: none; 
+        }
         
-        .btn-schedule { background-color: #198754; color: white; border-radius: 12px; padding: 12px 40px; font-weight: bold; font-size: 18px; border: none; transition: 0.3s; box-shadow: 0px 4px 8px rgba(25,135,84,0.3); cursor: pointer; }
-        .btn-schedule:hover { background-color: #146c43; color: white; transform: translateY(-2px); }
+        .radio-group label {
+            background-color: #fff; 
+            border: 1px solid #ced4da; 
+            color: #495057;
+            padding: 8px 25px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            margin: 0 !important;
+            transition: all 0.2s ease-in-out;
+            font-size: 0.95rem;
+            font-weight: 600;
+            white-space: nowrap; 
+        }
         
-        .btn-cancel { border-radius: 12px; padding: 12px 40px; font-weight: bold; font-size: 18px; transition: 0.3s; text-decoration: none; display: inline-block; }
-        .btn-cancel:hover { transform: translateY(-2px); }
+        .radio-group input[type="radio"]:checked + label { 
+            background-color: var(--ec-primary); 
+            color: #fff; 
+            border-color: var(--ec-primary);
+        }
+        
+        .radio-group label:hover { 
+            background-color: #f8f9fa; 
+            border-color: #b3b3b3; 
+            color: #333; 
+        }
+        
+        .radio-group input[type="radio"]:checked + label:hover { 
+            background-color: #0b5ed7; 
+            color: white; 
+        }
     </style>
 </asp:Content>
 
 <asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
     
-    <div class="compose-container">
-        
-        <h1 class="page-title text-uppercase">Operational Announcement Management</h1>
-        <h3 class="sub-title">Compose New Operational Announcement</h3>
-
-        <asp:Label ID="lblMessage" runat="server" CssClass="alert d-block fw-bold" Visible="false"></asp:Label>
-
-        <div class="d-flex align-items-center mb-5">
-            <div class="form-label-custom">Target Group:</div>
-            <div class="radio-group input-wrapper">
-                <asp:RadioButtonList ID="rblTarget" runat="server" RepeatDirection="Horizontal" RepeatLayout="Flow" CssClass="d-inline">
-                    <asp:ListItem Value="0" Selected="True">All</asp:ListItem>
-                    <asp:ListItem Value="4">Student</asp:ListItem>
-                    <asp:ListItem Value="3">Tutor</asp:ListItem>
-                </asp:RadioButtonList>
-            </div>
+    <div class="ec-staff-wrapper">
+        <div class="ec-section-gap mb-3">
+            <asp:SiteMapPath ID="SiteMapPath1" runat="server" SiteMapProvider="StaffMap" 
+                PathSeparator=" > " CssClass="small text-muted text-decoration-none" RenderCurrentNodeAsLink="false" />
         </div>
+        <h2 class="ec-staff-title text-uppercase mb-1">Compose New Operational Announcement</h2>
 
-        <div class="d-flex align-items-start mb-4">
-            <div class="form-label-custom pt-3">Title:</div>
-            <div class="input-wrapper">
-                <asp:TextBox ID="txtTitle" runat="server" CssClass="custom-input" Placeholder="Type your announcement title here..."></asp:TextBox>
-                <asp:RequiredFieldValidator ID="rfvTitle" runat="server" ControlToValidate="txtTitle" ErrorMessage="Title is required" ForeColor="Red" Display="Dynamic" ValidationGroup="Compose" CssClass="fw-bold mt-2 d-block" />
+        <div class="ec-staff-card p-4 p-md-5 shadow-sm mt-4">
+            <asp:Label ID="lblMessage" runat="server" CssClass="alert d-block fw-bold" Visible="false"></asp:Label>
+
+            <div class="row mb-4 align-items-center">
+                <label class="col-md-2 col-form-label fw-bold text-muted text-md-end">Target Group:</label>
+                <div class="col-md-10">
+                    <div class="radio-group">
+                        <asp:RadioButtonList ID="rblTarget" runat="server" RepeatDirection="Horizontal" RepeatLayout="Flow">
+                            <asp:ListItem Value="0" Selected="True">All Roles</asp:ListItem>
+                            <asp:ListItem Value="4">Student Only</asp:ListItem>
+                            <asp:ListItem Value="3">Tutor Only</asp:ListItem>
+                        </asp:RadioButtonList>
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <div class="d-flex align-items-start mb-5">
-            <div class="form-label-custom pt-3">Message:</div>
-            <div class="input-wrapper">
-                <asp:TextBox ID="txtMessage" runat="server" CssClass="custom-textarea" TextMode="MultiLine" Placeholder="Type your announcement message here..."></asp:TextBox>
-                <asp:RequiredFieldValidator ID="rfvMessage" runat="server" ControlToValidate="txtMessage" ErrorMessage="Message is required" ForeColor="Red" Display="Dynamic" ValidationGroup="Compose" CssClass="fw-bold mt-2 d-block" />
+            <div class="row mb-4 align-items-start">
+                <label class="col-md-2 col-form-label fw-bold text-muted text-md-end">Title:</label>
+                <div class="col-md-10">
+                    <asp:TextBox ID="txtTitle" runat="server" CssClass="form-control ec-form-control" Placeholder="Type your announcement title here..."></asp:TextBox>
+                    <asp:RequiredFieldValidator ID="rfvTitle" runat="server" ControlToValidate="txtTitle" ErrorMessage="Title is required" ForeColor="#dc3545" Display="Dynamic" ValidationGroup="Compose" CssClass="small fw-bold mt-1" />
+                </div>
             </div>
-        </div>
 
-        <div class="d-flex align-items-start" style="margin-left: 160px;">
-            <asp:Button ID="btnSendNow" runat="server" Text="Send Now" CssClass="btn-send me-3" OnClick="btnSendNow_Click" ValidationGroup="Compose" />
-            <button type="button" class="btn-schedule" onclick="return openScheduleModal();">Schedule Publish</button>
-            <asp:HyperLink ID="hlCancel" runat="server" NavigateUrl="~/Pages/Staff/AnnouncementManagement.aspx" CssClass="btn btn-secondary btn-cancel ms-3">Cancel</asp:HyperLink>
+            <div class="row mb-5 align-items-start">
+                <label class="col-md-2 col-form-label fw-bold text-muted text-md-end pt-2">Message:</label>
+                <div class="col-md-10">
+                    <asp:TextBox ID="txtMessage" runat="server" CssClass="form-control ec-form-control" TextMode="MultiLine" Rows="8" Placeholder="Type your announcement message here..."></asp:TextBox>
+                    <asp:RequiredFieldValidator ID="rfvMessage" runat="server" ControlToValidate="txtMessage" ErrorMessage="Message is required" ForeColor="#dc3545" Display="Dynamic" ValidationGroup="Compose" CssClass="small fw-bold mt-1" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-10 offset-md-2 d-flex gap-3">
+                    <asp:Button ID="btnSendNow" runat="server" Text="Send Now" CssClass="btn btn-outline-primary rounded-pill px-4 fw-bold shadow-sm" OnClick="btnSendNow_Click" ValidationGroup="Compose" />
+                    
+                    <button type="button" class="btn btn-outline-success rounded-pill px-4 fw-bold shadow-sm" onclick="return openScheduleModal();">Schedule Publish</button>
+                    
+                    <asp:HyperLink ID="hlCancel" runat="server" NavigateUrl="~/Pages/Staff/AnnouncementManagement.aspx" CssClass="btn btn-outline-secondary rounded-pill px-4 fw-bold shadow-sm">Cancel</asp:HyperLink>
+                </div>
+            </div>
+
         </div>
 
         <div class="modal fade" id="scheduleModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content border-0 shadow-lg" style="border: 4px solid #a10d2d !important; border-radius: 15px;">
-                    <div class="modal-header text-white" style="background-color: #a10d2d;">
-                        <h5 class="modal-title fw-bold text-uppercase">Schedule Announcement</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <div class="modal-content ec-modal-content" style="border: 1px solid var(--ec-primary);">
+                    <div class="modal-header ec-modal-header bg-light border-0 pb-0 position-relative">
+                        <h5 class="modal-title fw-bold text-dark text-uppercase">Schedule Announcement</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="position:absolute; top:20px; right:20px;"></button>
                     </div>
-                    <div class="modal-body p-5 text-center">
-                        <h5 class="text-dark fw-bold mb-4">Select a date and time to publish:</h5>
-                        <asp:TextBox ID="txtScheduleDate" runat="server" CssClass="form-control text-center mx-auto mb-4 custom-input" TextMode="DateTimeLocal" style="max-width: 350px;"></asp:TextBox>
+                    <div class="modal-body ec-modal-body p-4 pt-3 text-center">
+                        <h6 class="text-muted fw-bold mb-4">Select a date and time to automatically publish:</h6>
                         
-                        <div class="d-flex justify-content-center gap-3 mt-4">
-                            <asp:Button ID="btnConfirmSchedule" runat="server" Text="Confirm Schedule" CssClass="btn btn-success px-5 py-3 fw-bold rounded-pill" OnClick="btnConfirmSchedule_Click" ValidationGroup="Compose" />
-                            <button type="button" class="btn btn-secondary px-5 py-3 fw-bold rounded-pill" data-bs-dismiss="modal">Cancel</button>
+                        <asp:TextBox ID="txtScheduleDate" runat="server" CssClass="form-control text-center mx-auto mb-4 ec-form-control" TextMode="DateTimeLocal" style="max-width: 300px;"></asp:TextBox>
+                        
+                        <div class="d-flex justify-content-center gap-3 mt-2">
+                            <asp:Button ID="btnConfirmSchedule" runat="server" Text="Confirm Schedule" CssClass="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" OnClick="btnConfirmSchedule_Click" ValidationGroup="Compose" />
+                            <button type="button" class="btn btn-secondary px-4 fw-bold rounded-pill" data-bs-dismiss="modal">Cancel</button>
                         </div>
                     </div>
                 </div>

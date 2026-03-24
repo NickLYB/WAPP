@@ -1,6 +1,8 @@
 ﻿<%@ Master Language="C#" AutoEventWireup="true" CodeBehind="Guest.master.cs" Inherits="WAPP.Master.Guest" %>
 <%@ Register Src="~/Controls/LoginModal.ascx" TagPrefix="uc" TagName="LoginModal" %>
 <%@ Register Src="~/Controls/SignUpModal.ascx" TagPrefix="uc" TagName="SignUpModal" %>
+<%@ Register Src="~/Controls/ForgotPasswordModal.ascx" TagPrefix="uc" TagName="ForgotModal" %>
+
 
 <!DOCTYPE html>
 <html>
@@ -32,6 +34,7 @@
 
         <uc:LoginModal runat="server" ID="ucLoginModal" />
         <uc:SignUpModal runat="server" ID="SignUpModal" />
+        <uc:ForgotModal runat="server" ID="ForgotModalControl" />
 
         <div style="flex-grow: 1; display: flex; flex-direction: column;">
             <main class="page-content" style="flex-grow: 1;">

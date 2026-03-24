@@ -13,6 +13,10 @@
         <div class="ec-section-header border-0">
             <h1 id="pageTitle" runat="server" class="ec-page-title m-0">CREATE NEW QUIZ</h1>
             <div class="d-flex gap-2">
+                <asp:Button ID="btnDeleteQuiz" runat="server" Text="Delete Quiz" CssClass="btn btn-danger btn-pill" 
+                    Visible="false" OnClick="btnDeleteQuiz_Click" 
+                    OnClientClick="return confirm('Are you sure you want to permanently delete this quiz? This action cannot be undone.');" />
+                
                 <asp:Button ID="Button2" runat="server" Text="Cancel" CssClass="btn-sub" OnClick="Button2_Click"/>
                 <asp:Button ID="Button1" runat="server" Text="Save Quiz" CssClass="btn-main btn-pill" OnClick="Button1_Click" />
             </div>
@@ -30,6 +34,7 @@
                     <div class="ec-glass-card-body">
                         <asp:Repeater ID="rptQuestions" runat="server" OnItemCommand="rptQuestions_ItemCommand">
                             <ItemTemplate>
+                                <asp:HiddenField ID="hfQuestionId" runat="server" Value='<%# Eval("QuestionId") %>' />
                                 <div class="ec-glass-card mb-4" style="background: #f8fafc; border: 1px solid #e2e8f0;">
                                     
                                     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -116,18 +121,9 @@
                         <div class="ec-item-gap">
                             <asp:Label runat="server" Text="Time Limit" CssClass="small fw-bold text-muted mb-1 d-block" />
                             <asp:DropDownList ID="ddlTimeLimit" runat="server" CssClass="login-input m-0" style="padding: 10px 15px;">
-                                <asp:ListItem Text="No Limit" Value="0" />
+                                <asp:ListItem Text="15 Minutes" Value="15" />
                                 <asp:ListItem Text="30 Minutes" Value="30" />
                                 <asp:ListItem Text="1 Hour" Value="60" />
-                            </asp:DropDownList>
-                        </div>
-
-                        <div class="ec-item-gap">
-                            <asp:Label runat="server" Text="Required Score" CssClass="small fw-bold text-muted mb-1 d-block" />
-                            <asp:DropDownList ID="ddlPassingScore" runat="server" CssClass="login-input m-0" style="padding: 10px 15px;">
-                                <asp:ListItem Text="60% to Pass" Value="60" />
-                                <asp:ListItem Text="70% to Pass" Value="70" />
-                                <asp:ListItem Text="80% to Pass" Value="80" />
                             </asp:DropDownList>
                         </div>
                     </div>

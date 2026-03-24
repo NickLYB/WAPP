@@ -3,7 +3,6 @@ using Microsoft.Owin;
 using Owin;
 using System;
 using System.Configuration;
-using System.Threading.Tasks;
 
 [assembly: OwinStartup(typeof(WAPP.Startup))]
 
@@ -29,13 +28,18 @@ namespace WAPP
             // 4. Start the Hangfire Dashboard (UI to monitor jobs)
             app.UseHangfireDashboard("/hangfire");
 
-            // 5. Schedule our recurring job to run every minute
+            // 5. Schedule our recurring job to run every minute for Announcements
             RecurringJob.AddOrUpdate(
                 "process-scheduled-announcements",
                 () => ProcessAnnouncementsJob(),
                 Cron.Minutely);
-        }
 
+            // 6. Schedule our recurring job to run every minute for Appointment Reminders
+            RecurringJob.AddOrUpdate(
+                "process-appointment-reminders",
+                () => ProcessAppointmentRemindersJob(),
+                Cron.Minutely);
+        }
 
         public void ProcessAnnouncementsJob()
         {
@@ -54,7 +58,7 @@ namespace WAPP
               AND a.status = 'ACTIVE' 
               AND a.is_published = 0
               AND u.Id != a.created_by -- Do not notify the tutor who created it
-              AND u.role_id = a.target_role_id -- Only notify the target role (Students)
+              AND (a.target_role_id IS NULL OR u.role_id = a.target_role_id)
               AND (
                   -- SCENARIO A: It's a general announcement
                   a.course_id IS NULL 
@@ -109,11 +113,8 @@ namespace WAPP
               AND (
                   a.course_id IS NULL 
                   OR EXISTS (
-                      SELECT 1 
-                      FROM [dbo].[enrollment] e 
-                      WHERE e.course_id = a.course_id 
-                        AND e.student_id = u.Id 
-                        AND e.status = 'ENROLLED'
+                      SELECT 1 FROM [dbo].[enrollment] e 
+                      WHERE e.course_id = a.course_id AND e.student_id = u.Id AND e.status = 'ENROLLED'
                   )
               );
 
@@ -123,7 +124,87 @@ namespace WAPP
 
                 using (System.Data.SqlClient.SqlCommand updateCmd = new System.Data.SqlClient.SqlCommand(updateQuery, conn))
                 {
-                    updateCmd.ExecuteNonQuery();
+                    int rowsAffected = updateCmd.ExecuteNonQuery();
+
+                    // 3. SIGNALR TRIGGER
+                    // Only send the real-time signal if we ACTUALLY published something just now
+                    if (rowsAffected > 0)
+                    {
+                        var hubContext = Microsoft.AspNet.SignalR.GlobalHost.ConnectionManager.GetHubContext<WAPP.Hubs.NotificationHub>();
+                        hubContext.Clients.All.receiveNotification(0); // 0 = broadcast to everyone to check their unread counts
+                    }
+                }
+            }
+        }
+
+        public void ProcessAppointmentRemindersJob()
+        {
+            string connString = ConfigurationManager.ConnectionStrings["MyDbConn"].ConnectionString;
+
+            using (System.Data.SqlClient.SqlConnection conn = new System.Data.SqlClient.SqlConnection(connString))
+            {
+                conn.Open();
+
+                // DATEDIFF checks if the combined Date + Time is exactly 10 minutes away from GETDATE()
+                string query = @"
+                    SELECT 
+                        a.subject, 
+                        a.start_time,
+                        s.email AS StudentEmail, 
+                        s.fname AS StudentName,
+                        t.email AS TutorEmail, 
+                        t.fname AS TutorName
+                    FROM [dbo].[appointment] a
+                    INNER JOIN [dbo].[user] s ON a.student_id = s.Id
+                    INNER JOIN [dbo].[user] t ON a.tutor_id = t.Id
+                    WHERE a.status = 'APPROVED'
+                      AND DATEDIFF(minute, GETDATE(), CAST(CONCAT(a.appointment_date, ' ', a.start_time) AS DATETIME2)) = 10";
+
+                using (System.Data.SqlClient.SqlCommand cmd = new System.Data.SqlClient.SqlCommand(query, conn))
+                {
+                    using (System.Data.SqlClient.SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            string subject = reader["subject"].ToString();
+                            string startTimeStr = reader["start_time"].ToString();
+
+                            // Format the time nicely for the email body
+                            if (TimeSpan.TryParse(startTimeStr, out TimeSpan parsedTime))
+                            {
+                                startTimeStr = DateTime.Today.Add(parsedTime).ToString("h:mm tt");
+                            }
+
+                            string studentEmail = reader["StudentEmail"].ToString();
+                            string studentName = reader["StudentName"].ToString();
+                            string tutorEmail = reader["TutorEmail"].ToString();
+                            string tutorName = reader["TutorName"].ToString();
+
+                            string emailSubject = $"Reminder: Appointment '{subject}' starts in 10 minutes!";
+
+                            try
+                            {
+                                // 1. Notify Student
+                                string studentMsg = $"Hi {studentName}, your appointment with {tutorName} for '{subject}' is starting shortly at {startTimeStr}. Please get ready!";
+                                WAPP.Utils.EmailHelper.SendNotificationEmail(studentEmail, studentName, emailSubject, studentMsg);
+                            }
+                            catch (Exception ex)
+                            {
+                                System.Diagnostics.Debug.WriteLine($"Failed to send reminder to student {studentEmail}: {ex.Message}");
+                            }
+
+                            try
+                            {
+                                // 2. Notify Tutor
+                                string tutorMsg = $"Hi {tutorName}, your appointment with {studentName} for '{subject}' is starting shortly at {startTimeStr}. Please get ready!";
+                                WAPP.Utils.EmailHelper.SendNotificationEmail(tutorEmail, tutorName, emailSubject, tutorMsg);
+                            }
+                            catch (Exception ex)
+                            {
+                                System.Diagnostics.Debug.WriteLine($"Failed to send reminder to tutor {tutorEmail}: {ex.Message}");
+                            }
+                        }
+                    }
                 }
             }
         }

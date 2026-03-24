@@ -34,9 +34,7 @@
                         
                         <div class="ec-course-body">
                             <div class="ec-badge-row">
-                                <span class="ec-status-pill ec-status-active">
-                                    <%# Eval("status") %>
-                                </span>
+                                <span class="ec-status-pill ec-status-active"><%# Eval("DisplayStatus") %></span>
                                 <span class="small text-muted ms-auto">
                                     <i class="bi bi-star-fill text-warning me-1"></i> 4.8
                                 </span>
@@ -57,8 +55,8 @@
                             </div>
 
                             <div class="ec-course-footer border-0 p-0 mt-auto">
-                                <a href='<%# "LessonView.aspx?resourceId=" + GetFirstResourceId(Eval("course_id")) %>' class="btn-main btn-pill w-100">
-                                    <i class="bi bi-play-circle-fill me-2"></i>Continue Lesson
+                                <a href='LessonView.aspx?resourceId=<%# Eval("TargetResourceId") %>' class='<%# GetButtonCssClass(Eval("Progress")) %>'>
+                                    <%# GetButtonText(Eval("Progress")) %>
                                 </a>
                             </div>
                         </div>

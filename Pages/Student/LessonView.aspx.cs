@@ -22,7 +22,8 @@ namespace WAPP.Pages.Student
             {
                 Response.Redirect("~/Pages/Student/Home.aspx");
             }
-            else{
+            else
+            {
                 studentId = Convert.ToInt32(Session["UserId"]);
             }
             if (Request.QueryString["resourceId"] == null || !int.TryParse(Request.QueryString["resourceId"], out resourceId))
@@ -38,8 +39,8 @@ namespace WAPP.Pages.Student
 
             if (!IsPostBack)
             {
-                
-                LoadCourseTitle(courseId);
+
+                LoadCourseAndTutorInfo(courseId);
                 LoadLessonList(courseId);
                 LoadLessonContent(resourceId);
 
@@ -48,6 +49,7 @@ namespace WAPP.Pages.Student
                 UpdateProgressBar();
 
                 CheckExistingCourseFeedback();
+                CheckExistingLessonFeedback(resourceId);
                 LoadCommunityFeedback(resourceId);
             }
         }
@@ -83,35 +85,57 @@ namespace WAPP.Pages.Student
             if (!path.EndsWith("/LessonView.aspx", StringComparison.OrdinalIgnoreCase) &&
                 !path.EndsWith("/LessonView", StringComparison.OrdinalIgnoreCase))
             {
-                return null; // Return null to let the provider handle other pages normally
+                return null;
             }
 
             SiteMapProvider provider = (SiteMapProvider)sender;
+            string resourceIdStr = ctx.Request.QueryString["resourceId"];
 
-            // 2. Try to get CurrentNode. If it's null (due to query strings or .aspx), force it to find the base URL.
-            SiteMapNode current = provider.CurrentNode ?? provider.FindSiteMapNode("~/Pages/Student/LessonView");
+            string sourcePage = ctx.Request.QueryString["source"]?.ToLower();
 
-            if (current == null) return null;
+            if (!int.TryParse(resourceIdStr, out int rId)) return null;
 
-            // Clone the node and its ancestors so we don't overwrite the global sitemap
-            SiteMapNode clone = current.Clone(true);
+            string cId = GetCourseIdByResource(rId);
+            string courseTitle = GetCourseNameForBreadcrumb(cId);
 
-            if (int.TryParse(ctx.Request.QueryString["resourceId"], out int currentResourceId))
+            SiteMapNode targetNode = new SiteMapNode(provider, "LessonView",
+                $"~/Pages/Student/LessonView.aspx?resourceId={resourceIdStr}", courseTitle ?? "Classroom");
+            SiteMapNode rootNode = new SiteMapNode(provider, "Home", "~/Pages/Student/Home.aspx", "Home");
+
+            // --- BUILD DYNAMIC PATH BASED ON WHERE THEY CAME FROM ---
+            if (sourcePage == "results")
             {
-                string cId = GetCourseIdByResource(currentResourceId);
-                if (!string.IsNullOrEmpty(cId))
-                {
-                    string courseTitle = GetCourseNameForBreadcrumb(cId);
-                    if (!string.IsNullOrWhiteSpace(courseTitle))
-                    {
-                        // 3. Dynamically update the title and ensure the URL keeps the resourceId
-                        clone.Title = courseTitle;
-                        clone.Url = $"~/Pages/Student/LessonView.aspx?resourceId={currentResourceId}";
-                    }
-                }
+                SiteMapNode resultsNode = new SiteMapNode(provider, "Results", "~/Pages/Student/Results.aspx", "My Grades");
+                resultsNode.ParentNode = rootNode;
+                targetNode.ParentNode = resultsNode;
+            }
+            else if (sourcePage == "tutor")
+            {
+                string tId = GetTutorIdByCourse(cId);
+                SiteMapNode tutorNode = new SiteMapNode(provider, "TutorProfile", $"~/Pages/Student/TutorProfile.aspx?id={tId}", "Tutor Profile");
+                SiteMapNode courseNode = new SiteMapNode(provider, "CourseDetail", $"~/Pages/Student/CourseDetail.aspx?id={cId}&source=tutor", courseTitle);
+
+                tutorNode.ParentNode = rootNode;
+                courseNode.ParentNode = tutorNode;
+                targetNode.ParentNode = courseNode;
+            }
+            else if (sourcePage == "course")
+            {
+                SiteMapNode exploreNode = new SiteMapNode(provider, "Explore", "~/Pages/Student/Study.aspx", "Explore");
+                SiteMapNode courseNode = new SiteMapNode(provider, "CourseDetail", $"~/Pages/Student/CourseDetail.aspx?id={cId}", "Course Overview");
+
+                exploreNode.ParentNode = rootNode;
+                courseNode.ParentNode = exploreNode;
+                targetNode.ParentNode = courseNode;
+            }
+            else
+            {
+                SiteMapNode myLearningNode = new SiteMapNode(provider, "MyLearning", "~/Pages/Student/MyCourses.aspx", "My Learning");
+                myLearningNode.ParentNode = rootNode;
+                targetNode.ParentNode = myLearningNode;
             }
 
-            return clone;
+            return targetNode;
         }
 
         // Helper method to fetch the course title safely
@@ -129,14 +153,45 @@ namespace WAPP.Pages.Student
                 }
             }
         }
-        private void LoadCourseTitle(string courseId)
+
+        private string GetTutorIdByCourse(string courseId)
         {
             using (SqlConnection conn = new SqlConnection(connStr))
             {
-                SqlCommand cmd = new SqlCommand("SELECT title FROM course WHERE Id=@id", conn);
-                cmd.Parameters.AddWithValue("@id", courseId);
-                conn.Open();
-                litCourseTitle.Text = cmd.ExecuteScalar()?.ToString() ?? "Course";
+                string query = "SELECT tutor_id FROM course WITH (NOLOCK) WHERE Id=@cid";
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue("@cid", courseId);
+                    conn.Open();
+                    object result = cmd.ExecuteScalar();
+                    return result != null && result != DBNull.Value ? result.ToString() : "";
+                }
+            }
+        }
+        private void LoadCourseAndTutorInfo(string courseId)
+        {
+            using (SqlConnection conn = new SqlConnection(connStr))
+            {
+                string query = @"SELECT c.title, c.tutor_id, (u.fname + ' ' + u.lname) as TutorName 
+                                 FROM course c WITH (NOLOCK)
+                                 JOIN [user] u WITH (NOLOCK) ON c.tutor_id = u.Id 
+                                 WHERE c.Id=@id";
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue("@id", courseId);
+                    conn.Open();
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        if (dr.Read())
+                        {
+                            litCourseTitle.Text = dr["title"].ToString();
+
+                            // Bind Tutor Info to the new Sidebar block
+                            litSidebarTutorName.Text = dr["TutorName"].ToString();
+                            hlTutorProfileBtn.NavigateUrl = $"TutorProfile.aspx?id={dr["tutor_id"]}";
+                        }
+                    }
+                }
             }
         }
 
@@ -144,7 +199,6 @@ namespace WAPP.Pages.Student
         {
             using (SqlConnection conn = new SqlConnection(connStr))
             {
-                // UPDATED SQL: Added lr.sequence_order to the ORDER BY clause
                 string query = @"
             SELECT lr.Id, rt.name as TypeName,
                    CASE 
@@ -162,7 +216,10 @@ namespace WAPP.Pages.Student
             JOIN resourceType rt ON lr.resource_type = rt.Id
             LEFT JOIN resourceProgress rp ON rp.resource_id = lr.Id AND rp.enrollment_id = @eid
             WHERE lr.course_id = @cid
-            ORDER BY lr.sequence_order ASC, lr.created_at ASC"; // Sorted by sequence first
+            ORDER BY 
+                CASE WHEN lr.sequence_order IS NULL THEN 1 ELSE 0 END ASC,
+                lr.sequence_order ASC, 
+                lr.created_at ASC";
 
                 SqlDataAdapter da = new SqlDataAdapter(query, conn);
                 da.SelectCommand.Parameters.AddWithValue("@cid", courseId);
@@ -196,7 +253,7 @@ namespace WAPP.Pages.Student
 
             using (SqlConnection conn = new SqlConnection(connStr))
             {
-                string query = "SELECT resource_link, note, quiz_id FROM learningResource WHERE Id=@rid";
+                string query = "SELECT resource_link, note, quiz_id, resource_type FROM learningResource WHERE Id=@rid";
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
                     cmd.Parameters.AddWithValue("@rid", resourceId);
@@ -209,11 +266,29 @@ namespace WAPP.Pages.Student
                         {
                             string link = dr["resource_link"].ToString();
                             string note = dr["note"].ToString();
+                            int typeId = dr["resource_type"] != DBNull.Value ? Convert.ToInt32(dr["resource_type"]) : 1; // Default to 1 (video) if null
+
+                            string fileUrl = ResolveClientUrl(link);
 
                             if (link.Contains("youtube.com") || link.Contains("youtu.be"))
-                                litVideoPlayer.Text = $"<iframe src='{link}' allowfullscreen></iframe>";
-                            else
-                                litVideoPlayer.Text = $"<div class='p-5 text-center'><a href='{link}' class='btn btn-primary rounded-pill'>Download File</a></div>";
+                            {
+                                litVideoPlayer.Text = $"<iframe src='{link}' width='100%' height='100%' style='border:none; min-height: 450px;' allowfullscreen></iframe>";
+                            }
+                            else if (typeId == 1) // 1 = Video File (MP4)
+                            {
+                                litVideoPlayer.Text = $@"
+                                    <video width='100%' height='450px' controls style='background: #000;'>
+                                        <source src='{fileUrl}' type='video/mp4'>
+                                        Your browser does not support the video tag.
+                                    </video>";
+                            }
+                            else    // PDF
+                            {
+                                litVideoPlayer.Text = $@"
+                                <iframe src='{fileUrl}' width='100%' height='600px' style='border: none;'>
+                                    This browser does not support inline documents. Please download the file.
+                                </iframe>";
+                            }
 
                             litLessonNote.Text = string.IsNullOrEmpty(note) ? "No detailed notes available for this lesson." : note;
                             lblCurrentLessonName.Text = "Lesson ID: " + resourceId;
@@ -229,9 +304,9 @@ namespace WAPP.Pages.Student
                                 phQuizTrigger.Visible = false;
                             }
                         }
-                    } 
+                    }
                 }
-            } 
+            }
 
             if (pendingQuizId.HasValue)
             {
@@ -424,10 +499,15 @@ namespace WAPP.Pages.Student
         {
             using (SqlConnection conn = new SqlConnection(connStr))
             {
-                string query = @"SELECT Id FROM enrollment WHERE student_id=@sid AND course_id=@cid AND status='ENROLLED'";
+                string query = @"SELECT Id FROM enrollment
+                                 WHERE student_id=@sid 
+                                 AND course_id=@cid 
+                                 AND status IN ('ENROLLED', 'COMPLETED')";
+
                 SqlCommand cmd = new SqlCommand(query, conn);
                 cmd.Parameters.AddWithValue("@sid", studentId);
                 cmd.Parameters.AddWithValue("@cid", courseId);
+
                 conn.Open();
                 object result = cmd.ExecuteScalar();
                 return result != null ? Convert.ToInt32(result) : 0;
@@ -456,6 +536,32 @@ namespace WAPP.Pages.Student
                     }
 
                     return null; // Return null safely if nothing was found
+                }
+            }
+        }
+
+        private void CheckExistingLessonFeedback(int resId)
+        {
+            using (SqlConnection conn = new SqlConnection(connStr))
+            {
+                string query = "SELECT rating, comment FROM feedback WHERE student_id=@sid AND resource_id=@rid";
+                SqlCommand cmd = new SqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@sid", studentId);
+                cmd.Parameters.AddWithValue("@rid", resId);
+
+                conn.Open();
+                SqlDataReader dr = cmd.ExecuteReader();
+                if (dr.Read())
+                {
+                    ddlRating.SelectedValue = dr["rating"].ToString();
+                    txtComment.Text = dr["comment"].ToString();
+                    btnSubmitFeedback.Text = "Update Feedback";
+                    pnlRemoveFeedback.Visible = true;
+                }
+                else
+                {
+                    btnSubmitFeedback.Text = "Submit";
+                    pnlRemoveFeedback.Visible = false;
                 }
             }
         }
@@ -505,7 +611,7 @@ namespace WAPP.Pages.Student
                         DECLARE @cid INT = (SELECT course_id FROM learningResource WHERE Id=@rid)
         
                         INSERT INTO feedback (student_id, tutor_id, course_id, resource_id, rating, comment, status)
-                        VALUES (@sid, @tid, @cid, @rid, @rating, @comment, 'APPROVED')
+                        VALUES (@sid, @tid, @cid, @rid, @rating, @comment, 'PENDING')
                     END";
 
                 SqlCommand cmd = new SqlCommand(query, conn);
@@ -557,7 +663,7 @@ namespace WAPP.Pages.Student
                     ELSE
                     BEGIN
                         INSERT INTO feedback (student_id, tutor_id, course_id, resource_id, rating, comment, status)
-                        VALUES (@sid, @tid, @cid, NULL, @rating, @comment, 'APPROVED')
+                        VALUES (@sid, @tid, @cid, NULL, @rating, @comment, 'PENDING')
                     END";
 
                 SqlCommand cmd = new SqlCommand(query, conn);
@@ -630,7 +736,7 @@ namespace WAPP.Pages.Student
             SELECT f.rating, f.comment, f.created_at, u.fname, u.lname 
             FROM feedback f 
             JOIN [user] u ON f.student_id = u.Id 
-            WHERE f.resource_id = @rid AND f.status = 'APPROVED'
+            WHERE f.resource_id = @rid AND f.status IN ('APPROVED', 'PENDING')
             ORDER BY f.created_at DESC";
 
                 SqlCommand cmd = new SqlCommand(query, conn);
@@ -658,8 +764,15 @@ namespace WAPP.Pages.Student
             {
                 string qid = ViewState["CurrentQuizId"].ToString();
 
-                // Added the enrollmentId to the QueryString so QuizReview.aspx can catch it!
-                Response.Redirect($"QuizReview.aspx?quizId={qid}&enrollmentId={enrollmentId}");
+                string source = Request.QueryString["source"];
+
+                string redirectUrl = $"QuizReview.aspx?quizId={qid}&enrollmentId={enrollmentId}";
+                if (!string.IsNullOrEmpty(source))
+                {
+                    redirectUrl += $"&source={source}";
+                }
+
+                Response.Redirect(redirectUrl);
             }
         }
     }

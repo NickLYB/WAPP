@@ -9,7 +9,6 @@ namespace WAPP.Pages.Shared
 {
     public partial class Chat : System.Web.UI.Page
     {
-        // --- NEW: DYNAMIC MASTER PAGE LOGIC ---
         protected void Page_PreInit(object sender, EventArgs e)
         {
             if (Session["role_id"] != null)
@@ -19,6 +18,9 @@ namespace WAPP.Pages.Shared
                 {
                     case 1: // Admin
                         this.MasterPageFile = "~/Masters/Admin.Master";
+                        break;
+                    case 2: // Staff
+                        this.MasterPageFile = "~/Masters/Staff.Master";
                         break;
                     case 3: // Tutor
                         this.MasterPageFile = "~/Masters/Tutor.Master";
@@ -53,9 +55,10 @@ namespace WAPP.Pages.Shared
             if (!IsPostBack)
             {
                 // Dynamic SiteMapProvider Setup
-                if (UserRoleId == 3) SiteMapPath1.SiteMapProvider = "TutorMap";
+                if (UserRoleId == 1) SiteMapPath1.SiteMapProvider = "AdminMap";
+                else if (UserRoleId == 2) SiteMapPath1.SiteMapProvider = "StaffMap";
+                else if (UserRoleId == 3) SiteMapPath1.SiteMapProvider = "TutorMap";
                 else if (UserRoleId == 4) SiteMapPath1.SiteMapProvider = "StudentMap";
-                else SiteMapPath1.SiteMapProvider = "AdminMap"; // Add Admin map if exists
 
                 LoadContacts("");
                 hfMyId.Value = LoggedInUserId.ToString();
@@ -80,7 +83,7 @@ namespace WAPP.Pages.Shared
 
                 if (string.IsNullOrEmpty(searchTerm))
                 {
-                    // DEFAULT: Load users you have existing conversations with
+                    // Load users you have existing conversations with
                     query = @"
                         SELECT 
                             u.Id AS UserId, 
@@ -100,8 +103,6 @@ namespace WAPP.Pages.Shared
                     string roleFilter = "";
                     if (UserRoleId == 4) // Student searching
                         roleFilter = " AND u.role_id = 3"; // Can only find Tutors
-                    else if (UserRoleId == 3) // Tutor searching
-                        roleFilter = " AND u.role_id = 4"; // Can only find Students
 
                     query = @"
                         SELECT 
@@ -256,18 +257,15 @@ namespace WAPP.Pages.Shared
 
             ScriptManager.RegisterStartupScript(btnSend, btnSend.GetType(), "ClearMyChatBox", "setTimeout(function() { document.getElementById('txtMessage').value = ''; }, 0);", true);
         }
-
         protected void btnRefreshChat_Click(object sender, EventArgs e)
         {
             LoadChatHistory();
         }
-
         protected void btnRefreshSidebar_Click(object sender, EventArgs e)
         {
             LoadContacts(txtSearch.Text.Trim());
             upContacts.Update();
         }
-
         protected void btnSearchTrigger_Click(object sender, EventArgs e)
         {
             LoadContacts(txtSearch.Text.Trim());

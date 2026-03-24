@@ -2,7 +2,8 @@
 using System.IO;
 using System.Configuration;
 using System.Web.UI;
-using WAPP.Utils; // Ensure your OtpHelper and EmailHelper are here
+using System.Text.RegularExpressions;
+using WAPP.Utils;
 
 namespace WAPP.Controls
 {
@@ -25,7 +26,7 @@ namespace WAPP.Controls
             int roleId = int.Parse(rblRole.SelectedValue);
 
             // 1. Validation 
-            if (string.IsNullOrWhiteSpace(txtFirstName.Text) || string.IsNullOrWhiteSpace(email))
+            if (string.IsNullOrWhiteSpace(txtFirstName.Text) || string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
             {
                 ShowModalAndError("Please fill in all required fields.");
                 return;
@@ -40,13 +41,21 @@ namespace WAPP.Controls
                 ShowModalAndError("Passwords do not match.");
                 return;
             }
+
+            // Strong Password Validation
+            if (!IsPasswordStrong(password))
+            {
+                ShowModalAndError("Password does not meet the minimum strength requirements.");
+                return;
+            }
+
             if (roleId == 3 && !fileVerification.HasFile)
             {
                 ShowModalAndError("Tutors must upload a verification document.");
                 return;
             }
 
-            // 2. Handle File Upload BEFORE DB creation
+            // 2. Handle File Upload before DB creation
             string savedFileName = null;
             if (roleId == 3)
             {
@@ -77,8 +86,6 @@ namespace WAPP.Controls
             Session["Reg_Dob"] = txtDob.Text;
             Session["Reg_Contact"] = txtContact.Text.Trim();
             Session["Reg_Email"] = email;
-
-            // SECURITY UPGRADE: Store the securely hashed password, never the plain text!
             Session["Reg_Password"] = hashedPassword;
 
             Session["Reg_RoleId"] = roleId;
@@ -106,6 +113,13 @@ namespace WAPP.Controls
             {
                 ShowModalAndError("Failed to initiate verification: " + ex.Message);
             }
+        }
+
+        private bool IsPasswordStrong(string password)
+        {
+            // Requires at least 8 chars, 1 lowercase, 1 uppercase, 1 number, and 1 special char
+            string pattern = @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\da-zA-Z]).{8,}$";
+            return Regex.IsMatch(password, pattern);
         }
 
         private void ShowModalAndError(string errorMsg)

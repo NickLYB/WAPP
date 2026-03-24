@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
-using System.Linq;
-using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 
@@ -18,9 +15,8 @@ namespace WAPP.Pages.Student
         {
             if (!IsPostBack)
             {
-
                 LoadCategories();
-                LoadCourses();
+                LoadCourses(); // Loads all courses initially
             }
         }
 
@@ -43,28 +39,34 @@ namespace WAPP.Pages.Student
         {
             using (SqlConnection conn = new SqlConnection(connStr))
             {
-                // Join course with courseType for names and user for tutor names
                 string query = @"
                     SELECT c.Id, c.title, c.duration_minutes, c.skill_level, c.average_rating, c.image_path, 
                            ct.name as TypeName, 
                            (u.fname + ' ' + u.lname) as TutorFullName
-                    FROM course c
-                    INNER JOIN courseType ct ON c.course_type_id = ct.Id
-                    INNER JOIN [user] u ON c.tutor_id = u.Id
+                    FROM course c WITH (NOLOCK)
+                    INNER JOIN courseType ct WITH (NOLOCK) ON c.course_type_id = ct.Id
+                    INNER JOIN [user] u WITH (NOLOCK) ON c.tutor_id = u.Id
                     WHERE c.status = 'PUBLISHED'";
 
                 if (!string.IsNullOrEmpty(searchText))
                 {
                     query += " AND (c.title LIKE @search OR u.fname LIKE @search OR u.lname LIKE @search)";
                 }
+
                 if (categoryId != "0")
                 {
                     query += " AND c.course_type_id = @catId";
                 }
 
+                query += " ORDER BY c.created_at DESC";
+
                 SqlCommand cmd = new SqlCommand(query, conn);
-                if (!string.IsNullOrEmpty(searchText)) cmd.Parameters.AddWithValue("@search", "%" + searchText + "%");
-                if (categoryId != "0") cmd.Parameters.AddWithValue("@catId", categoryId);
+
+                if (!string.IsNullOrEmpty(searchText))
+                    cmd.Parameters.AddWithValue("@search", "%" + searchText + "%");
+
+                if (categoryId != "0")
+                    cmd.Parameters.AddWithValue("@catId", categoryId);
 
                 SqlDataAdapter da = new SqlDataAdapter(cmd);
                 DataTable dt = new DataTable();
@@ -73,12 +75,23 @@ namespace WAPP.Pages.Student
                 rptCourses.DataSource = dt;
                 rptCourses.DataBind();
 
-                // UI management for results count and empty state
                 lblCount.Text = dt.Rows.Count.ToString();
+
+                if (dt.Rows.Count == 0)
+                {
+                    rptCourses.Visible = false;
+                    phNoCourses.Visible = true;
+                }
+                else
+                {
+                    rptCourses.Visible = true;
+                    phNoCourses.Visible = false;
+                }
             }
         }
 
-        protected void btnSearch_Click(object sender, EventArgs e)
+        // Fired instantly when user types OR changes the category dropdown
+        protected void Search_Changed(object sender, EventArgs e)
         {
             LoadCourses(txtSearch.Text.Trim(), ddlCategory.SelectedValue);
         }

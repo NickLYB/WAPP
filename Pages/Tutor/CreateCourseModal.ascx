@@ -7,8 +7,18 @@
             // Remove old instance to prevent duplicate editors when UpdatePanel reloads
             tinymce.remove('#<%= description.ClientID %>'); 
             
+            // Check if dark mode is active on the page
+            var isDark = document.documentElement.classList.contains('dark-mode');
+            
             tinymce.init({
                 selector: '#<%= description.ClientID %>',
+                width: '100%',
+
+                // Add these two lines to enable TinyMCE's native dark mode
+                skin: isDark ? 'oxide-dark' : 'oxide',
+                content_css: isDark ? 'dark' : 'default',
+                content_style: isDark ? "body { background-color: #2d2d2d; color: #ffffff; }" : "",
+
                 plugins: 'lists link charmap preview code textcolor',
                 toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline | forecolor backcolor | alignleft aligncenter alignright | bullist numlist | link code',
                 menubar: false,
@@ -20,8 +30,8 @@
                     });
                 }
             });
-        }
     }
+}
 
     // Hook into ASP.NET AJAX lifecycle to survive UpdatePanel partial postbacks
     if (typeof Sys !== 'undefined') {
@@ -39,7 +49,8 @@
 </script>
 
 <div class="modal fade" id="createCourseModal" tabindex="-1" aria-labelledby="createCourseModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered"> <div class="modal-content">
+    <div class="modal-dialog modal-lg modal-dialog-centered"> 
+        <div class="modal-content">
             
             <div class="modal-header bg-light">
                 <h5 class="modal-title" id="createCourseModalLabel" >CREATE NEW COURSE</h5>
@@ -50,50 +61,63 @@
                 <ContentTemplate>
                     <div class="modal-body p-4">
                         
-                        <div class="text-center mb-3">
+                        <div class="text-center mb-4">
                             <asp:Label ID="lblMsg" runat="server" ></asp:Label>
                         </div>
 
-                        <div class="form-row mb-3 d-flex align-items-center">
-                            <asp:Label ID="lblEmpty" runat="server" Text="Course Title:" CssClass="form-label" />
-                            <asp:TextBox ID="title" runat="server" CssClass="form-control flex-grow-1" required="true"></asp:TextBox>
+                        <!-- Replaced d-flex with Bootstrap Grid (row/col) -->
+                        <div class="row mb-3 align-items-center">
+                            <asp:Label ID="lblEmpty" runat="server" Text="Course Title:" CssClass="col-sm-3 col-form-label fw-bold" />
+                            <div class="col-sm-9">
+                                <asp:TextBox ID="title" runat="server" CssClass="form-control" required="true"></asp:TextBox>
+                            </div>
                         </div>
 
-                        <div class="form-row mb-3 d-flex align-items-start">
-                            <asp:Label ID="Label1" runat="server" Text="Course Description:" CssClass="form-label mt-1"  />
-                            <asp:TextBox ID="description" runat="server" CssClass="form-control flex-grow-1" TextMode="MultiLine" Rows="3"></asp:TextBox>
+                        <div class="row mb-3">
+                            <asp:Label ID="Label1" runat="server" Text="Description:" CssClass="col-sm-3 col-form-label fw-bold" />
+                            <div class="col-sm-9">
+                                <asp:TextBox ID="description" runat="server" CssClass="form-control" TextMode="MultiLine" Rows="3"></asp:TextBox>
+                            </div>
                         </div>
 
-                        <div class="form-row mb-3 d-flex align-items-center">
-                            <asp:Label ID="Label2" runat="server" Text="Course Type:" CssClass="form-label" />
-                            <asp:DropDownList ID="type" runat="server" CssClass="form-select flex-grow-1" ></asp:DropDownList>
+                        <div class="row mb-3 align-items-center">
+                            <asp:Label ID="Label2" runat="server" Text="Course Type:" CssClass="col-sm-3 col-form-label fw-bold" />
+                            <div class="col-sm-9">
+                                <asp:DropDownList ID="type" runat="server" CssClass="form-select"></asp:DropDownList>
+                            </div>
                         </div>
 
-                        <div class="form-row mb-3 d-flex align-items-center">
-                            <asp:Label ID="Label3" runat="server" Text="Duration (Mins):" CssClass="form-label" />
-                            <asp:TextBox ID="duration" runat="server" CssClass="form-control flex-grow-1" TextMode="Number"></asp:TextBox>
+                        <div class="row mb-3 align-items-center">
+                            <asp:Label ID="Label3" runat="server" Text="Duration (Mins):" CssClass="col-sm-3 col-form-label fw-bold" />
+                            <div class="col-sm-9">
+                                <asp:TextBox ID="duration" runat="server" CssClass="form-control" TextMode="Number"></asp:TextBox>
+                            </div>
                         </div>
 
-                        <div class="form-row mb-3 d-flex align-items-center">
-                            <asp:Label ID="Label4" runat="server" Text="Skill Level:" CssClass="form-label" />
-                            <asp:DropDownList ID="skill" runat="server" CssClass="form-select flex-grow-1">
-                                <asp:ListItem>-- Select Skill --</asp:ListItem>
-                                <asp:ListItem>Beginner</asp:ListItem>
-                                <asp:ListItem>Intermediate</asp:ListItem>
-                                <asp:ListItem>Advanced</asp:ListItem>
-                            </asp:DropDownList>
+                        <div class="row mb-3 align-items-center">
+                            <asp:Label ID="Label4" runat="server" Text="Skill Level:" CssClass="col-sm-3 col-form-label fw-bold" />
+                            <div class="col-sm-9">
+                                <asp:DropDownList ID="skill" runat="server" CssClass="form-select">
+                                    <asp:ListItem>-- Select Skill --</asp:ListItem>
+                                    <asp:ListItem>Beginner</asp:ListItem>
+                                    <asp:ListItem>Intermediate</asp:ListItem>
+                                    <asp:ListItem>Advanced</asp:ListItem>
+                                </asp:DropDownList>
+                            </div>
                         </div>
 
-                        <div class="form-row mb-3 d-flex align-items-center">
-                            <asp:Label ID="Label5" runat="server" Text="Upload Image:" CssClass="form-label" />
-                            <asp:FileUpload ID="FileUpload1" runat="server" CssClass="form-control flex-grow-1" />
+                        <div class="row mb-3 align-items-center">
+                            <asp:Label ID="Label5" runat="server" Text="Upload Image:" CssClass="col-sm-3 col-form-label fw-bold" />
+                            <div class="col-sm-9">
+                                <asp:FileUpload ID="FileUpload1" runat="server" CssClass="form-control" />
+                            </div>
                         </div>
 
                     </div>
 
                     <div class="modal-footer bg-light">
                         <asp:Button ID="Button2" runat="server" Text="Cancel" CssClass="btn btn-secondary" data-bs-dismiss="modal" OnClientClick="return false;" />
-                        <asp:Button ID="Button1" runat="server" Text="Submit for Approval" OnClick="Button1_Click" CssClass="btn text-white" style="background-color: #a31d3d;" />
+                        <asp:Button ID="Button1" runat="server" Text="Submit for Approval" OnClick="Button1_Click" CssClass="btn text-white" style="background-color: #a31d3d;" OnClientClick="if(typeof tinymce !== 'undefined') { tinymce.triggerSave(); }" />
                     </div>
                 </ContentTemplate>
                 

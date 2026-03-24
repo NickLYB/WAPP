@@ -1,49 +1,92 @@
 ﻿<%@ Page Title="" Language="C#" MasterPageFile="~/Masters/Guest.Master" AutoEventWireup="true" CodeBehind="Home.aspx.cs" Inherits="WAPP.Pages.Guest.Home" %>
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
     <style>
-        .guest-hero { background: linear-gradient(135deg, var(--ec-bg-nav) 0%, #fdf396 100%); border-radius: var(--ec-radius-lg); padding: 60px 40px; margin-top: 40px; margin-bottom: 40px; box-shadow: var(--ec-shadow-sm); position: relative; overflow: hidden; }
-        .guest-hero::before { content: ''; position: absolute; top: -50%; right: -10%; width: 600px; height: 600px; background: radial-gradient(circle, rgba(13, 110, 253, 0.08) 0%, transparent 70%); border-radius: 50%; z-index: 0; }
+        /* HERO SECTION - White Glass */
+        .guest-hero { 
+            background: rgba(255, 255, 255, 0.85); 
+            backdrop-filter: blur(12px); 
+            -webkit-backdrop-filter: blur(12px); 
+            border: 1px solid rgba(255, 255, 255, 0.6); 
+            border-radius: var(--ec-radius-lg); 
+            padding: 60px 40px; margin-top: 40px; margin-bottom: 40px; 
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05); 
+            position: relative; overflow: hidden; 
+        }
         .guest-hero-content { position: relative; z-index: 1; }
-        .guest-hero h1 { font-size: 3rem; font-weight: 900; color: var(--ec-dark); margin-bottom: 1rem; line-height: 1.2; }
+        .guest-hero h1 { font-size: 3rem; color: var(--ec-text-main); margin-bottom: 1rem; line-height: 1.2; }
         .guest-hero p { font-size: 1.25rem; color: var(--ec-text-muted); margin-bottom: 2rem; max-width: 700px; }
         .hero-buttons { display: flex; gap: 1rem; flex-wrap: wrap; }
         
+        /* FEATURES GRID - White Glass */
         .guest-features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 40px; }
-        .guest-feature-card { background: var(--ec-bg-surface); border: 1px solid var(--ec-border-light); border-radius: var(--ec-radius-lg); padding: 30px 24px; text-align: center; transition: all 0.3s ease; position: relative; overflow: hidden; }
-        .guest-feature-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, rgba(13, 110, 253, 0.03) 0%, transparent 100%); opacity: 0; transition: opacity 0.3s ease; }
-        .guest-feature-card:hover { transform: translateY(-8px); box-shadow: var(--ec-shadow-hover); border-color: var(--ec-primary); }
-        .guest-feature-card:hover::before { opacity: 1; }
+        .guest-feature-card { 
+            background: rgba(255, 255, 255, 0.85); 
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.6); 
+            border-radius: var(--ec-radius-lg); padding: 30px 24px; text-align: center; 
+            transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+        }
+        .guest-feature-card:hover { transform: translateY(-8px); box-shadow: 0 15px 30px rgba(0,0,0,0.08); border-color: var(--ec-primary); }
         .feature-icon { font-size: 3rem; margin-bottom: 1rem; display: block; }
-        .guest-feature-card h3 { font-size: 1.5rem; font-weight: 700; color: var(--ec-text-main); margin-bottom: 0.75rem; }
+        .guest-feature-card h3 { font-size: 1.5rem; color: var(--ec-text-main); margin-bottom: 0.75rem; }
         .guest-feature-card p { color: var(--ec-text-muted); line-height: 1.6; margin: 0; }
         
-        .guest-stats { background: linear-gradient(135deg, var(--ec-dark) 0%, var(--ec-dark-hover) 100%); border-radius: var(--ec-radius-lg); padding: 50px 40px; margin-bottom: 40px; color: white; }
+        /* STATS SECTION - White Glass */
+        .guest-stats { 
+            background: rgba(255, 255, 255, 0.85); 
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.6); 
+            border-radius: var(--ec-radius-lg); padding: 50px 40px; margin-bottom: 40px; 
+            color: var(--ec-text-main); /* Changed text to dark so you can read it on white */
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+        }
         .guest-stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 30px; text-align: center; }
-        .guest-stat-item h2 { font-size: 3rem; font-weight: 900; margin-bottom: 0.5rem; }
-        .guest-stat-item p { font-size: 1.1rem; opacity: 0.9; margin: 0; }
+        .guest-stat-item h2 { font-size: 3rem; margin-bottom: 0.5rem; color: var(--ec-primary); } /* Make numbers blue */
+        .guest-stat-item p { font-size: 1.1rem; color: var(--ec-text-muted); margin: 0; font-weight: 600; }
         
-        .guest-course-card { background: var(--ec-bg-surface); border: 1px solid var(--ec-border-light); border-radius: var(--ec-radius-md); overflow: hidden; transition: all 0.3s ease; height: 100%; display: flex; flex-direction: column; }
-        .guest-course-card:hover { transform: translateY(-6px); box-shadow: var(--ec-shadow-hover); border-color: var(--ec-primary); }
-        .guest-course-img { width: 100%; height: 180px; background: linear-gradient(135deg, var(--ec-bg-nav) 0%, #fdf396 100%); display: flex; align-items: center; justify-content: center; font-size: 4rem; }
-        .guest-course-body { padding: 20px; flex-grow: 1; display: flex; flex-direction: column; }
-        .guest-course-body h3 { font-size: 1.25rem; font-weight: 700; color: var(--ec-text-main); margin-bottom: 0.75rem; }
-        .guest-course-body p { color: var(--ec-text-muted); margin-bottom: 1rem; flex-grow: 1; }
+        /* COURSE & TESTIMONIAL CARDS - White Glass */
+        .guest-course-card, .guest-testimonial-card { 
+            background: rgba(255, 255, 255, 0.85); 
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.6); 
+            border-radius: var(--ec-radius-md); overflow: hidden; transition: all 0.3s ease; height: 100%; display: flex; flex-direction: column; 
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+        }
+        .guest-course-card:hover { transform: translateY(-6px); box-shadow: 0 15px 30px rgba(0,0,0,0.08); border-color: var(--ec-primary); }
+        .guest-course-body, .guest-testimonial-card { padding: 20px; }
+        .guest-course-body h3, .author-info h4 { color: var(--ec-text-main); margin-bottom: 0.75rem; }
+        .guest-course-body p, .course-meta, .testimonial-content, .author-info p { color: var(--ec-text-muted); }
         
-        .course-meta { display: flex; gap: 1rem; font-size: 0.9rem; color: var(--ec-text-muted); padding-top: 1rem; border-top: 1px solid var(--ec-border-subtle); }
-        .course-meta span { display: flex; align-items: center; gap: 0.4rem; }
+        /* --- CONSISTENT COURSE IMAGES --- */
+        .guest-course-img, .ec-course-img-wrapper { 
+            width: 100%; 
+            height: 180px; /* Force a strict height */
+            overflow: hidden; /* Prevent the image from spilling out */
+            background: rgba(255,255,255,0.5); /* Placeholder background */
+        }
+
+        /* Make sure the actual <img> tag respects the container */
+        .guest-course-img img, .ec-course-img-wrapper img, .ec-course-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover !important; /* Forces the image to fill the box without squishing */
+        }
+        .course-meta { border-top: 1px solid rgba(0,0,0,0.05); padding-top: 1rem; display: flex; gap: 1rem; font-size: 0.9rem; }
+        .guest-testimonial-card::before { content: '"'; position: absolute; top: 15px; left: 25px; font-size: 4rem; color: rgba(13, 110, 253, 0.1); font-family: Georgia, serif; }
+        .testimonial-author { display: flex; align-items: center; gap: 1rem; margin-top: auto; }
+        .author-avatar { width: 50px; height: 50px; border-radius: 50%; background: var(--ec-primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; }
         
-        .guest-testimonial-card { background: var(--ec-bg-surface); border: 1px solid var(--ec-border-light); border-radius: var(--ec-radius-lg); padding: 30px; position: relative; height: 100%; display: flex; flex-direction: column; }
-        .guest-testimonial-card::before { content: '"'; position: absolute; top: 15px; left: 25px; font-size: 4rem; color: rgba(13, 110, 253, 0.1); font-family: Georgia, serif; line-height: 1; }
-        .testimonial-content { margin-bottom: 1.5rem; color: var(--ec-text-muted); line-height: 1.8; position: relative; z-index: 1; flex-grow: 1; }
-        .testimonial-author { display: flex; align-items: center; gap: 1rem; }
-        .author-avatar { width: 50px; height: 50px; border-radius: 50%; background: var(--ec-primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1.1rem; }
-        .author-info h4 { color: var(--ec-text-main); margin-bottom: 0.2rem; font-size: 1rem; font-weight: 600; }
-        .author-info p { color: var(--ec-text-muted); font-size: 0.9rem; margin: 0; }
-        
-        .guest-cta { background: linear-gradient(135deg, var(--ec-primary) 0%, var(--ec-primary-hover) 100%); border-radius: var(--ec-radius-lg); padding: 60px 40px; text-align: center; color: white; margin-bottom: 40px; }
-        .guest-cta h2 { font-size: 2.5rem; font-weight: 900; margin-bottom: 1rem; }
-        .guest-cta p { font-size: 1.25rem; margin-bottom: 2rem; opacity: 0.95; }
-        
+        /* CTA SECTION - White Glass */
+        .guest-cta { 
+            background: rgba(255, 255, 255, 0.85); 
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.6); 
+            border-radius: var(--ec-radius-lg); padding: 60px 40px; text-align: center; 
+            margin-bottom: 40px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+        }
+        .guest-cta h2 { font-size: 2.5rem; color: var(--ec-text-main); margin-bottom: 1rem; }
+        .guest-cta p { font-size: 1.25rem; color: var(--ec-text-muted); margin-bottom: 2rem; }
+
         .scroll-fade-in { opacity: 0; transform: translateY(30px); transition: opacity 0.6s ease, transform 0.6s ease; }
         .scroll-fade-in.visible { opacity: 1; transform: translateY(0); }
 
@@ -51,10 +94,9 @@
             .guest-hero h1 { font-size: 2rem; }
             .guest-hero p { font-size: 1rem; }
             .hero-buttons { flex-direction: column; }
-            .hero-buttons .btn, .hero-buttons a, .hero-buttons button { width: 100%; text-align: center; }
+            .hero-buttons button, .hero-buttons a { width: 100%; text-align: center; }
             .guest-stats-grid { grid-template-columns: repeat(2, 1fr); }
             .guest-cta h2 { font-size: 1.75rem; }
-            .guest-cta p { font-size: 1rem; }
         }
     </style>
 </asp:Content>
@@ -177,49 +219,29 @@
             </div>
             
             <div class="row g-4">
-                <div class="col-md-4">
-                    <div class="guest-testimonial-card">
-                        <p class="testimonial-content">
-                            EduConnect transformed my career! The courses are well-structured and the instructors are incredibly knowledgeable. I landed my dream job as a web developer within 3 months!
-                        </p>
-                        <div class="testimonial-author">
-                            <div class="author-avatar">SM</div>
-                            <div class="author-info">
-                                <h4>Sarah Martinez</h4>
-                                <p>Web Developer</p>
+                <asp:Repeater ID="rptTestimonials" runat="server">
+                    <ItemTemplate>
+                        <div class="col-md-4">
+                            <div class="guest-testimonial-card">
+                                <p class="testimonial-content">
+                                    <%# Eval("comment") %>
+                                </p>
+                                <div class="testimonial-author">
+                                    <div class="author-avatar"><%# Eval("initials") %></div>
+                                    <div class="author-info">
+                                        <h4><%# Eval("fname") %> <%# Eval("lname") %></h4>
+                                        <p class="text-warning mb-0" style="font-size: 0.9rem;">
+                                            <%# GetStars(Convert.ToInt32(Eval("rating"))) %>
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="guest-testimonial-card">
-                        <p class="testimonial-content">
-                            The flexibility of learning at my own pace while working full-time was a game-changer. The community support and resources are outstanding!
-                        </p>
-                        <div class="testimonial-author">
-                            <div class="author-avatar">JL</div>
-                            <div class="author-info">
-                                <h4>James Lee</h4>
-                                <p>Data Analyst</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="guest-testimonial-card">
-                        <p class="testimonial-content">
-                            As a complete beginner, I was nervous about learning to code. EduConnect made it so easy and fun! The projects were engaging and practical.
-                        </p>
-                        <div class="testimonial-author">
-                            <div class="author-avatar">EP</div>
-                            <div class="author-info">
-                                <h4>Emily Parker</h4>
-                                <p>Software Engineer</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                    </ItemTemplate>
+                </asp:Repeater>
             </div>
+            
+            <asp:Label ID="lblNoTestimonials" runat="server" CssClass="text-muted text-center w-100 d-block mt-4" Visible="false" Text="No testimonials available yet."></asp:Label>
         </section>
 
         <section class="guest-cta scroll-fade-in mt-5 mb-5">

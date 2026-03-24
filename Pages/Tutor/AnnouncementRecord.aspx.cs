@@ -34,7 +34,7 @@ namespace WAPP.Pages.Tutor
 
             using (SqlConnection con = new SqlConnection(cs))
             {
-                // LEFT JOIN allows us to get the course name if it exists, but won't break if course_id is NULL
+                // LEFT JOIN to get the course name if it exists, but won't break if course_id is NULL
                 string query = @"
                     SELECT 
                         a.Id, 
@@ -80,7 +80,7 @@ namespace WAPP.Pages.Tutor
                 int announcementId = Convert.ToInt32(e.CommandArgument);
                 string cs = ConfigurationManager.ConnectionStrings["MyDbConn"].ConnectionString;
 
-                // We change the status to 'ARCHIVED' rather than fully deleting it, maintaining referential integrity
+                // change the status to 'ARCHIVED' rather than fully deleting it, maintaining referential integrity
                 using (SqlConnection con = new SqlConnection(cs))
                 {
                     string query = "UPDATE announcement SET status = 'ARCHIVED' WHERE Id = @Id";

@@ -24,6 +24,15 @@ namespace WAPP.Pages.Admin
         protected global::System.Web.UI.UpdateProgress UpdateProgress1;
 
         /// <summary>
+        /// SiteMapPath1 control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.SiteMapPath SiteMapPath1;
+
+        /// <summary>
         /// upPanelUsers control.
         /// </summary>
         /// <remarks>
@@ -31,6 +40,15 @@ namespace WAPP.Pages.Admin
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.UpdatePanel upPanelUsers;
+
+        /// <summary>
+        /// lblMessage control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblMessage;
 
         /// <summary>
         /// txtSearch control.
@@ -60,6 +78,24 @@ namespace WAPP.Pages.Admin
         protected global::System.Web.UI.WebControls.DropDownList ddlSort;
 
         /// <summary>
+        /// btnClear control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.LinkButton btnClear;
+
+        /// <summary>
+        /// btnAdd control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Button btnAdd;
+
+        /// <summary>
         /// ddlRoleFilter control.
         /// </summary>
         /// <remarks>
@@ -76,15 +112,6 @@ namespace WAPP.Pages.Admin
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.DropDownList ddlStatusFilter;
-
-        /// <summary>
-        /// btnAdd control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.Button btnAdd;
 
         /// <summary>
         /// gvUsers control.
@@ -114,6 +141,15 @@ namespace WAPP.Pages.Admin
         protected global::System.Web.UI.WebControls.LinkButton btnPrev;
 
         /// <summary>
+        /// txtPageJump control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.TextBox txtPageJump;
+
+        /// <summary>
         /// btnNext control.
         /// </summary>
         /// <remarks>
@@ -121,15 +157,6 @@ namespace WAPP.Pages.Admin
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.LinkButton btnNext;
-
-        /// <summary>
-        /// ddlAddRole control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.DropDownList ddlAddRole;
 
         /// <summary>
         /// txtAddFname control.
@@ -150,13 +177,13 @@ namespace WAPP.Pages.Admin
         protected global::System.Web.UI.WebControls.TextBox txtAddLname;
 
         /// <summary>
-        /// txtAddEmail control.
+        /// txtAddDob control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox txtAddEmail;
+        protected global::System.Web.UI.WebControls.TextBox txtAddDob;
 
         /// <summary>
         /// txtAddPhone control.
@@ -168,13 +195,13 @@ namespace WAPP.Pages.Admin
         protected global::System.Web.UI.WebControls.TextBox txtAddPhone;
 
         /// <summary>
-        /// txtAddDob control.
+        /// txtAddEmail control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox txtAddDob;
+        protected global::System.Web.UI.WebControls.TextBox txtAddEmail;
 
         /// <summary>
         /// txtAddPassword control.
@@ -184,6 +211,24 @@ namespace WAPP.Pages.Admin
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.TextBox txtAddPassword;
+
+        /// <summary>
+        /// ddlAddRole control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.DropDownList ddlAddRole;
+
+        /// <summary>
+        /// ddlStatus control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.DropDownList ddlStatus;
 
         /// <summary>
         /// btnSaveUser control.
@@ -222,13 +267,13 @@ namespace WAPP.Pages.Admin
         protected global::System.Web.UI.WebControls.TextBox txtEditLname;
 
         /// <summary>
-        /// txtEditEmail control.
+        /// txtEditDob control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox txtEditEmail;
+        protected global::System.Web.UI.WebControls.TextBox txtEditDob;
 
         /// <summary>
         /// txtEditPhone control.
@@ -240,13 +285,22 @@ namespace WAPP.Pages.Admin
         protected global::System.Web.UI.WebControls.TextBox txtEditPhone;
 
         /// <summary>
-        /// txtEditDob control.
+        /// txtEditEmail control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox txtEditDob;
+        protected global::System.Web.UI.WebControls.TextBox txtEditEmail;
+
+        /// <summary>
+        /// txtEditPass control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.TextBox txtEditPass;
 
         /// <summary>
         /// ddlEditRole control.
@@ -258,6 +312,15 @@ namespace WAPP.Pages.Admin
         protected global::System.Web.UI.WebControls.DropDownList ddlEditRole;
 
         /// <summary>
+        /// ddlEditStatus control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.DropDownList ddlEditStatus;
+
+        /// <summary>
         /// btnUpdateUser control.
         /// </summary>
         /// <remarks>
@@ -265,6 +328,15 @@ namespace WAPP.Pages.Admin
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.Button btnUpdateUser;
+
+        /// <summary>
+        /// btnDeleteUser control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Button btnDeleteUser;
 
         /// <summary>
         /// hfConfirmUserId control.

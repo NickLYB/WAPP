@@ -24,13 +24,22 @@ namespace WAPP.Pages.Student
         protected global::System.Web.UI.WebControls.SiteMapPath SiteMapPath1;
 
         /// <summary>
-        /// divCoverPhoto control.
+        /// divAvatarCircle control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.HtmlControls.HtmlGenericControl divCoverPhoto;
+        protected global::System.Web.UI.HtmlControls.HtmlGenericControl divAvatarCircle;
+
+        /// <summary>
+        /// imgProfilePic control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Image imgProfilePic;
 
         /// <summary>
         /// litInitials control.

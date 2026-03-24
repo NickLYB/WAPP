@@ -1,9 +1,9 @@
 ﻿<%@ Control Language="C#" AutoEventWireup="true" CodeBehind="Calendar.ascx.cs" Inherits="WAPP.Pages.Tutor.Calendar" %>
 
 <style>
-    /* Modernizing the ASP.NET Calendar */
     .modern-calendar {
         width: 100%;
+        table-layout: fixed; 
         border-collapse: collapse;
         border: none !important;
         background-color: transparent;
@@ -50,22 +50,31 @@
     .appt-badge:hover {
         transform: scale(1.02);
     }
+    .calendar-wrapper {
+        max-height: 500px; 
+        overflow-y: auto; 
+        overflow-x: auto;
+        border-radius: 8px;
+        border: 1px solid var(--ec-border-light);
+    }
 </style>
 
-<div class="calendar-body">
-    <asp:Calendar ID="Calendar1" runat="server" 
-        CssClass="modern-calendar" 
-        SelectionMode="Day"
-        ShowGridLines="False"
-        OnDayRender="Calendar1_DayRender"
-        NextPrevFormat="ShortMonth"
-        DayNameFormat="Short">
+<div class="calendar-wrapper shadow-sm">
+    <div class="calendar-body">
+        <asp:Calendar ID="Calendar1" runat="server" 
+            CssClass="modern-calendar" 
+            SelectionMode="Day"
+            ShowGridLines="False"
+            OnDayRender="Calendar1_DayRender"
+            NextPrevFormat="ShortMonth"
+            DayNameFormat="Short">
 
-        <TitleStyle BackColor="Transparent" Font-Bold="True" Font-Size="1.1em" ForeColor="#0d6efd" Height="40px" HorizontalAlign="Center" VerticalAlign="Middle" />
-        <NextPrevStyle ForeColor="#0d6efd" Font-Bold="true" Font-Size="0.9em" VerticalAlign="Middle" />
-        <OtherMonthDayStyle ForeColor="#cbd5e1" />
-        <TodayDayStyle BackColor="#eff6ff" BorderColor="#0d6efd" BorderWidth="1px" />
-    </asp:Calendar>
+            <TitleStyle BackColor="Transparent" Font-Bold="True" Font-Size="1.1em" ForeColor="#0d6efd" Height="40px" HorizontalAlign="Center" VerticalAlign="Middle" />
+            <NextPrevStyle ForeColor="#0d6efd" Font-Bold="true" Font-Size="0.9em" VerticalAlign="Middle" />
+            <OtherMonthDayStyle ForeColor="#cbd5e1" />
+            <TodayDayStyle BackColor="#eff6ff" BorderColor="#0d6efd" BorderWidth="1px" />
+        </asp:Calendar>
+    </div>
 </div>
 
 <div class="modal fade" id="apptDetailsModal" tabindex="-1" aria-hidden="true">
@@ -102,12 +111,12 @@
 
 <script>
     function showApptModal(event, student, subject, time, status) {
-        event.stopPropagation(); 
+        event.stopPropagation();
 
         document.getElementById('modalApptStudent').innerText = student;
         document.getElementById('modalApptSubject').innerText = subject;
         document.getElementById('modalApptTime').innerText = time;
-        
+
         var statusHtml = "";
         if (status === "APPROVED") {
             statusHtml = "<span class='badge bg-success'>Approved</span>";
